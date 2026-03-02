@@ -35,6 +35,7 @@ class GenerateDocsMetaParseTest(unittest.TestCase):
         self.assertIn("query:transformer", item["tags"])
         self.assertEqual(item["date"], "20170612")
         self.assertIn("https://arxiv.org/pdf", item["pdf"])
+        self.assertEqual(item["selection_source"], "")
 
     def test_parse_fallback_to_legacy_meta_lines(self):
         with tempfile.TemporaryDirectory() as d:
@@ -42,6 +43,10 @@ class GenerateDocsMetaParseTest(unittest.TestCase):
             path.write_text(
                 "\n".join(
                     [
+                        "---",
+                        "selection_source: fresh_fetch",
+                        "title: Legacy title",
+                        "---",
                         "**Authors**: Legacy A, Legacy B",
                         "**Date**: 20260301",
                         "**PDF**: https://example.com/paper.pdf",
@@ -53,11 +58,17 @@ class GenerateDocsMetaParseTest(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            item = self.mod._parse_generated_md_to_meta(str(path), "legacy", "deep")
+            item = self.mod._parse_generated_md_to_meta(
+                str(path),
+                "legacy",
+                "deep",
+                "cache_hint",
+            )
             self.assertEqual(item["authors"], "Legacy A, Legacy B")
             self.assertEqual(item["date"], "20260301")
             self.assertEqual(item["pdf"], "https://example.com/paper.pdf")
             self.assertEqual(item["tldr"], "legacy tldr text")
+            self.assertEqual(item["selection_source"], "cache_hint")
 
 
 if __name__ == "__main__":

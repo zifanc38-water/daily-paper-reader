@@ -1265,6 +1265,7 @@ window.$docsify = {
             paper_id: paperId,
             section: normalizeSection(section) || 'quick',
             title_en,
+            selection_source: String(meta.selection_source || '').trim(),
             authors,
             date: normalizeDateField(meta.date || ''),
             pdf: String(meta.pdf || meta.PDF || '').trim(),

@@ -50,6 +50,8 @@ MODES = {
 
 CARRYOVER_DAYS = 5
 CARRYOVER_RATIO = 0.5
+SOURCE_FRESH_FETCH = "fresh_fetch"
+SOURCE_CARRYOVER_CACHE = "carryover_cache"
 
 
 def log(message: str) -> None:
@@ -305,6 +307,7 @@ def build_candidates(
         copied = dict(item)
         copied["id"] = pid
         copied["_source"] = "carryover"
+        copied["selection_source"] = SOURCE_CARRYOVER_CACHE
         merged[pid] = copied
 
     for item in scored_papers:
@@ -313,6 +316,7 @@ def build_candidates(
             continue
         copied = dict(item)
         copied["_source"] = "new"
+        copied["selection_source"] = SOURCE_FRESH_FETCH
         merged[pid] = copied
 
     return list(merged.values())
@@ -574,6 +578,7 @@ def build_carryover_out(
             continue
         copied = dict(item)
         copied.pop("_source", None)
+        copied["selection_source"] = SOURCE_CARRYOVER_CACHE
         copied["paper_id"] = copied.get("id")
         copied["carry_days"] = carry_days
         carryover_out.append(copied)
@@ -848,6 +853,7 @@ def main() -> None:
                 copied = dict(item)
                 copied["id"] = pid
                 copied["_source"] = "carryover"
+                copied["selection_source"] = SOURCE_CARRYOVER_CACHE
                 candidates.append(copied)
         else:
             candidates = build_candidates(scored_papers, carryover_items, seen_ids)

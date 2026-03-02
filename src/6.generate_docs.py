@@ -1275,6 +1275,7 @@ def build_markdown_content(
     abstract_en = (paper.get("abstract") or "").strip()
     if not abstract_en:
         abstract_en = "arXiv did not provide an abstract for this paper."
+    selection_source = str(paper.get("selection_source") or "").strip()
 
     # 解析速览内容
     glance = paper.get("_glance_overview", "").strip()
@@ -1328,6 +1329,8 @@ def build_markdown_content(
         lines.append(f"evidence: {yaml_escape(evidence)}")
     if display_tldr:
         lines.append(f"tldr: {yaml_escape(display_tldr)}")
+    if selection_source:
+        lines.append(f"selection_source: {yaml_escape(selection_source)}")
 
     # 速览字段
     if glance_motivation:
@@ -2089,7 +2092,12 @@ def _parse_front_matter(md_text: str) -> Dict[str, Any]:
     return meta
 
 
-def _parse_generated_md_to_meta(md_path: str, paper_id: str, section: str) -> Dict[str, Any]:
+def _parse_generated_md_to_meta(
+    md_path: str,
+    paper_id: str,
+    section: str,
+    selection_source: str = "",
+) -> Dict[str, Any]:
     """
     从 Step6 已生成的论文 Markdown 中提取可导出的元信息（不引入额外 LLM 调用）。
     """
@@ -2192,6 +2200,9 @@ def _parse_generated_md_to_meta(md_path: str, paper_id: str, section: str) -> Di
     score_value = _fallback_meta("score", "Score")
     evidence_value = _fallback_meta("evidence", "Evidence")
     tldr_value = _fallback_meta("tldr", "TLDR")
+    src_value = str(selection_source or "").strip()
+    if not src_value and "selection_source" in fm_meta:
+        src_value = str(fm_meta.get("selection_source") or "").strip()
 
     # tags：输出为更“短”的一行形式（字符串），避免 JSON pretty-print 时每个 tag 独占一行
     tags_compact: List[str] = []
@@ -2214,6 +2225,7 @@ def _parse_generated_md_to_meta(md_path: str, paper_id: str, section: str) -> Di
         "tldr": str(tldr_value or "").strip(),
         "tags": ", ".join(tags_compact),
         "abstract_en": abstract_en,
+        "selection_source": src_value,
     }
 
 
@@ -2246,7 +2258,12 @@ def write_day_meta_index_json(
                 title = (paper.get("title") or "").strip()
                 arxiv_id = str(paper.get("id") or paper.get("paper_id") or "").strip()
                 md_path, _, pid = prepare_paper_paths(docs_dir, date_str, title, arxiv_id)
-                item = _parse_generated_md_to_meta(md_path, pid, section)
+                item = _parse_generated_md_to_meta(
+                    md_path,
+                    pid,
+                    section,
+                    str(paper.get("selection_source") or ""),
+                )
                 papers.append(item)
             except Exception as e:
                 errors.append(
