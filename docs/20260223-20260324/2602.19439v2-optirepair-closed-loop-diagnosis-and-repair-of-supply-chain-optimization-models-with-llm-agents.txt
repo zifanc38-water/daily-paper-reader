@@ -1,0 +1,760 @@
+Title: OptiRepair: Closed-Loop Diagnosis and Repair of Supply Chain Optimization Models with LLM Agents
+
+URL Source: https://arxiv.org/pdf/2602.19439v2
+
+Published Time: Thu, 26 Feb 2026 01:11:56 GMT
+
+Number of Pages: 33
+
+Markdown Content:
+# OptiRepair: Closed-Loop Diagnosis and Repair of Supply Chain Optimization Models with LLM Agents 
+
+Ruicheng Ao ∗ David Simchi-Levi † Xinshang Wang ‡
+
+Abstract 
+
+Supply chain optimization models frequently become infeasible because of modeling errors. Diagnosis and repair require scarce OR expertise: analysts must interpret solver diagnostics, trace root causes across echelons, and fix formulations without sacrificing operational soundness. Whether AI agents can perform this task remains untested. OptiRepair decomposes this task into two phases: a domain-agnostic feasibility phase that iteratively repairs any LP using IIS-guided diagnosis, and a domain-specific validation phase that enforces five rationality checks grounded in inventory theory. We test 22 API models from seven families on 976 multi-echelon supply chain problems and train two 8B-parameter models with self-taught reasoning and solver-verified rewards. The trained models reach 81.7% Rational Recovery Rate (RRR)—the fraction of problems resolved to both feasibility and operational rationality—versus 42.2% for the best API model and 21.3% on average. The gap concentrates in Phase 1 repair, where API models average 27.6% recovery rate versus 97.2% for trained models. Two gaps separate current AI from reliable model repair: solver interaction, as API models restore only 27.6% of infeasible formulations; and operational rationale, as roughly one in four feasible repairs violate supply chain theory. Each gap requires a different intervention—targeted training closes the solver interaction gap, while explicit specification as solver-verifiable checks closes the rationality gap. For organizations adopting AI in operational planning, formalizing what “rational” means in their context is the higher-return investment. 
+
+Keywords: supply chain optimization; large language models; model diagnosis and repair; opera-tional rationality; reinforcement learning 
+
+# 1 Introduction 
+
+Consider a supply chain analyst building a multi-echelon inventory optimization model in Gurobi. The model spans five echelons and 24 planning periods, with over 500 constraints encoding demand propagation, inventory balance, lead-time coupling, and production capacity. After submitting the formulation, the solver returns Infeasible . The analyst must determine which constraints con-flict, understand why (a misspecified lead time? an incorrect capacity limit?), and repair the formulation so that the solution is not merely feasible but operationally sound. This iterative diagnosis-and-repair loop—IIS analysis, interpretation, model modification, re-solving, and opera-tional validation—consumes hours of expert time and recurs with every model revision. IIS computation (Chinneck, 2008) identifies which constraints conflict but not why : an IIS containing an inventory balance equation and a capacity constraint at echelon 3 reveals a mathe-matical conflict, yet the analyst must still determine whether capacity was understated, demand 
+
+> ∗
+
+Massachusetts Institute of Technology. Email: aorc@mit.edu .
+
+> †
+
+Massachusetts Institute of Technology. Email: dslevi@mit.edu .
+
+> ‡
+
+Alibaba Group. Email: xinshang.w@alibaba-inc.com .
+
+1
+
+> arXiv:2602.19439v2 [cs.AI] 24 Feb 2026
+
+was overstated, or lead time was misspecified—each calling for a different repair. Even a correct diagnosis does not guarantee a good repair: relaxing a capacity constraint may restore feasibility but let echelon 3 order ten times its physical throughput—a mathematically valid yet operationally meaningless fix. Unlike general software debugging, where unit tests sample program behavior, diagnosing and repairing supply chain models demands both mathematical reasoning (interpreting IIS output) and operational reasoning (judging whether the repaired solution makes physical sense). A feasible, optimal solution is necessary but not sufficient. A repaired supply chain model must also satisfy what we call operational rationality : its solution should exhibit properties consistent with supply chain theory—base-stock structure (Clark and Scarf, 1960), bounded bullwhip amplifi-cation (Lee et al., 1997; Chen et al., 2000), inventory allocation, cost consistency (Zipkin, 2000), and order smoothing. These five checks form a Rationality Oracle that filters out “technically correct but operationally absurd” repairs—a type of error that pure feasibility metrics miss entirely. LLMs now address operations management tasks (Dai and Swaminathan, 2025; Chen et al., 2025; Zhao et al., 2025); benchmarks such as NL4Opt (Ramamonjison et al., 2023) and OptiBench (Yang et al., 2024) evaluate one-shot formulation, while PILOT-Bench (Ao et al., 2026c) adds multi-step tool interaction but targets formulation, not repair of faulty models. The iterative diagnosis-and-repair process that consumes analyst time in practice remains unevaluated. LLMs exhibit a 64.5% self-correction blind spot rate (Tsui, 2025). Existing correction benchmarks either exclude OR entirely (Tie et al., 2025) or rely on unit tests rather than deterministic solver feedback (Jimenez et al., 2024). Can LLMs diagnose and repair supply chain optimization models effectively when given structured solver feedback? 
+
+A closed-loop framework linking optimization feasibility to operational decisions. Op-tiRepair splits optimization model diagnosis and repair into two independently deployable phases. Phase 1 iterates on solver IIS feedback to diagnose and repair constraint conflicts (up to 20 turns); it applies to any LP, not just supply chains. Phase 2 applies a domain oracle that checks whether the solution is operationally sound; we implement it for supply chains with five theory-grounded rationality checks (Section 3.3.2). Each phase is independently trainable, but combined they con-nect optimization (“is the model solvable?”) to operations (“does the solution make sense?”). We evaluate the full pipeline on OptiRepair-SC , 976 supply chain problems spanning 10 error types (ME-1–ME-10), and benchmark agentic performance against 22 frontier API models (Table 2). 
+
+A domain-specialized training pipeline that outperforms frontier API models. Using iterative self-taught reasoning ( STaR ) with solver-verified rewards, we train two 8B-parameter models—one for feasibility repair (Phase 1) and one for rationality repair (Phase 2). The combined pipeline reaches 81.7% Rational Recovery Rate (RRR)—the fraction of problems where the agent restores solver feasibility and produces an operationally rational solution. The best API model (GPT-5.2, tied with Gemini 2.5 Pro) reaches 42.2%, a gap of 39.5 percentage points. The gap holds across two base architectures: Qwen3-8B at 81.7% and Llama-3.1-8B at 80.3%, differing by only 1.4 percentage points. 
+
+Empirical evidence that domain specialization, not model scale, drives operational value. Across 22 API models spanning 7 families, two gaps persist: solver interaction (API average 27.6% recovery rate versus 97.2% for trained models) and operational rationale (roughly one in four feasible repairs violate supply chain theory); prompt engineering cannot reliably close either (one model improves by 7.4 pp, another degrades by 24.1 pp). Domain-specialized 8B models 2Table 1: Central result on OptiRepair-SC (284-problem test set). RRR: fraction of problems where the model restores feasibility and produces an operationally rational solution.     
+
+> Configuration RRR Trained 8B pipeline (best) 81.7% Best API (GPT-5.2 / Gemini 2.5 Pro) 42.2% Average API (22 models, 7 families) 21.3%
+
+outperform all 22 frontier API models; codifying operational rationale as solver-verifiable checks improved results more than scaling model parameters. Table 1 summarizes the central result. Section 2 reviews related work; Section 3 defines the evaluation framework; Section 4 details the training pipeline; Section 5 reports agentic performance; and Section 6 discusses implications and limitations. 
+
+# 2 Related Work 
+
+OptiRepair draws on three research streams: AI and LLMs in operations management, LLM-assisted optimization, and supply chain theory together with verifiable-reward training methods. 
+
+2.1 AI and LLMs in Operations Management 
+
+Dai and Swaminathan (2025) organize AI in OM around three pillars: AI for OM (using AI to improve operations), OM for AI (applying operational principles to AI system design, e.g., Ao et al., 2025), and Human-AI interaction (how humans and AI collaborate on operational tasks). 
+
+OptiRepair belongs to the first pillar—training AI agents for an operational task—and advances the third by identifying where AI succeeds (Phase 2 rationality repair, 76.3% average pass rate) and where it fails (Phase 1 repair, 27.6% average recovery rate). Behavioral operations research identifies systematic biases in human operational decisions. Schweitzer and Cachon (2000) established that newsvendor ordering exhibits a pull-to-center bias, and Bolton and Katok (2008) confirmed that experience reduces but does not eliminate these biases. Demand amplification studies (Sterman, 1989) and behavioral operations surveys (Donohue et al., 2020) reinforce the case for automated diagnosis assistance. Several studies now test whether LLMs replicate these biases. Chen et al. (2025) reported that ChatGPT exhibits demand-chasing and pull-to-center biases in newsvendor decisions, replicating patterns Schweitzer and Cachon (2000) and Kremer et al. (2010) observed in human subjects. AIM-Bench (Zhao et al., 2025) tested agentic LLMs as inventory managers in multi-period settings, confirming persistent pull-to-center behavior. Zhang et al. (2025) evaluated LLMs as human-behavior simulators in OM experiments, finding that they predict treatment effects but miss distributional properties of actual decisions. In concurrent work, Baek et al. (2026) benchmarked LLM agents on over 1,000 inventory scenarios, finding that OR-augmented LLM policies and human-AI teams each outperform their components in isolation; Simchi-Levi et al. (2026) showed that LLMs can serve as interactive interfaces to supply chain solvers, explaining recommendations and adjusting parameters through dialogue; and Long et al. (2025) deployed LLM agents on the beer distribution game, observing severe bullwhip effects in de-centralized settings. These studies confirm that LLMs and optimization tools are complementary— a premise OptiRepair applies through solver-in-the-loop repair. Gijsbrechts et al. (2022) applied deep RL to inventory management across dual sourcing, lost sales, and multi-echelon settings, finding that RL policies match or exceed heuristics but require careful reward design. Davis et al. 3(2024) argued for integrating machine learning and behavioral science, since neither approach alone captures how humans make operational decisions. Di Sorbo et al. (2025) measured how warnings and endorsements shape human-AI collaboration in demand forecasting. More broadly, integrat-ing ML-generated signals into sequential decisions under imperfect feedback—whether LLM judges replacing human evaluators, prediction-powered optimization, or surrogate rewards for bandits—is an active area (Ao et al., 2026a,b; Ji et al., 2025); our Rationality Oracle takes a similar approach, replacing expert review with automated solver-grounded checks. OptiRepair differs from these lines of work in two ways: it evaluates AI agents on a structured repair task with deterministic solver verification rather than prediction or quantity decisions, and it treats operational rationality 
+
+as a first-class metric separate from task completion. 
+
+2.2 LLM-Assisted Optimization 
+
+Multiple benchmarks now evaluate LLMs on optimization tasks. Most focus on one-shot formula-tion: NL4Opt (Ramamonjison et al., 2023), OptiBench (Yang et al., 2024), ORLM (Huang et al., 2025), MAMO (Huang et al., 2024), and others (Xiao et al., 2024; AhmadiTeshnizi et al., 2024). Sev-eral testbeds add multi-step interaction: PILOT-Bench (Ao et al., 2026c) evaluates LLM robustness under probabilistic tool failures and variable instruction quality, DP-Bench (Zhou et al., 2025) ap-plies solver verification to dynamic programming formulation, and LEAN-LLM-OPT (Liang et al., 2026) coordinates multiple agents to auto-formulate large-scale problems via structured workflow; all target formulation accuracy rather than repairing faulty models. Tsui (2025) measured a 64.5% self-correction blind spot rate in LLMs; CorrectBench (Tie et al., 2025) benchmarks correction across reasoning domains but excludes operations research. SWE-bench (Jimenez et al., 2024) benchmarks iterative code debugging, but unit tests only sample program behavior, whereas a solver delivers complete , deterministic feedback. OptiRepair addresses this gap: it evaluates iter-ative diagnosis and repair of faulty models with solver feedback, extending the correctness criterion beyond feasibility to domain-specific operational rationality. Ao et al. (2026d) introduce a solver-in-the-loop framework that benchmarks diagnostic accuracy of off-the-shelf LLMs on optimization debugging without closing the training loop. We measure end-to-end agentic performance—whether an agent can repair a formulation and validate the resulting solution—rather than diagnostic ac-curacy alone; apply the framework to multi-echelon supply chain models with theory-grounded rationality checks; and train specialized 8B-parameter agents through iterative STaR with solver-verified rewards. Table 2 contrasts OptiRepair with existing benchmarks on oracle type, multi-step interaction, self-correction, and domain-specific rationality checks. 
+
+2.3 Supply Chain Theory and Training Methods 
+
+Our error classification and rationality checks build on classical supply chain theory. Clark and Scarf (1960) proved that echelon base-stock policies optimize serial multi-echelon systems. Lee et al. (1997) traced order variance amplification to information distortion, and Chen et al. (2000) quantified the resulting bullwhip effect. Zipkin (2000) consolidated the foundations of inventory management. Our ten error types and five rationality checks encode these theoretical properties; Section 3.2 gives the detailed mapping. Our training approach extends reinforcement learning with verifiable rewards (RLVR). DeepSeek-AI (2025) showed that GRPO with outcome verification induces reasoning behavior without step-level supervision; Shao et al. (2024) and Lambert et al. (2025) confirmed that RLVR general-izes across reasoning domains. Zelikman et al. (2022) introduced STaR for bootstrapped self-4Table 2: Positioning against optimization-agent benchmarks. OptiRepair-SC is the first to eval-uate both iterative diagnosis-and-repair and operational rationality in a closed-loop supply chain setting.                                                                  
+
+> Framework Task Oracle Multi-step Self-Corr. Rationality NL4Opt (Ramamonjison et al., 2023) NL →LP ————OptiBench (Yang et al., 2024) Formulation ————MAMO (Huang et al., 2024) Complex LP ————ORLM (Huang et al., 2025) Formulation ————LEAN-LLM-OPT (Liang et al., 2026) Formulation Solver ✓——AIM-Bench (Zhao et al., 2025) Inventory Closed-form ——✓
+> InventoryBench (Baek et al., 2026) Inventory Closed-form ✓—✓
+> PILOT-Bench (Ao et al., 2026c) Tool Workflow Execution ✓——SWE-bench (Jimenez et al., 2024) Code Debug Unit Tests ✓Limited —CorrectBench (Tie et al., 2025) Self-Corr. ——General —DP-Bench (Zhou et al., 2025) DP Problems Solver ✓——
+> OptiRepair-SC SC Repair Solver IIS + Oracle ✓✓✓
+
+improvement. We adapt these methods to OR model repair, where Gurobi supplies exact, deter-ministic verification at every step—feasibility status, objective value, and IIS certificates—enabling fully automated reward computation without human annotation. 
+
+# 3 Closed-Loop Diagnosis and Repair Framework 
+
+OptiRepair decomposes optimization model repair into a domain-agnostic diagnosis-and-repair phase and a domain-specific validation phase. Phase I applies to any LP: given an infeasible model and solver IIS feedback, the agent iteratively diagnoses constraint conflicts and repairs the formulation. Phase II invokes a domain oracle that checks whether the repaired solution satisfies operational criteria; for supply chain models, the oracle verifies properties grounded in inventory theory (Clark and Scarf, 1960; Chen et al., 2000). 
+
+3.1 Multi-Echelon LP Formulation 
+
+Consider a serial supply chain with N echelons indexed n = 1 , . . . , N , where echelon 1 is the retailer (most downstream) and echelon N is the factory (most upstream). Material flows from echelon N
+
+toward echelon 1; orders flow in the opposite direction. The planning horizon spans T discrete periods. Each echelon n incurs holding cost hn and backorder cost bn per unit per period, faces production or order capacity Cn, and has replenishment lead time Ln periods. Customer demand at the retailer in period t is dt. Decision variables are order quantity xn,t , on-hand inventory In,t , and backorders 
+
+Bn,t at each echelon and period. The LP minimizes total holding and backorder costs: minimize 
+
+> N
+
+X
+
+> n=1
+> T
+
+X
+
+> t=1
+
+ hn In,t + bn Bn,t 
+
+ (1) s.t. In,t − Bn,t = In,t −1 − Bn,t −1 + xn,t −Ln − dn,t , ∀ n, t (2) 
+
+xn,t ≤ Cn, ∀ n, t (3) 5Table 3: Supply chain error classification. Ten error types (ME-1–ME-10) represent common modeling mistakes in multi-echelon inventory planning.                                  
+
+> Type Error Name Operational Meaning Difficulty ME-1 Demand Inflation Overstated downstream demand Hard ME-2 Lead Time Error Misspecified replenishment lead time Hard ME-3 Balance Violation Impossible inventory balance state Easy ME-4 Capacity Reduction Production capacity below demand Hard ME-5 Cost Structure Error Non-monotonic holding costs Easy ME-6 Bullwhip Amplification Forced upstream order amplification Medium ME-7 Coefficient Perturbation Distorted arrival coefficient Medium ME-8 Sign Error Inverted demand propagation sign Medium ME-9 Redundant Constraint Conflicting minimum-order bound Medium ME-10 Index Mismatch Wrong time index in demand propagation Hard
+
+subject also to demand propagation ( dn,t = xn−1,t for n ≥ 2; d1,t = dt) and non-negativity con-straints ( xn,t , I n,t , B n,t ≥ 0); Appendix A gives the complete formulation with all constraint fami-lies. Constraint (2) enforces flow conservation at each echelon, while demand propagation transmits order variability upstream—the bullwhip effect (Lee et al., 1997; Chen et al., 2000; Simchi-Levi et al., 2008). Our generator produces instances with 2–5 echelons, 12–24 periods, and varying cost structures and demand patterns (stationary, step-change, and seasonal). Typical instances contain 70–400 decision variables and 60–350 constraints. Gurobi solves every instance to optimality before error injection, confirming a feasible baseline. 
+
+3.2 Error Classification 
+
+Table 3 defines ten error types (ME-1–ME-10) covering common modeling mistakes in multi-echelon inventory planning (Simchi-Levi et al., 2008; Zipkin, 2000). Each type targets a specific LP com-ponent; we group them into five categories by the operational subsystem they affect. 
+
+Demand and timing errors (ME-1, ME-2) produce multi-echelon IIS patterns requiring upstream– downstream dependency tracing. Balance and capacity errors (ME-3, ME-4): ME-3 forces an im-possible inventory balance state (localized, easy-to-identify IIS signal), while ME-4 sets capacity far below demand, producing cascading infeasibility across periods. Cost and structural errors (ME-5, ME-6): ME-5 distorts holding costs, yielding feasible but operationally irrational solutions; ME-6 adds bullwhip-inducing constraints that cascade through the echelon structure. Coefficient and sign errors (ME-7, ME-8) perturb arrival coefficients or invert demand propagation signs, creating multi-constraint IIS patterns. Constraint and index errors (ME-9, ME-10): ME-9 adds redundant order constraints; ME-10 corrupts time indices in demand propagation, producing misleading IIS signals. A saboteur module generates all errors programmatically: given a valid LP instance, it selects an error type, applies a controlled perturbation, and verifies that (i) the sabotaged model returns 
+
+Infeasible (or Optimal -but-irrational for ME-5), (ii) the IIS is non-empty, and (iii) a ground-truth fix restores both feasibility and rationality. 6LLM Agent          
+
+> (Repair)
+> Solver
+> (Gurobi)
+> repair action
+> status + IIS
+> Phase I: Repair (Domain-Agnostic ·≤20 turns)
+> LLM Agent
+> (Validate)
+> Domain
+> Oracle
+> repaired solution
+> check feedback
+> Phase II: Validate (Domain-Specific ·≤3 turns)
+> Infeasible LP
+> Optimal
+> Rational Solution
+> Pass
+> e.g., SC: base-stock, bullwhip, cost consist.
+
+Figure 1: Two-phase closed-loop architecture of OptiRepair . Phase I (domain-agnostic) itera-tively diagnoses and repairs an infeasible LP via solver IIS feedback. Upon reaching Optimal ,Phase II (domain-specific) validates operational correctness through a replaceable domain oracle— implemented here with five supply chain rationality checks. 
+
+3.3 Two-Phase Closed-Loop MDP 
+
+OptiRepair uses a two-phase closed-loop architecture (Figure 1). Phase I is domain-agnostic: the same state space, action space, and transitions apply to any infeasible LP regardless of domain. Phase II applies a domain-specific oracle that checks operational correctness. Each phase operates as a self-contained decision loop with its own reward signal; combined, they connect optimization (“is this model solvable?”) to operations (“does this solution support sound decisions?”). We model both phases as a deterministic Markov Decision Process ( S, A, T, R, γ ). 
+
+3.3.1 Phase I: Diagnose and Repair. 
+
+The agent receives an infeasible LP and a natural-language description of the intended model. At each step, the agent observes the state, selects an action, and the environment executes it via Gurobi. 
+
+State space. A state s ∈ S is a tuple: 
+
+s = (problem NL , code , status , iis , history , t ), (4) where problem NL is the natural-language problem description, code is the current Gurobi model code, status ∈ { Infeasible , Optimal , . . . } is the solver return status, iis lists the constraints and variable bounds in the irreducible infeasible subsystem, history records previous actions and outcomes, and t counts steps. 
+
+Action space. Actions a ∈ A split into three categories: diagnostic actions ( GET IIS , CHECK SLACK )that query the solver without modifying the model; repair actions ( RELAX CONSTRAINT , DROP CONSTRAINT ,
+
+UPDATE OBJ , UPDATE BOUNDS , UPDATE RHS ) that modify the model; and the meta action SUBMIT that terminates the episode. Each action specifies a target constraint or variable by name and, where applicable, a numerical value. 7Transition. Transitions are deterministic: given state s and action a, the environment applies a
+
+to the Gurobi model, re-solves, recomputes the IIS if still infeasible, and returns s′. Phase I succeeds when the solver returns Optimal . Exhausting the 20-step budget without restoring feasibility ends the episode as a Phase I failure. Figure 2 illustrates a Phase I interaction: the agent diagnoses an ME-4 error (capacity too tight) using GET IIS and repairs it in a single step. System Prompt (excerpt) You are an expert supply chain optimization repair agent. Phase 1: fix infeasibility via solver IIS feedback. Phase 2: pass rationality checks (base-stock, bullwhip, cost consistency, . . . ).                             
+
+> Actions: GET_IIS ,DROP_CONSTRAINT ,RELAX_CONSTRAINT ,UPDATE_RHS ,UPDATE_OBJ ,UPDATE_BOUNDS ,SUBMIT
+> Solver Status: Infeasible
+> 3-echelon, 16-period supply chain LP 142 constraints, 96 variables
+> The model is infeasible. I need to compute the IIS to iden-tify the conflicting constraints.
+> Action: GET_IIS()
+> IIS Constraints: capacity_e1_t1 ,capacity_e1_t3 ,
+> capacity_e1_t5 ,demand_e1_t1 ,demand_e1_t3
+> IIS Bounds: xe1,t1 ≤20 ,xe1,t3 ≤20 ,xe1,t5 ≤20
+> The IIS involves echelon-1 capacity constraints. Capacity
+> C1= 20 is far below mean demand (45). I should relax the capacity bound.
+> Action: RELAX_CONSTRAINT(capacity_e1, 50.0)
+> Status: Optimal ✓Objective: 12,487.3
+> →Entering Phase 2 (Rationality Oracle)
+
+. . . 
+
+Figure 2: Phase I repair interaction. The agent receives an infeasible supply chain LP (Gurobi), uses GET IIS to diagnose conflicting constraints, and repairs the capacity bound. When the solver returns Optimal , the episode transitions to Phase II. Full system prompt and transcript appear in Appendix D. 
+
+3.3.2 Phase II: Validate. 
+
+Once Phase I reaches Optimal , the repaired model enters Phase II. A replaceable domain oracle encodes expert criteria for operational correctness beyond mathematical feasibility. For multi-echelon supply chain models, our Rationality Oracle enforces five checks grounded in inventory theory (Clark and Scarf, 1960; Chen et al., 2000): (1) base-stock structure (inventory levels ap-proximate echelon base-stock policies), (2) bullwhip ratio (order variance amplification stays within theoretical bounds (Dejonckheere et al., 2003)), (3) inventory allocation (downstream echelons do not hoard disproportionate inventory), (4) cost consistency (holding cost ordering and objective co-efficients match the problem specification), and (5) order smoothing (order quantities avoid extreme oscillation). Appendix C gives formal definitions and thresholds. Not all checks apply to every error type: an error-type-aware mapping excludes checks whose violations reflect saboteur-injection artifacts rather than genuine irrationality (Appendix C gives the full mapping). When any applicable check fails, the agent receives natural-language feedback identifying the violated property and re-enters the repair loop for up to three iterations. Phase II 8succeeds when all applicable checks pass; it fails if iterations run out or a repair breaks feasibility. Figure 3 shows a Phase II loop-back: the oracle detects a cost-consistency violation, the agent corrects the objective coefficient, and the oracle confirms all checks pass. Rationality Check: Failed                                     
+
+> Cost consistency ×: Echelon 1 (Retailer, h= $8 ) holds 45.2 units; Echelon 2 (Warehouse, h= $3 ) holds 12.3 units. Cost-efficient allocation violated—cheaper storage should buffer more. Base-stock ✓|Bullwhip ✓|Monotonicity ✓|Smoothing ✓
+> The capacity fix made the retailer hold too much inventory despite its high holding cost. The objective coefficient for retailer holding is distorted.
+> Action: UPDATE_OBJ(hold_e1, 3.0)
+> Status: Optimal ✓Objective: 11,832.1
+> →Re-checking Rationality Oracle
+> Rationality Check: Passed ✓
+> Base-stock ✓|Bullwhip ✓|Monotonicity ✓|Cost ✓|Smoothing ✓
+> Episode complete: solver-feasible and operationally rational.
+
+Figure 3: Phase II rationality repair interaction. The rationality oracle detects that the Phase I repair created a cost-consistency violation: the high-cost retailer holds more inventory than the cheaper warehouse. The agent corrects the objective coefficient; the solver re-optimizes and the oracle confirms all five checks pass. 
+
+3.3.3 Combined reward. 
+
+The episode reward R = Routcome + Rrationality sums a feasibility term (+100 if Optimal , −50 otherwise) and a rationality term (+50 if all checks pass, −25 if Optimal but checks fail, 0 if 
+
+Infeasible ): 
+
+R =
+
+
+
++150 Optimal and all rationality checks pass ,
+
++75 Optimal but one or more checks fail ,
+
+−50 Infeasible (Phase I failure) .
+
+(5) The agent therefore prioritizes feasibility restoration while still earning credit for solution quality. 
+
+3.4 Evaluation Metrics 
+
+Three complementary metrics measure repair performance. 
+
+Recovery Rate (RR). The fraction of problems where the agent restores the solver to Optimal 
+
+status within the step budget: RR = |{ i : status i = Optimal }| 
+
+N . (6) RR isolates raw repair ability: can the agent find any feasible modification, regardless of solution quality? 9SC Generator              
+
+> (2–5 echelons)
+> Saboteur
+> (ME-1 – ME-10)
+> Gurobi
+> Verify
+> Rationality
+> Oracle
+> OR-SC-Bench
+> 976 problems
+> valid LP sabotaged infeasible GT passes
+> ME-1 Demand ME-3 Balance ME-5 Cost
+> 5 categories ×2 types = 10 error types
+> Base-stock Bull-whip Cost consist.
+> 5 rationality checks
+> 1○2○3○4○5○
+
+Figure 4: OptiRepair-SC construction pipeline. 1○ A multi-echelon supply chain generator pro-duces valid LPs with 2–5 echelons and 12–24 periods. 2○ A saboteur injects one of ten error types, grouped into five categories (demand/timing, balance/capacity, cost/structure, coefficien-t/sign, constraint/index). 3○ Gurobi confirms the sabotaged model is infeasible (or Optimal -but-irrational for ME-5). 4○ The ground-truth fix is verified against five rationality checks. 5○ Validated instances form OptiRepair-SC (976 problems, disjoint train/test splits). 
+
+Rational Recovery Rate (RRR). The fraction of problems where the agent achieves Optimal 
+
+and passes all applicable rationality checks: RRR = |{ i : status i = Optimal ∧ rational i = True }| 
+
+N . (7) RRR is the primary metric for OptiRepair-SC , encoding both repair skill (Phase I) and opera-tional understanding (Phase II) in a single number. 
+
+Phase 2 Pass Rate (P2Pass). Among problems where the agent achieves Optimal , the frac-tion that also passes rationality checks: P2Pass = RRR /RR. An agent with high RR but low P2Pass restores feasibility yet yields operationally nonsensical solutions. Decomposing RRR = RR × P2Pass separates repair skill from operational understanding; Section 5 reports all three metrics. 
+
+3.5 Problem Set Construction 
+
+OptiRepair-SC. OptiRepair-SC (OptiRepair Supply Chain) contains 976 instances across all ten error types (ME-1–ME-10), with disjoint supply chain configurations between the training and test splits (Appendix G details the split). Each problem bundles a natural-language description, Gurobi Python code for the sabotaged LP, the ground-truth fix, and the error type label. Instances span 2–5 echelons, 12–24 periods, three demand patterns, holding-to-backorder ratios from 1:2 to 1:10, and both capacitated and uncapacitated variants. We validate every problem: the sabotaged code returns Infeasible (or Optimal -but-irrational for ME-5), and the ground-truth fix passes all applicable rationality checks. We report phase-wise performance on OptiRepair-SC through RR (Phase I recovery), P2Pass (Phase II conditional pass), and RRR (end-to-end success). 
+
+# 4 Training Pipeline 
+
+Two specialized 8B-parameter models drive the OptiRepair closed-loop pipeline—one per phase. The training procedure, OptiSTaR , cycles through solver-seeded STaR exploration and GRPO 
+
+refinement at each iteration. 10 Beam Search              
+
+> (K= 32 rollouts)
+> STaR Distill.
+> (SFT)
+> GRPO
+> (G= 8 groups)
+> best traj. distilled
+> Phase I: OptiSTaR Loop
+> Iterative STaR (×3)
+> Gurobi
+> (deterministic oracle)
+> IIS feedback Routcome P2 SFT
+> (oracle data)
+> P2 GRPO
+> (solver reward)
+> Rationality
+> Oracle
+> Phase II Training
+> Two-Model Pipeline
+> RRR = 81 .7%
+> P1 model
+> P2 model
+
+Figure 5: OptiSTaR training pipeline. Top : Phase I iterates through beam search exploration (K = 32 candidates), STaR distillation, and GRPO refinement; three iterations raise RR@5 from 44.4% to 75.7%. Gurobi provides IIS feedback for beam search and outcome rewards for GRPO .
+
+Middle right : Phase II trains independently on oracle-generated data (SFT) refined by solver-based GRPO . Bottom : The two independently trained 8B models combine into the final pipeline (RRR = 81 .7%). 
+
+4.1 Two-Model Architecture 
+
+The OptiRepair pipeline uses two independently trained 8B-parameter models: a P1 model for Phase I repair ( Infeasible → solver-feasible) and a P2 model for Phase II rationality repair (solver-feasible → operationally rational). Each model solves a self-contained problem with its own reward signal: P1 maximizes solver feasibility recovery using IIS feedback, while P2 maximizes oracle check compliance using domain-specific rationality criteria. Separating the two objectives isolates feasibility restoration from operational validation. Phase I demands LP structure and IIS-based diagnosis under multi-turn solver interaction. Phase II demands domain-specific knowledge (base-stock structure, bullwhip bounds, cost consistency) and can be swapped or extended without retraining Phase I. A joint model mixes both objectives: it can restore feasibility by deleting cost constraints, producing irrational solutions. Both models initialize from Qwen3-8B -Instruct, selected via a pilot study (+41.9% RR@5 headroom). At inference, P1 runs for up to 20 turns; once the solver returns Optimal , P2 takes over for up to 3 rationality repair iterations. 
+
+4.2 Iterative STaR for Phase I Repair 
+
+Phase I training follows an iterative STaR loop (Zelikman et al., 2022): beam search exploration (Wei et al., 2022), supervised distillation, and GRPO refinement (Figure 5). 
+
+Stage 1: Beam Search Exploration. The current model generates K = 32 candidate trajec-tories per problem; the shortest trajectory that restores Optimal status with DA ≥ 0.5 survives. 11 Stage 2: Supervised Distillation. SFT on successful beam trajectories with completion-only loss distills search-time gains into the model’s greedy policy. 
+
+Stage 3: GRPO Refinement. Group Relative Policy Optimization (Shao et al., 2024; DeepSeek-AI, 2025) refines the distilled model. For each problem, the model generates G = 8 rollout trajec-tories; rewards normalize within each group to yield advantages. The composite reward balances three objectives: 
+
+R = 0 .5 · Routcome + 0 .3 · Rdiagnosis + 0 .2 · Refficiency , (8) where Routcome = +100 if the solver returns Optimal and −50 otherwise; Rdiagnosis = DA ×
+
+100, rewarding overlap between the model’s targeted constraints and the ground-truth IIS; and 
+
+Refficiency = −1 per repair step, penalizing long trajectories. A faithfulness penalty of −20 fires when the model targets constraints outside the IIS, discouraging indirect fixes that mask the root cause. Hyperparameters: KL coefficient β = 0 .02, asymmetric clipping [ ϵlow , ϵ high ] = [0 .2, 0.28], LoRA rank r = 16, α = 32. The STaR loop ran three iterations, seeded with 696 successful trajectories from GPT-5.2, o4-mini, and DeepSeek-R1 teachers. Beam trajectories for hard error types (ME-2, ME-4) are filtered against ground-truth rationality: trajectories whose repairs fail rationality checks are replaced with upsampled ground-truth traces. Over the full loop, Phase I RR@5 rises from 44.4% to 75.7% and P1 RR reaches 97.2%. 
+
+GRPO ’s direct effect on greedy performance is marginal (+0.7pp in RR@5). Its value is indirect: refinement raises beam search solve rate from 81.4% to 98.3%, feeding higher-quality distillation data into the next STaR iteration. In multi-turn agentic settings, RL amplifies data quality rather than directly improving the greedy policy. 
+
+4.3 Oracle-Based Phase II Training 
+
+Phase II training teaches the model to repair operationally irrational solutions that remain math-ematically feasible. Three oracle design decisions shape training effectiveness: error-type-aware check activation, artifact-check relaxation, and prefix-matched constraint operations. Phase II GRPO grounds its reward in the solver: each rollout trajectory runs in Gurobi and the Rationality Oracle scores it, tying the training signal to operational quality rather than textual similarity. The reward is binary (pass/fail), using LoRA α = 0 .5. Paired with GRPO -trained Phase I, the final pipeline reaches RRR = 81 .7% on the held-out test set. ME-5 errors (pure Phase II problems) reach 100% RRR; the hardest errors, ME-2 and ME-4, require both phases and yield the largest GRPO gains: from 6% and 27% to 64.5% and 61.3%, respectively (Section 5.3). 
+
+4.4 Architecture Generalization 
+
+Replicating the full pipeline on Llama-3.1-8B -Instruct yields RRR = 80 .3% on the test set— within 1.4 percentage points of Qwen3-8B ’s 81.7%, with identical Phase I recovery rates (97.2%). The ablation pattern also holds: replacing trained P1 with Claude Opus 4.5 drops RRR from 80.3% to 40.5%. Full results appear in Section 5.5. Because the two architectures differ in tokenizer, pre-training data, and instruction-tuning methodology, this consistency confirms that the gains stem from the training procedure and oracle specification rather than architecture-specific properties. 12 Table 4: OptiRepair-SC results: 22 API models on the supply chain closed-loop pipeline (284 test problems). Models ranked by Rational Recovery Rate (RRR).                                                                                                         
+
+> # Model RR RRR P2Pass Steps # Model RR RRR P2Pass Steps 1 GPT-5.2 53.5 42.2 79.0 14.0 12 Claude Haiku 4.5 20.8 19.0 91.5 7.4 2 Gemini 2.5 Pro 53.9 42.2 78.4 9.3 13 GPT-o3 19.7 19.0 96.4 7.5 3 DeepSeek-R1-0528 53.2 37.0 69.5 13.8 14 GPT-4.1 18.0 17.6 98.0 5.9 4 Gemini 2.5 Flash 45.1 32.0 71.1 9.5 15 GPT-4.1 Mini 17.2 17.2 100.0 6.6 5 Qwen2.5-7B 41.2 31.0 75.2 8.1 16 GPT-5 Mini 18.7 16.9 90.6 6.8 6 Claude Opus 4.5 33.5 30.3 90.5 16.6 17 GPT-o1 14.9 13.5 90.5 4.4 7 Qwen2.5-Max 32.8 26.8 81.7 7.0 18 Claude 3.7 Sonnet 13.7 13.4 97.4 4.5 8 GPT-o4-mini 35.9 25.7 71.6 9.5 19 Qwen2.5-14B 13.0 12.7 97.3 3.7 9 Claude Sonnet 4 26.4 23.6 89.3 7.2 20 Qwen2.5-32B 23.2 4.2 18.2 5.5 10 DeepSeek-V3.2 23.9 21.8 91.2 17.0 21 Kimi K2 15.1 1.4 9.3 5.3 11 Gemini 2.0 Flash 22.9 20.1 87.7 5.9 22 Llama-3.3-70B 11.3 0.4 3.1 2.1
+> Average (22 models) 27.6 21.3 76.3 7.8
+
+Table 5: Trained 8B models vs. API baselines on OptiRepair-SC (284 test problems). Domain-specialized 8B models outperform all 22 frontier API models by 38–40 percentage points in RRR, while using 2–3 × fewer steps and 6–19 × fewer tokens. 
+
+Model Arch. P1 RR RRR ME-2 ME-4 ME-5 Steps Tokens 
+
+Qwen3-8B (OptiSTaR ) Qwen 97.2 81.7 64.5 61.3 100.0 5.2 3,439 
+
+Llama-3.1-8B (OptiSTaR ) Llama 97.2 80.3 67.7 74.2 100.0 4.3 3,180 Best API (GPT-5.2) — 53.5 42.2 41.9 38.7 100.0 14.0 20,730 Avg. API (22 models) — 27.6 21.3 3.7 4.7 87.3 7.8 30,078 
+
+# 5 Agentic Performance 
+
+Evaluation focuses on OptiRepair-SC , a supply chain closed-loop benchmark with two-phase interaction. 
+
+5.1 Experimental Setup 
+
+Benchmark. OptiRepair-SC tests the full two-phase closed-loop pipeline on 284 test problems (from the 976-problem set) across ten supply chain error types (ME-1–ME-10), with a disjoint training split for domain-specialized models. 
+
+Models. The evaluation covers 24 models: 22 API models from seven families—OpenAI (7), Google (3), Anthropic Claude (4), DeepSeek (2), Qwen (4), Meta (1), and Moonshot (1)—plus two trained 8B-parameter pipelines ( Qwen3-8B and Llama-3.1-8B ). 
+
+Infrastructure. All local models run on 2 ×H100 80GB GPUs, served via SGLang with tensor parallelism (TP=2) and 16-way concurrent evaluation. API models connect through provider end-points with rate limiting. All evaluations use greedy decoding (temperature = 0). Phase 1 permits up to 20 interaction steps; Phase 2, up to 3 rationality validation iterations. 
+
+5.2 OptiRepair-SC Results: Supply Chain Closed-Loop 
+
+The trained Qwen3-8B pipeline reaches 81.7% RRR (Table 5), beating the best API models— GPT-5.2 and Gemini 2.5 Pro, both at 42.2% (Table 4)—by 39.5 percentage points; the average 13 0 10 20 30 40 50 60 70 80 90 
+
+Rational Recovery Rate (%) 
+
+> Llama-3.3-70B
+> Kimi K2
+> Qwen2.5-32B
+> Qwen2.5-14B
+> Claude 3.7 Sonnet
+> o1
+> GPT-5 Mini
+> GPT-4.1 Mini
+> GPT-4.1
+> Claude Haiku 4.5
+> o3
+> Gemini 2.0 Flash
+> DeepSeek-V3.2
+> Claude Sonnet 4
+> o4-mini
+> Qwen2.5-Max
+> Claude Opus 4.5
+> Qwen2.5-7B
+> Gemini 2.5 Flash
+> DeepSeek-R1
+> GPT-5.2
+> Gemini 2.5 Pro
+> Trained 8B (Llama)
+> Trained 8B (Qwen)
+> API avg = 21.3%
+> 0.4
+> 1.4
+> 4.2
+> 12.7
+> 13.4
+> 13.5
+> 16.9
+> 17.2
+> 17.6
+> 19.0
+> 19.0
+> 20.1
+> 21.8
+> 23.6
+> 25.7
+> 26.8
+> 30.3
+> 31.0
+> 32.0
+> 37.0
+> 42.2
+> 42.2
+> 80.3
+> 81.7
+> Trained
+> Google
+> OpenAI
+> DeepSeek
+> Qwen
+> Claude
+> Moonshot
+> Meta
+
+Figure 6: Rational Recovery Rate (RRR) for 22 API models and two trained 8B pipelines ( Qwen3-8B and Llama-3.1-8B ) on OptiRepair-SC (284-problem test set). The vertical dashed line marks the API average (21.3%). Both trained models outperform the best API by ≥38 percentage points. API model manages only 21.3%. Performance varies widely across the 22 API models (Figure 6). At the bottom, Qwen2.5-32B (4.2% RRR), Kimi K2 (1.4%), and Llama-3.3-70B (0.4%) fall below 5% due to Phase 2 format compliance failures. GPT-5.2, Gemini 2.5 Pro, and DeepSeek-R1-0528 all exceed 37% RRR, each with Phase 1 recovery above 53%. Ranks 4–12 cluster between 19% and 32%; model family and parameter count are weak predictors of performance. The gap concentrates in Phase 1: API models average 27.6% RR versus 97.2% for trained models—a 69.6 percentage point gap (Figure 7). This low Phase 1 rate reflects harder repair challenges: longer constraint chains, multiple interacting echelons (Simchi-Levi et al., 2008), and domain-specific variable naming. Once feasibility is restored, the validation phase poses a lower barrier: the 19 format-compliant API models average 86.7% P2Pass, with several above 90%. The bottleneck is finding a feasible repair, not judging its operational quality. Model families exhibit distinct repair profiles. Claude models achieve the highest P2Pass (89– 97%) but the lowest RR among top-tier models (13–34%); GPT-5.2 and Gemini 2.5 Pro balance both (RR >53%, P2Pass ≈79%). Reasoning-specialized models (o3: 19.0%, o1: 13.5%) do not out-perform general models. DeepSeek-R1-0528 ranks third (37.0%) with strong RR (53.2%) but lower P2Pass (69.5%), illustrating a feasibility–rationality trade-off: aggressive repairs restore solvability 14 0 20 40 60 80 100 
+
+> Phase 1 Recovery Rate (%)
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Phase 2 Rationality Pass Rate (%)
+> GPT-5.2
+> Gemini 2.5 Pro
+> DeepSeek-R1
+> Trained 8B (Qwen)
+> Trained 8B (Llama)
+> High P1 + High P2 Low P1 + High P2
+> Low P1 + Low P2
+> Trained
+> Google
+> OpenAI
+> DeepSeek
+> Qwen
+> Claude
+> Moonshot
+> Meta
+
+Figure 7: Phase 1 Recovery Rate vs. Phase 2 Pass Rate for all 22 API models and two trained 8B pipelines. Bubble size ∝ RRR. API models cluster upper-left (high P2Pass, low RR); trained models reach the upper-right corner. The vertical gap between clusters—roughly 70 percentage points in RR—confirms that Phase 1 repair drives the overall performance difference. at the cost of operational quality. 
+
+5.3 Per-Error-Type Analysis 
+
+Table 9 (Appendix E) breaks down RRR by error type for the top-6 API models and both trained models. The ten error types range from universally solvable to near-impossible for API models, with a sharp boundary between errors that produce direct diagnostic signals and those requiring multi-echelon causal reasoning. All top models score 90–100% RRR on ME-5 (cost structure error): the model is already feasible, and the rationality oracle directly identifies the non-monotonic holding costs, making the repair unambiguous. ME-2 (lead time error) and ME-4 (capacity reduction) separate trained from API models. On ME-2, the best API model (GPT-5.2) reaches 41.9% RRR vs. trained Qwen3-8B at 64.5%; on ME-4, GPT-5.2 manages 38.7% vs. Llama-3.1-8B at 74.2%. These errors require tracing how lead-time coupling and capacity constraints interact with inventory balance equations across echelons—domain knowledge that general models lack. ME-3 (balance violation) tops the API success ranking (63–77% for top models) because the IIS directly pinpoints the violated constraint and the repair is localized. ME-1 (demand inflation) and ME-10 (index mismatch) hover near zero for API models (0–7%), as these errors generate misleading IIS signals that require backward reasoning through the echelon structure. The pattern is clear: when the IIS points directly to the root cause (ME-3, ME-5), general models suffice; when diagnosis requires tracing interactions across echelons (ME-1, ME-2, ME-4, ME-10), only specialized training closes the gap. 
+
+5.4 Component Ablation 
+
+To isolate each phase’s contribution, we substitute trained models with API alternatives (Table 6). Replacing the trained Phase 1 model cuts RRR by 22–40pp; replacing only Phase 2 costs 9–13pp. The trained Phase 1 model reaches 97.2% RR, exceeding both API alternatives by 31–42pp. API 15 Table 6: Component ablation on OptiRepair-SC (284 test problems). Phase 1 repair is the critical bottleneck: replacing the trained P1 model with API alternatives reduces RRR by 22–40 percentage points. The pattern holds across both architectures.                                                      
+
+> P1 Model P2 Model P1 RR (%) RRR (%)
+> Qwen3-8B pipeline (8B)
+> Qwen3-8B OptiSTaR Qwen3-8B P2 OptiSTaR 97.2 81.7
+> Qwen3-8B OptiSTaR Claude Opus 4.5 97.2 69.4
+> Qwen3-8B OptiSTaR GPT-5.2 96.8 68.7 Claude Opus 4.5 Qwen3-8B P2 OptiSTaR 55.6 45.1 GPT-5.2 Qwen3-8B P2 OptiSTaR 63.0 55.6
+> Llama-3.1-8B pipeline (8B)
+> Llama-3.1-8B OptiSTaR Llama-3.1-8B P2 OptiSTaR 97.2 80.3
+> Llama-3.1-8B OptiSTaR Claude Opus 4.5 96.8 71.1
+> Llama-3.1-8B OptiSTaR GPT-5.2 97.2 71.1 Claude Opus 4.5 Llama-3.1-8B P2 OptiSTaR 51.1 40.5 GPT-5.2 Llama-3.1-8B P2 OptiSTaR 66.5 58.1
+> Full API (no training)
+> GPT-5.2 GPT-5.2 53.5 42.3 Claude Opus 4.5 Claude Opus 4.5 33.5 30.3
+
+models perform adequately on Phase 2 because operational reasoning aligns more closely with their general capabilities than multi-step repair does. End-to-end, GPT-5.2 scores 42.3% RRR and Opus 4.5 scores 30.3%—Phase 1 repair drives the gap. For practitioners building in-house repair tools, Phase 1 capability is the higher-return investment. 
+
+5.5 Architecture Generalization 
+
+To test architecture dependence, we replicate the full training pipeline on Llama-3.1-8B (Llama-3.1-8B-Instruct). Llama-3.1-8B scores 80.3% RRR versus Qwen3-8B ’s 81.7%—a 1.4pp gap— with identical Phase 1 recovery rates (97.2%). The ablation patterns replicate across architectures: trained Phase 1 outperforms API Phase 1 by 30–46pp, trained Phase 2 outperforms API Phase 2 by 9–13pp, confirming that the training procedure, not architecture-specific properties, drives ef-fectiveness. 
+
+5.6 Prompt Engineering Limitations 
+
+Two guided prompt variants augment the baseline API prompt: an anti-loop variant with explicit loop-avoidance instructions, and a domain-knowledge variant with supply chain structural hints (base-stock intuition, echelon coupling; full text in Appendix F). The domain-knowledge prompt raises Claude Opus 4.5 by 7.4 percentage points but degrades GPT-5.2 by 24.1 percentage points; the anti-loop prompt hurts both models. Prompt engineering alone cannot close the 38–40 per-centage point gap to domain-specialized training. 
+
+5.7 Repair Efficiency 
+
+Trained models also repair more efficiently (Table 5, Figure 8). The Qwen3-8B pipeline averages 5.2 steps and 3,439 tokens per problem; GPT-5.2 requires 14.0 steps and 20,730 tokens, and the 22-model API average is 7.8 steps and 30,078 tokens. This 2–3 × step reduction and 6–19 × token 16 0.0 2.5 5.0 7.5 10.0 12.5 15.0 17.5 20.0 
+
+> Average Steps per Problem
+> 0K
+> 10K
+> 20K
+> 30K
+> 40K
+> 50K
+> 60K
+> 70K
+> Average Tokens per Problem
+> GPT-5.2
+> Gemini 2.5 Pro
+> DeepSeek-R1
+> Claude Opus 4.5
+> Trained 8B (Qwen)
+> Trained 8B (Llama)
+> Trained
+> Google
+> OpenAI
+> DeepSeek
+> Qwen
+> Claude
+> Moonshot
+> Meta
+
+Figure 8: Repair efficiency: average steps vs. average tokens per problem for all 24 models. Bubble size ∝ RRR. Trained 8B models cluster in the bottom-left corner—fewer steps, fewer tokens, higher RRR—while the highest-RRR API models (GPT-5.2, DeepSeek-R1) consume the most resources. reduction accompany the 38–40 percentage point RRR gap documented above. Trained models converge on targeted repairs instead of cycling through equivalent constraint relaxations, repeating similar fixes, or generating verbose diagnostic text—behaviors that consume steps without progress. Models that solve problems need fewer attempts to do so. 
+
+# 6 Discussion and Conclusion 
+
+OptiRepair tests whether AI agents can diagnose and repair supply chain optimization mod-els through a closed-loop framework evaluated on 22 API models and two trained 8B-parameter pipelines. Domain-specialized 8B models achieve 80–82% RRR, outperforming the best API model (42.2%) by 38–40pp across both architectures. The gap concentrates in Phase 1 repair (API av-erage: 27.6% RR vs. 97.2% trained), while Phase 2 rationality pass rates remain high (76.3%). Precise correctness specification, not model capability, determines Phase 2 effectiveness. 
+
+6.1 Managerial Implications 
+
+The recovery bottleneck is solver interaction. API models pass Phase 2 rationality checks 76.3% of the time—frontier LLMs already reason well about supply chain operations. Yet those same models restore only 27.6% of infeasible formulations, because iterating on solver feedback, diagnosing IIS conflicts, and proposing targeted constraint repairs is a different skill from answering questions about inventory theory. Adding supply chain knowledge to prompts does not help reli-ably: one model gains 7.4pp, another loses 24.1pp. For operations teams evaluating AI for model maintenance, the scarcest capability is solver interaction—and it responds to targeted training on a modest compute budget. 
+
+Feasibility is not rationality: the AI-human decision gap. Restoring feasibility without ensuring operational rationality risks producing solutions that appear valid but encode flawed logic—potentially worse than leaving the model for human review. Roughly one in four API repairs that restore solver feasibility violate an operational property—inverted cost hierarchies, inventory 17 hoarding at upstream echelons, or demand-amplifying orders—that no experienced analyst would accept. The gap between AI output and expert judgment is not a capability problem; it is a specification problem. The rationale behind a good supply chain solution—base-stock adherence, echelon coupling, cost consistency—is knowledge that experienced analysts apply implicitly. AI systems cannot learn it unless it is explicitly codified. Codifying that rationale as solver-verifiable checks—five predicates grounded in inventory theory (Clark and Scarf, 1960; Chen et al., 2000; Lee et al., 1997)—improved results more than training larger models. For organizations adopting AI in operational planning, formalizing what “rational” means in their context is the higher-return investment. 
+
+Separating repair from validation creates reusable components. Because Phase 1 (feasi-bility repair) is designed as a domain-agnostic solver-interaction module, extending to a new domain requires only a new Phase 2 oracle encoding that domain’s correctness criteria. Organizations can share one repair model across domains while maintaining domain-specific validation. 
+
+6.2 Limitations and Future Work 
+
+Several limitations qualify these findings. The benchmark uses synthetic errors with serial topology and deterministic demand; real-world practice involves error combinations, network topologies, stochastic demand, and multi-product settings. The Rationality Oracle encodes operational criteria specific to multi-echelon inventory; organizations with different priorities would need to customize the checks. All evaluations use greedy decoding, and alternative inference strategies may yield different model rankings. Expanding the error classification to mixed-integer programs and nonlinear formulations, incor-porating real industrial repair traces, and evaluating multi-agent architectures where specialized agents collaborate with domain experts would each extend the evaluation. For structured operational repair, domain expertise codified as a correctness oracle matters more than model scale—across all error types, architectures, and configurations tested. 
+
+# References 
+
+Ali AhmadiTeshnizi, Wenzhi Gao, and Madeleine Udell. Optimus: Scalable optimization modeling with (MI)LP solvers and large language models. arXiv preprint arXiv:2402.10172 , 2024. Ruicheng Ao, Gan Luo, David Simchi-Levi, and Xinshang Wang. Optimizing LLM inference: Fluid-guided online scheduling with memory constraints. arXiv preprint arXiv:2504.11320 , 2025. Ruicheng Ao, Hongyu Chen, Siyang Gao, Hanwei Li, and David Simchi-Levi. Best arm identification with LLM judges and limited human. arXiv preprint arXiv:2601.21471 , 2026a. Ruicheng Ao, Hongyu Chen, Haoyang Liu, David Simchi-Levi, and Will Wei Sun. PPI-SVRG: Unifying prediction-powered inference and variance reduction for semi-supervised optimization. 
+
+arXiv preprint arXiv:2601.21470 , 2026b. Ruicheng Ao, Zeping Min, Tingyu Zhu, Wotao Yin, and Xinshang Wang. PILOT-Bench: Proba-bilistic interaction for LLM operations in tool-driven scenarios. In International Conference on Learning Representations , 2026c. URL https://openreview.net/forum?id=KTZ56LG7jZ .18 Ruicheng Ao, David Simchi-Levi, and Xinshang Wang. Solver-in-the-loop: MDP-based bench-marks for self-correction and behavioral rationality in operations research. arXiv preprint arXiv:2601.21008 , 2026d. Jackie Baek, Yaopeng Fu, Will Ma, and Tianyi Peng. AI agents for inventory control: Human-LLM-OR complementarity. arXiv preprint arXiv:2602.12631 , 2026. Gary E Bolton and Elena Katok. Learning by doing in the newsvendor problem: A laboratory investigation of the role of experience and feedback. Manufacturing & Service Operations Man-agement , 10(3):519–538, 2008. doi: 10.1287/msom.1060.0190. Frank Chen, Zvi Drezner, Jennifer K Ryan, and David Simchi-Levi. Quantifying the bullwhip effect in a simple supply chain: The impact of forecasting, lead times, and information. Management Science , 46(3):436–443, 2000. doi: 10.1287/mnsc.46.3.436.12069. Yang Chen, Samuel N Kirshner, Anton Ovchinnikov, Meena Andiappan, and Tracy Jenkin. A man-ager and an AI walk into a bar: Does ChatGPT make biased decisions like we do? Manufacturing & Service Operations Management , 27(2):354–368, 2025. John W. Chinneck. Feasibility and infeasibility in optimization: Algorithms and computational methods. International Series in Operations Research & Management Science , 118, 2008. doi: 10.1007/978-0-387-74932-7. Andrew J Clark and Herbert Scarf. Optimal policies for a multi-echelon inventory problem. Man-agement Science , 6(4):475–490, 1960. doi: 10.1287/mnsc.6.4.475. Tinglong Dai and Jayashankar M Swaminathan. Artificial intelligence and operations management: A foundational framework. Production and Operations Management , 34(1):1–18, 2025. doi: 10.1177/10591478241302441. Andrew M Davis, Kyle Hyndman, and Raluca M Ursu. Best of both worlds: Integrating machine learning and behavioral science in operations. Manufacturing & Service Operations Management ,26(5):1587–1601, 2024. doi: 10.1287/msom.2022.0570. DeepSeek-AI. DeepSeek-R1: Incentivizing reasoning capability in LLMs via reinforcement learning. 
+
+arXiv preprint arXiv:2501.12948 , 2025. Jeroen Dejonckheere, Stephen M. Disney, Marc R. Lambrecht, and Denis R. Towill. Measuring and avoiding the bullwhip effect: A control theoretic approach. European Journal of Operational Research , 147(3):567–590, 2003. doi: 10.1016/S0377-2217(02)00369-7. Andrea Di Sorbo, Jordan Tong, and Balaraman Rajan. Warnings and endorsements: Improving human-AI collaboration in operations. Manufacturing & Service Operations Management , 27(6): 2108–2125, 2025. doi: 10.1287/msom.2023.0456. Karen Donohue, ¨Ozalp ¨Ozer, and Yanchong Zheng. Behavioral operations: Past, present, and future. Manufacturing & Service Operations Management , 22(1):191–202, 2020. doi: 10.1287/ msom.2019.0828. Joren Gijsbrechts, Robert N Boute, Jan A Van Mieghem, and Dennis J Zhang. Can deep reinforce-ment learning improve inventory management? performance on dual sourcing, lost sales, and multi-echelon problems. Manufacturing & Service Operations Management , 24(3):1349–1368, 2022. doi: 10.1287/msom.2021.1064. 19 Chenyu Huang et al. ORLM: A customizable framework in training large models for automated optimization modeling. Operations Research , 2025. Xuhan Huang, Qingning Shen, Yan Hu, Anningzhe Gao, and Benyou Wang. MAMO: A mathe-matical modeling benchmark with solvers. arXiv preprint arXiv:2405.13144 , 2024. Wenlong Ji, Yihan Pan, Ruihao Zhu, and Lihua Lei. Multi-armed bandits with machine learning-generated surrogate rewards. arXiv preprint arXiv:2506.16658 , 2025. Carlos E Jimenez, John Yang, Alexander Wettig, Shunyu Yao, Kexin Pei, Ofir Press, and Karthik Narasimhan. SWE-bench: Can language models resolve real-world GitHub issues? In Interna-tional Conference on Learning Representations , 2024. arXiv:2310.06770. Mirko Kremer, Stefan Minner, and Luk N Van Wassenhove. Do random errors explain newsvendor behavior? Manufacturing & Service Operations Management , 12(4):673–681, 2010. doi: 10. 1287/msom.1100.0294. Nathan Lambert, Jacob Morrison, Valentina Pyatkin, Shengyi Huang, Hamish Ivison, Faeze Brah-man, Lester James V. Miranda, Alisa Liu, Nouha Dziri, Shane Lyu, Yuling Gu, Saumya Malik, Victoria Graf, Jena D. Hwang, Jiangjiang Yang, Ronan Le Bras, Oyvind Tafjord, Chris Wilhelm, Luca Soldaini, Noah A. Smith, Yizhong Wang, Pradeep Dasigi, and Hannaneh Hajishirzi. T¨ ulu 3: Pushing frontiers in open language model post-training. arXiv preprint arXiv:2411.15124 ,2025. Hau L Lee, V Padmanabhan, and Seungjin Whang. Information distortion in a supply chain: The bullwhip effect. Management Science , 43(4):546–558, 1997. doi: 10.1287/mnsc.43.4.546. Kuo Liang, Yuhang Lu, Jianming Mao, Shuyi Sun, Chunwei Yang, Congcong Zeng, Xiao Jin, Hanzhang Qin, Ruihao Zhu, and Chung-Piaw Teo. Large-scale optimization model auto-formulation: Harnessing LLM flexibility via structured workflow. arXiv preprint arXiv:2601.09635 , 2026. Carol Xuan Long, David Simchi-Levi, Andre du Pin Calmon, and Flavio du Pin Calmon. Beer game by AI agents. https://infotheorylab.github.io/beer-game/ , 2025. Interactive simulation; see also HBR article “When Supply Chains Become Autonomous” (December 2025). Rindranirina Ramamonjison, Timothy Yu, Raymond Li, Haley Li, Giuseppe Carenini, Bissan Ghad-dar, Shiqi He, Mahdi Mostajabdaveh, Amin Banitalebi-Dehkordi, Zirui Zhou, and Yong Zhang. NL4Opt competition: Formulating optimization problems based on their natural language de-scriptions. In Proceedings of the NeurIPS 2022 Competitions Track , volume 220 of Proceedings of Machine Learning Research , pages 189–203. PMLR, 2023. arXiv:2303.08233. Maurice E Schweitzer and G´ erard P Cachon. Decision bias in the newsvendor problem with a known demand distribution: Experimental evidence. Management Science , 46(3):404–420, 2000. doi: 10.1287/mnsc.46.3.404.12070. Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Y Wu, et al. DeepSeekMath: Pushing the limits of mathematical reasoning in open language models. arXiv preprint arXiv:2402.03300 , 2024. Introduces GRPO algorithm. David Simchi-Levi, Philip Kaminsky, and Edith Simchi-Levi. Designing and Managing the Supply Chain: Concepts, Strategies, and Case Studies . McGraw-Hill, 3rd edition, 2008. 20 David Simchi-Levi, Konstantina Mellou, Ishai Menache, and Jeevan Pathuri. Large language mod-els for supply chain decisions. In Maxime C. Cohen and Tinglong Dai, editors, AI in Supply Chains: Perspectives from Global Thought Leaders , volume 27 of Springer Series in Supply Chain Management , pages 93–104. Springer, 2026. doi: 10.1007/978-3-032-07054-8 \ 7. John D Sterman. Modeling managerial behavior: Misperceptions of feedback in a dynamic decision making experiment. Management Science , 35(3):321–339, 1989. doi: 10.1287/mnsc.35.3.321. Guiyao Tie, Zenghui Yuan, Zeli Zhao, Chaoran Hu, Tianhe Gu, Ruihang Zhang, Sizhe Zhang, Junran Wu, Xiaoyue Tu, Ming Jin, Qingsong Wen, Lixing Chen, Pan Zhou, and Lichao Sun. Can LLMs correct themselves? a benchmark of self-correction in LLMs. In Advances in Neural Information Processing Systems , volume 38, 2025. NeurIPS 2025 Datasets and Benchmarks Track. arXiv:2510.16062. Ken Tsui. Self-correction bench: Uncovering and addressing the self-correction blind spot in large language models. arXiv preprint arXiv:2507.02778 , 2025. Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models. In 
+
+Advances in Neural Information Processing Systems , volume 35, pages 24824–24837, 2022. Ziyang Xiao, Dongxiang Zhang, Yangjun Wu, Lilin Xu, Yuan Jessica Wang, Xiongwei Han, Xiaojin Fu, Tao Zhong, Jia Zeng, Mingli Song, et al. Chain-of-experts: When LLMs meet complex operations research problems. In International Conference on Learning Representations , 2024. OpenReview:HobyL1B9CZ. Zhicheng Yang, Yiwei Wang, Yinya Huang, Zhijiang Guo, Wei Shi, Xiongwei Han, Liang Feng, Linqi Song, Xiaodan Liang, and Jing Tang. OptiBench meets ReSocratic: Measure and improve LLMs for optimization modeling. arXiv preprint arXiv:2407.09887 , 2024. Eric Zelikman, Yuhuai Wu, Jesse Mu, and Noah Goodman. STaR: Bootstrapping reasoning with reasoning. In Advances in Neural Information Processing Systems , volume 35, pages 15476–15488, 2022. Runze Zhang, Xiaowei Zhang, and Mingyang Zhao. Predicting effects, missing distributions: Evaluating LLMs as human behavior simulators in operations management. arXiv preprint arXiv:2510.03310 , 2025. Xuhua Zhao et al. AIM-Bench: Evaluating decision-making biases of agentic LLM as inventory manager. arXiv preprint arXiv:2508.11416 , 2025. Chenyu Zhou, Jingyuan Yang, Linwei Xin, Yitian Chen, Ziyan He, and Dongdong Ge. Auto-formulating dynamic programming problems with large language models. arXiv preprint arXiv:2507.11737 , 2025. Paul H Zipkin. Foundations of Inventory Management . McGraw-Hill, New York, 2000. 21 A Full Multi-Echelon LP Formulation 
+
+This appendix details the complete linear programming formulation for the multi-echelon serial supply chain model used in the OptiRepair-SC evaluation. The formulation follows the echelon-stock framework of Clark and Scarf (1960) and its LP relaxation. Let N = {1, . . . , N } denote echelons (1 = retailer, N = factory; N ∈ { 2, 3, 4, 5}) and T = {1, . . . , T } denote planning periods (T ∈ { 12 , 16 , 20 , 24 }). 
+
+A.1 Parameters 
+
+• hn ≥ 0: holding cost per unit per period at echelon n. Range: hn ∈ [1 , 10]. 
+
+• bn ≥ 0: backorder cost per unit per period at echelon n. Range: bn ∈ [5 , 50]. 
+
+• Cn > 0: production or order capacity at echelon n. Range: Cn ∈ [50 , 500]. 
+
+• Ln ≥ 0: replenishment lead time (in periods) at echelon n. Range: Ln ∈ { 1, 2, 3}.
+
+• dt > 0: external customer demand at the retailer in period t.
+
+• Iinit  
+
+> n, 0
+
+≥ 0: initial on-hand inventory at echelon n.Demand patterns include three types: (i) stationary ( dt = ¯d for all t), (ii) step-change ( dt shifts from ¯d1 to ¯d2 at a change point), and (iii) seasonal ( dt = ¯d + A sin(2 πt/T ) for amplitude A). 
+
+A.2 Decision Variables 
+
+• xn,t ≥ 0: order quantity placed by echelon n in period t.
+
+• In,t ≥ 0: on-hand inventory at echelon n at the end of period t.
+
+• Bn,t ≥ 0: backorders at echelon n at the end of period t.
+
+A.3 Objective Function 
+
+The LP minimizes total holding and backorder costs across all echelons and periods: minimize X
+
+> n∈N
+
+X
+
+> t∈T
+
+ hn In,t + bn Bn,t 
+
+. (9) 
+
+A.4 Constraints 
+
+C1: Inventory balance (retail echelon). For the retailer ( n = 1): 
+
+I1,t − B1,t = I1,t −1 − B1,t −1 + x1,t −L1 − dt, ∀ t ∈ T , (10) where x1,t −L1 represents the order placed L1 periods ago that arrives in period t. For t − L1 ≤ 0, we set x1,t −L1 = 0 (no arrivals from pre-horizon orders unless initial pipeline inventory is modeled separately). 22 C2: Inventory balance (upstream echelons). For each non-retail echelon n ∈ { 2, . . . , N }:
+
+In,t − Bn,t = In,t −1 − Bn,t −1 + xn,t −Ln − X
+
+> c∈children( n)
+
+xc,t , ∀ t ∈ T , (11) where children( n) = {n−1} in the serial topology. The demand faced by echelon n is the or-der placed by its downstream neighbor, inducing the propagation mechanism that generates the bullwhip effect (Lee et al., 1997; Chen et al., 2000). 
+
+C3: Capacity constraints. 
+
+xn,t ≤ Cn, ∀ n ∈ N , t ∈ T . (12) 
+
+C4: Non-negativity. 
+
+xn,t , I n,t , B n,t ≥ 0, ∀ n ∈ N , t ∈ T . (13) 
+
+C5: Initial conditions. 
+
+In, 0 = Iinit  
+
+> n, 0
+
+, Bn, 0 = 0 , ∀ n ∈ N . (14) 
+
+C6: Demand satisfaction (implicit). Backorders B1,t at the retail echelon capture unmet demand. The inventory balance constraint (10) ensures that B1,t ≥ dt − I1,t −1 − x1,t −L1 + B1,t −1
+
+whenever I1,t = 0 (i.e., stock is depleted). The backorder cost b1 in the objective penalizes unmet demand, so the LP trades off between holding excess inventory and incurring backorder penalties. 
+
+# B Error Type Specifications 
+
+This appendix defines the injection mechanism and solver signature for each of the ten error types introduced in Section 3.2. While the main text groups errors by the operational subsystem they affect, Table 7 documents how each error is injected into a valid LP and how it manifests in Gurobi’s IIS output. The difficulty column reflects empirical solve rates: “Hard” errors (ME-1, ME-2, ME-4, ME-10) generate misleading IIS signals that require multi-echelon causal reasoning; “Medium” errors produce localized but ambiguous signals; “Easy” errors (ME-3, ME-5) yield IIS patterns that directly pinpoint the violated constraint or produce feasible-but-irrational solutions detected by the oracle. 
+
+# C Phase II Rationality Checks: Definitions and Thresholds 
+
+The Phase II Rationality Oracle evaluates whether a feasible LP solution is operationally rational. It consists of five domain-specific checks, each derived from supply chain theory. Not all checks apply to every error type: the oracle uses an error-type-aware mapping to avoid penalizing correct repairs for artifacts introduced by the error injection process. 
+
+C.1 Five Rationality Checks 
+
+Check 1: Base-stock structure. For each echelon n, the oracle verifies that inventory lev-els approximate the echelon base-stock policy established by Clark and Scarf (1960). The check computes the coefficient of variation of inventory: CV n = Std( In,t )Mean( In,t ) , (15) 23 Table 7: Error type injection specifications. 
+
+Type Injection Mechanism IIS Signature Difficulty ME-1 Add systematic offset (3–6 × de-mand mean) to demand propa-gation at one echelon Multiple demand prop 
+
+constraints + capacity bounds Hard ME-2 Remove arrival term from all in-ventory balance constraints at target echelon Multiple inv balance 
+
+constraints + backorder caps Hard ME-3 Force net inventory ( In,t − Bn,t )to value below achievable mini-mum Single inv balance con-straint with impossible target Easy ME-4 Set order capacity to 0 .02–0 .1×
+
+demand mean at retailer Multiple capacity con-straints + inventory bal-ance Hard ME-5 Inflate upstream holding cost to 1.5–3 .0× downstream cost None ( Optimal but ir-rational); detected by ra-tionality oracle Easy ME-6 Add constraints forcing xn,t ≥
+
+xn−1,t −1 + offset exceeding ca-pacity Multiple 
+
+bullwhip force con-straints + supply cap Medium ME-7 Perturb arrival coefficient from 1.0 to 0 .05–0 .2 in inventory bal-ance Multiple inv balance 
+
+constraints with modi-fied coefficient Medium ME-8 Flip sign in demand propaga-tion ( dn,t = −xn−1,t instead of +) Multiple demand prop 
+
+constraints (negated term) Medium ME-9 Add minimum-order constraints at factory exceeding supply ca-pacity Multiple min order con-straints + supply cap Medium ME-10 Shift time index in demand propagation + add offset (2–4 ×
+
+demand mean) Multiple demand prop 
+
+constraints (shifted indices) Hard 
+
+24 and flags a violation when CV n > τ bs with τbs = 2 .0. A well-managed inventory under a base-stock policy exhibits relatively stable levels (low CV), while a poorly repaired model may produce wild inventory fluctuations. 
+
+Check 2: Bullwhip ratio. The bullwhip effect (Lee et al., 1997) measures order variance am-plification. For each upstream echelon n ≥ 2, the oracle computes: BWR n = Var( xn,t )Var( dt) , (16) where dt is the external customer demand. The check flags a violation when BWR n > τ bw with 
+
+τbw = 3 .0. The threshold is set above the theoretical lower bound of Chen et al. (2000) (which depends on lead time and forecasting method) to accommodate the LP’s deterministic setting. 
+
+Check 3: Inventory allocation. In a well-structured serial system, inventory should not con-centrate disproportionately at the retailer while upstream echelons hold nothing. The oracle flags a violation when the retailer’s average on-hand inventory exceeds all upstream echelons combined and is meaningful relative to demand: ¯I1 > τ ia · ¯d and 
+
+> N
+
+X
+
+> n=2
+
+¯In ≈ 0, (17) where ¯In = 1
+
+> T
+
+P 
+
+> t
+
+In,t and τia = 0 .25. This check detects structural cost misallocation—particularly cost-swap errors (ME-5) where the optimizer places inventory at the wrong echelon because holding cost coefficients are distorted. 
+
+Check 4: Cost consistency. The oracle enforces two properties of the cost structure. First, holding costs in the problem configuration should decrease upstream: h1 ≥ h2 ≥ · · · ≥ hN (with a 1% tolerance). Second, if the Gurobi model is available, the oracle checks that each variable’s objective coefficient matches the configuration—that is, the model’s holding and backorder cost coefficients equal the values specified in the problem parameters. This check detects repairs that corrupt cost coefficients or tamper with the objective function. 
+
+Check 5: Order smoothing. The oracle checks that order quantities do not exhibit extreme oscillation: max t |xn,t − xn,t −1|
+
+Mean( xn,t ) < τ os , (18) with τos = 5 .0. Extreme order oscillation (the “nervous system” problem in MRP systems) indi-cates an unstable replenishment policy that would be operationally infeasible in practice due to production changeover costs and capacity constraints. 
+
+C.2 Which Checks Apply to Which Error Types 
+
+Table 8 specifies which checks apply to each error type. Excluded checks are those where the saboteur’s error injection or the associated constraint tightening creates structural conditions that cause the check to fail even on correct repairs. 25 Table 8: Oracle check applicability by error type. A check mark ( ✓) indicates the check is applied; a dash (–) indicates exclusion. The “Exclusion rationale” column explains why excluded checks produce false failures for that error type. 
+
+Error Base-stock Bullwhip Inv. alloc. Cost consist. Order smooth. Exclusion rationale ME-1 ✓ – ✓ ✓ – Demand inflation creates legitimate order variance ME-2 ✓ – ✓ ✓ – Lead-time repair creates legitimate order variance ME-3 ✓ – ✓ ✓ – Balance repair creates legitimate order variance ME-4 ✓ – ✓ ✓ – Capacity change creates legitimate order variance ME-5 – – – ✓ – Cost-only error; cost consistency detects the root cause ME-6 – – – – ✓ Bullwhip error; only order smoothing is artifact-free ME-7 – – – ✓ – Coefficient error; cost consistency detects tampering ME-8 – – – ✓ – Sign error; cost consistency detects coefficient changes ME-9 ✓ – ✓ ✓ – Constraint removal creates legitimate order variance ME-10 ✓ – ✓ ✓ – Index correction creates legitimate order variance 
+
+# D Prompt and Interaction Examples 
+
+This appendix presents the full system prompt used by OptiRepair agents and a complete inter-action transcript illustrating both phases of the closed-loop pipeline. 
+
+D.1 System Prompt 
+
+The following system prompt is used for trained models ( Qwen3-8B and Llama-3.1-8B ). API models receive a JSON-formatted variant with identical content. 26 System Prompt 
+
+You are an expert supply chain optimization debugger. Your task is to debug infeasible multi-echelon supply chain LP models through a two-phase closed-loop process. == Two-Phase Process == Phase 1 (Debug): Fix infeasibility. Identify conflicting constraints and repair them to restore feasibility. Phase 2 (Validate): After restoring feasibility, an automated rationality oracle checks the solution for operational rationality. A solver-feasible solution is not necessarily a good supply chain policy. Checks: 1. Base-stock rationality --cost-efficient inventory 2. Bullwhip control -- order variance within bounds 3. Monotonicity -- no severe inventory inversions 4. Cost consistency -- coefficients match specification 5. Order smoothing -- no excessive order oscillation If the solution fails, you receive violation feedback and must fix the structural issue. == Available Actions == - GET IIS(): Compute Irreducible Infeasible Subsystem - DROP CONSTRAINT(name): Remove a constraint - RELAX CONSTRAINT(name, amount): Relax a constraint - UPDATE RHS(name, value): Update right-hand side - UPDATE OBJ(var prefix, value): Update objective coeff - UPDATE BOUNDS(var, lb, ub): Update variable bounds - CHECK SLACK(name): Check slack for a constraint - SUBMIT(): Submit the repaired model == Response Format == <think> Your reasoning about the infeasibility or rationality violation... </think> Action: ACTION TYPE(arguments) 
+
+D.2 State Observation Format 
+
+At each step, the agent receives a structured observation containing the solver status, IIS informa-tion (if applicable), model dimensions, and recent action history. 27 State Observation 
+
+## Current State - Solver Status: INFEASIBLE - Step: 0## IIS (Irreducible Infeasible Subsystem) - Conflicting Constraints: [’capacity e1 t1’, ’capacity e1 t3’, ’capacity e1 t5’, ’demand balance e1 t1’, ’demand balance e1 t3’] - Conflicting Bounds: [’x e1 t1 <= 20’, ’x e1 t3 <= 20’, ’x e1 t5 <= 20’] ## Model Structure - Total Constraints: 142 - Total Variables: 96 - Constraint Names (first 10): [’demand balance e1 t1’, ’demand balance e1 t2’, ..., ’capacity e1 t1’, ...] What action should be taken next? 
+
+D.3 Phase I Interaction Transcript 
+
+The following transcript shows the trained Qwen3-8B model debugging an ME-4 error (capacity too tight) on a 3-echelon, 16-period supply chain. 
+
+Agent – Turn 1 
+
+<think> The model is infeasible. The IIS shows capacity constraints at echelon 1 (capacity e1 t1, t3, t5) conflicting with demand balance constraints. The variable bounds confirm x e1 <= 20 for all flagged periods. Average demand is 45 units, well above the capacity of 20. This is an ME-4 error: capacity set far below demand, causing cascading infeasibility. I should relax the echelon-1 capacity constraints. </think> Action: RELAX CONSTRAINT(capacity e1, 50.0) 
+
+Environment Response 
+
+## Current State - Solver Status: OPTIMAL - Step: 1- Objective Value: 12487.3 -> Entering Phase 2 (Rationality Oracle) 
+
+D.4 Phase II Interaction Transcript 
+
+After Phase I restores feasibility, the rationality oracle evaluates the solution. 28 Rationality Oracle – Feedback 
+
+## Rationality Feedback (from Phase 2 Oracle) Echelon 1 (Retailer, h= $8.00) holds 45.2 units on-hand inventory while Echelon 2 (Warehouse, h= $3.00) holds 12.3 units. Holding cost at Retailer ( $8.00) > Warehouse ($3.00). Cost-efficient allocation violated. The solver found a feasible solution, but it failed rationality checks. The repair restored feasibility but created an operationally irrational policy. Fix the structural issue described above, then restore feasibility again. ## Closed-Loop Status - Phase: VALIDATE -> DEBUG (loop-back) - Debug-Validate Loop: 1
+
+Agent – Turn 2 
+
+<think> The capacity relaxation fixed infeasibility but broke cost consistency. The retailer (echelon 1) has holding cost h= $8 but holds 45 units, while the warehouse (echelon 2) with h= $3 holds only 12 units. In a rational supply chain, the cheaper storage location should buffer more inventory. The holding cost coefficient for echelon 1 in the objective function may be distorted. I should update it to match the warehouse’s cost structure. </think> Action: UPDATE OBJ(hold e1, 3.0) 
+
+Environment Response 
+
+## Current State - Solver Status: OPTIMAL - Step: 2- Objective Value: 11832.1 -> Re-checking Rationality Oracle 
+
+Rationality Oracle – Result 
+
+## Rationality Check: PASSED - Base-stock rationality: PASS - Bullwhip control: PASS - Monotonicity: PASS - Cost consistency: PASS - Order smoothing: PASS Episode complete. Solution is both solver-feasible and operationally rational. Total steps: 2 | Loops: 1
+
+D.5 API Model Response Format 
+
+API models (GPT-5.2, Claude, Gemini, etc.) use a JSON response format instead of the <think> /Action: 
+
+format: 29 API Agent Response (JSON) 
+
+{
+
+"reasoning": "The IIS shows capacity constraints at echelon 1 conflicting with demand balance. Capacity C1=20 is below demand of 45. I should relax the capacity constraint.", "action": "RELAX CONSTRAINT", "target": "capacity e1", "value": 50.0 
+
+}
+
+Both formats are parsed into identical Action objects by the environment’s action parser. The trained model format is more token-efficient (no JSON overhead) and allows natural chain-of-thought reasoning within the <think> tags. 
+
+# E Full Per-Error-Type Results 
+
+This appendix reports the complete per-error-type breakdown for all models evaluated on OptiRepair-SC . Figure 7 in the main text decomposes overall performance into Phase 1 Recovery Rate and Phase 2 Pass Rate; the tables below give the per-error-type detail. Table 9 presents per-error-type RRR for both trained models and the top-6 API baselines. Table 10 presents the complete RRR breakdown for all 22 API models in landscape format. Table 9: Per-error-type RRR (%) on OptiRepair-SC for trained models and top-6 API baselines. ME-5 (cost structure) is universally solvable; ME-2 (lead time) and ME-4 (capacity) separate trained models from API baselines.                                                                                             
+
+> Model ME-1 ME-2 ME-3 ME-4 ME-5 ME-6 ME-7 ME-8 ME-9 ME-10
+> Qwen3-8B (trained) 85.2 64.5 96.7 61.3 100 89.3 91.7 88.0 96.4 86.7
+> Llama-3.1-8B (trained) 81.5 67.7 93.3 74.2 100 85.7 87.5 84.0 92.9 83.3 GPT-5.2 7.4 41.9 73.3 38.7 100 7.1 50.0 36.0 57.1 6.7 Gemini 2.5 Pro 0.0 6.5 63.3 6.5 100 60.7 50.0 60.0 57.1 23.3 DeepSeek-R1 3.7 12.9 76.7 9.7 100 0.0 58.3 60.0 42.9 10.0 Gemini 2.5 Flash 0.0 3.2 66.7 9.7 100 21.4 41.7 44.0 21.4 13.3 Claude Opus 4.5 3.7 6.5 70.0 3.2 100 35.7 37.5 20.0 25.0 0.0 Qwen2.5-7B 40.7 0.0 66.7 9.7 90.0 3.6 29.2 36.0 0.0 33.3
+
+30 Table 10:  RRR (%) by error type for all 22 API models and the trained  Qwen3-8B  pipeline on  OptiRepair-SC  test set.  Bold = highest API score per error type. 
+
+> Rank  Model  ME-1  ME-2  ME-3  ME-4  ME-5  ME-6  ME-7  ME-8  ME-9  ME-10  Overall 1 GPT-5.2  7.4  41.9  73.3  38.7  100  7.1  50.0  36.0  57.1  6.7  42.2 2 Gemini 2.5 Pro  0.0  6.5  63.3  6.5  100  60.7  50.0  60.0  57.1  23.3  42.2 3 DeepSeek-R1-0528  3.7  12.9  76.7  9.7  100  0.0  58.3  60.0  42.9  10.0  37.0 4 Gemini 2.5 Flash  0.0  3.2  66.7  9.7  100  21.4  41.7  44.0  21.4  13.3  32.0 5 Qwen2.5-7B  40.7  0.0  66.7  9.7  90.0  3.6  29.2  36.0  0.0  33.3  31.0 6 Claude Opus 4.5  3.7  6.5  70.0  3.2  100  35.7  37.5  20.0  25.0  0.0  30.3 7 Qwen2.5-Max  18.5  0.0  63.3  9.7  100  0.0  50.0  16.0  0.0  10.0  26.8 8 GPT-o4-mini  7.4  0.0  50.0  0.0  100  7.1  25.0  16.0  39.3  10.0  25.7 9 Claude Sonnet 4  3.7  6.5  66.7  3.2  100  0.0  12.5  8.0  25.0  3.3  23.6 10  DeepSeek-V3.2  3.7  0.0  50.0  3.2  100  10.7  12.5  20.0  14.3  0.0  21.8 11  Gemini 2.0 Flash  0.0  0.0  80.0  0.0  100  0.0  8.3  0.0  3.6  0.0  20.1 12  Claude Haiku 4.5  0.0  0.0  23.3  0.0  100  7.1  25.0  28.0  7.1  0.0  19.0 13  GPT-o3  0.0  0.0  36.7  3.2  100  0.0  8.3  0.0  32.1  3.3  19.0 14  GPT-4.1  0.0  3.2  36.7  6.5  100  0.0  8.3  4.0  10.7  0.0  17.6 15  GPT-4.1 Mini  3.7  0.0  26.7  0.0  100  0.0  4.2  0.0  32.1  0.0  17.2 16  GPT-5 Mini  0.0  0.0  33.3  0.0  100  0.0  12.5  0.0  14.3  3.3  16.9 17  GPT-o1  0.0  0.0  20.0  0.0  96.7  0.0  4.2  0.0  7.1  0.0  13.5 18  Claude 3.7 Sonnet  0.0  0.0  16.7  0.0  100  0.0  8.3  0.0  3.6  0.0  13.4 19  Qwen2.5-14B  0.0  0.0  16.7  0.0  100  0.0  4.2  0.0  0.0  0.0  12.7 20  Qwen2.5-32B  0.0  0.0  16.7  0.0  20.0  0.0  0.0  0.0  0.0  3.3  4.2 21  Kimi K2  0.0  0.0  3.3  0.0  10.0  0.0  0.0  0.0  0.0  0.0  1.4 22  Llama-3.3-70B  0.0  0.0  0.0  0.0  3.3  0.0  0.0  0.0  0.0  0.0  0.4 — Trained  Qwen3-8B  85.2  64.5  96.7  61.3  100  89.3  91.7  88.0  96.4  86.7  81.7
+
+31 F Guided Prompt Experiments 
+
+We evaluated two guided prompt variants on Claude Opus 4.5 and GPT-5.2-chat. The anti-loop 
+
+variant added explicit instructions to avoid repeating failed repair strategies; the domain-knowledge 
+
+variant injected supply chain structural hints (base-stock properties, bullwhip ratio interpretation, cost structure constraints). The domain-knowledge prompt improved Opus by 7.4 percentage points (RRR 30.3% to 37.7%) but degraded GPT-5.2 by 24.1 percentage points (42.2% to 18.1%). The anti-loop prompt hurt both models. Prompt text is available from the authors upon request. 
+
+# G Dataset Construction Details 
+
+This appendix describes the generation pipeline, instance parameters, validation procedures, and dataset statistics for OptiRepair-SC .
+
+G.1 OptiRepair-SC Generation Pipeline 
+
+We construct the OptiRepair-SC problem set through a four-stage pipeline: 1. Source instance generation. We generate supply chain LP instances by sampling param-eters from the ranges specified in Table 11. Each instance is solved to optimality by Gurobi 12.0 to confirm a feasible baseline. Trivially feasible instances (optimal objective value below a threshold) or degenerate ones (fewer than 10 active constraints at optimality) are filtered out. 2. Sabotage. For each valid source instance, the saboteur selects an error type (ME-1–ME-10) and applies the corresponding injection mechanism (Appendix B). The saboteur first tightens the model with operational bounds—backorder caps and factory supply caps calibrated to the optimal solution—to prevent the LP’s natural slack from absorbing the perturbation. The error is then injected into the tightened model. 3. Gurobi verification. Each sabotaged model is solved by Gurobi. The model must return 
+
+Infeasible status (or Optimal -but-irrational for ME-5), and the IIS computation must return a non-empty subsystem. Models that fail either check are discarded. 4. Oracle labeling. The ground-truth fix is applied, and the repaired model is re-solved. The solution must achieve Optimal status and pass all applicable Rationality Oracle checks (Appendix C). Problems where the ground-truth fix does not pass all checks are discarded. 
+
+G.2 Instance Parameters G.3 Dataset Statistics 
+
+The train/test split is stratified by error type, with disjoint supply chain instances (i.e., no source instance appears in both splits). The test set contains 284 problems, providing sufficient statistical power to detect differences of 5 percentage points or larger at 95% confidence. 32 Table 11: Parameter ranges for OptiRepair-SC instance generation. 
+
+Parameter Range Distribution Number of echelons N {2, 3, 4, 5} Uniform Planning periods T {12 , 16 , 20 , 24 } Uniform Topology Serial Fixed Holding cost hn [1 , 10] per unit/period Uniform Backorder cost bn [5 , 50] per unit/period Uniform 
+
+h-to-b ratio 1:2 to 1:10 Derived Capacity Cn [50 , 500] units/period Uniform Lead time Ln {1, 2, 3} periods Uniform Initial inventory Iinit  
+
+> n, 0
+
+[0 , 2 ¯d] Uniform Mean demand ¯d [50 , 200] units/period Uniform Demand pattern Stationary, step-change, seasonal Categorical (equal) 
+
+Table 12: Dataset split statistics for OptiRepair-SC .
+
+Train Test Total Total problems 692 284 976 ME-1 (Demand Inflation) 78 27 105 ME-2 (Lead Time Error) 89 31 120 ME-3 (Balance Violation) 87 30 117 ME-4 (Capacity Reduction) 89 31 120 ME-5 (Cost Structure Error) 71 30 101 ME-6 (Bullwhip Amplification) 40 28 68 ME-7 (Coefficient Perturbation) 66 24 90 ME-8 (Sign Error) 71 25 96 ME-9 (Redundant Constraint) 56 28 84 ME-10 (Index Mismatch) 45 30 75 Avg. variables per instance 185 Avg. constraints per instance 162 Avg. IIS size 12.3 constraints 
+
+33

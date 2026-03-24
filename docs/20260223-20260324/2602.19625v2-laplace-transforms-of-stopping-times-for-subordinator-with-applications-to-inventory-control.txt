@@ -1,0 +1,2518 @@
+Title: Laplace Transforms of Stopping Times for Subordinator with Applications to Inventory Control
+
+URL Source: https://arxiv.org/pdf/2602.19625v2
+
+Published Time: Wed, 04 Mar 2026 01:46:27 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+LAPLACE TRANSFORMS OF STOPPING TIMES FOR SUBORDINATOR WITH APPLICATIONS TO INVENTORY CONTROL 
+
+RYOYA KOIDE 
+
+Abstract. Intermittent demand fluctuations pose significant challenges in disaster logistics and medical supply systems. In this study, we formulate cumulative demand as a generalized L´ evy process composed of a drift term, Poisson jumps, and compound Poisson jumps, and analyze a continuous-time inventory model. The proposed framework provides a unified formulation that encompasses both drifted Poisson processes and drifted compound Poisson processes. From a mathematical perspective, we treat the reorder time as a first-passage problem of a subordinator and derive its Laplace transform via the Laplace exponent. In particular, for the drifted Poisson case, we obtain an explicit representation of the inverse Laplace exponent using the Lambert W function, which yields an analytic expression for the Laplace transform of the first-passage time. Furthermore, when the jump sizes follow exponential and Gamma distributions, we derive explicit formulas for the mean and variance of the reorder times, thereby clarifying the moment structure of first-passage times for generalized L´ evy demand processes. From an operations research perspective, we explicitly characterize the expected total cost over a finite time horizon based on the distribution of cumulative demand. This study presents an analytical framework that integrates first-passage theory of L´ evy processes with continuous-time inventory control. 
+
+1. Introduction 
+
+Inventory control problems under uncertain demand constitute an important research area in both probability theory and operations research. In particular, in situations such as disaster response or intermittent demand, continuous demand models are often insufficient. L´ evy pro-cesses provide a well-behaved class of stochastic processes capable of modeling discontinuous changes. ( [25], [16], [27], [14], [13]) For example, Noba and Yamazaki (2025) [21] propose an inventory control policy based on L´ evy processes and conduct analytical investigations. In their framework, the total cost incurred in inventory control is expressed as a general functional form, and the optimal replenishment strategy is characterized. However, difficulties remain in performing numerical computations and explicit calculations under concrete specifications. On the other hand, Koide et al. (2024) [12] and Koide et al. (2025) [14] propose inventory control models driven by L´ evy processes. By imposing engineering-oriented assumptions that facilitate computation and simulation, they explicitly derive the expected total cost and enable numerical simulations. In this study, we consider {Dt}t≥0 as a stochastic process representing cumulative demand. In particular, we focus on non-decreasing L´ evy processes (subordinators), such as a drifted Poisson process (cf. the setting in Koide [14]). Let a > 0, Q > 0, and n ∈ N. The first passage time of 
+
+Dt is defined by 
+
+Tn = inf {s > 0 | Ds ≥ a + ( n − 1) Q} .
+
+The random variable Tn represents the time of the n-th replenishment. Let x > 0 denote the initial inventory level, where x − a is the reorder point and Q > 0 is the order quantity. We consider a fixed-order-quantity policy. Then, the inventory level at time t, denoted by Xt, is given by 
+
+Xt = x − Dt + QR t , where Rt = X
+
+> n≥1
+
+1{Tn<t } = inf {k | Tk > t }. 
+
+> 1
+> arXiv:2602.19625v2 [math.PR] 3 Mar 2026 2RYOYA KOIDE
+
+Here, {Rt}t≥0 represents the stochastic process describing the cumulative number of orders placed up to time t.In order to compute the expectation and variance of Xt, as well as the expected total cost, it is necessary to evaluate the expectation and variance of Tn. However, the distribution of Tn is generally unknown, making direct computation difficult. The computational tractability achieved in Koide et al. (2025) [14] relies on engineering-oriented assumptions motivated by numerical computation and simulation. Moreover, the applicability to real data is discussed in Koide et al. (2025) [13]. In contrast, the present study does not impose such engineering assumptions. Instead, by directly exploiting the probabilistic structure of stopping times for L´ evy processes, we demonstrate that the expectation and variance of Tn can be derived explicitly. Furthermore, we analyze the expectation of the inventory level, the expected total cost, and the asymptotic behavior of the total cost. 2. Setting 
+
+2.1. Fixed-Order-Quantity Policy under Intermittent Demand. 
+
+Intermittent demand refers to a demand pattern in which demand does not occur continuously, but instead exhibits sudden arrivals after long periods of no demand. Such demand is charac-terized by strong uncertainty in both the timing of demand occurrences and the demand sizes. We model the cumulative demand under intermittent demand by a subordinator {Dt}t≥0. In this model, the inventory level at time t is given by the initial inventory minus the cumulative demand up to time t. Whenever the inventory level falls below a prescribed threshold, a replen-ishment of fixed size Q is placed. Since the time at which the inventory reaches the threshold is stochastic, we define the corresponding stopping times. To model replenishment at each reorder point, the system is designed so that an order is placed whenever the cumulative demand exceeds a prescribed level. The order quantity is also incorporated explicitly. The formulation follows [14]. 
+
+Definition 2.1 (First Passage Time of {Dt}). Let a > 0, Q > 0, and n ∈ N. The first passage time of the cumulative demand process {Dt} is defined by (1) T a,Q n (= Tn) = inf {s > 0 | Ds ≥ a + ( n − 1) Q} .
+
+The parameter a determines the reorder level, and Q represents the order quantity. The random variable Tn denotes the stochastic time of the n-th replenishment under the fixed-order-quantity policy. Using these quantities, we define the inventory control model under intermittent demand as follows. 
+
+Definition 2.2 (Inventory Level Process ). Let x > 0 denote the initial inventory level. We consider a fixed-order-quantity policy with reorder point x − a and order quantity Q > 0. Let 
+
+{Dt} be the subordinator representing cumulative demand. The inventory level process {Xt} is defined by (2) Xt = x − Dt + QR t,
+
+where (3) Rt = X
+
+> n≥1
+
+1{T a,Q n <t } = inf {k | T a,Q k > t }
+
+denotes the stochastic process representing the cumulative number of orders placed up to time 
+
+t.Taking expectations yields 
+
+E[Xt] = x − E[Dt] + QE [Rt]3
+
+= x − E[Dt] + Q X
+
+> n≥1
+
+E[1 {Tn<t }] (by Fubini’s theorem) (4) Therefore, 
+
+E[Xt] = x − E[Dt] + Q X
+
+> n≥1
+
+P (Tn < t ).(5) 2.2. Expected Total Cost. 
+
+In order to determine an optimal inventory control strategy, it is necessary to evaluate the associated costs explicitly. While Noba and Yamazaki [21] describe the total cost using a general functional form, here we decompose the total cost according to individual cost components. 
+
+Definition 2.3 (Expected Inventory Cost ). Let Co, C h, C s.o. > 0 denote the unit ordering cost, holding cost, and stockout cost, respectively. The total cost incurred up to time t is defined by (6) Ctotal (a, Q, t ) = QC oRt
+
+| {z }
+
+> ordering cost
+
++ Ch
+
+Z t
+
+> 0
+
+Xsds 
+
+| {z }
+
+> holding cost
+
++ Cs.o. 
+
+Z t
+
+> 0
+
+(−Xs)+ds 
+
+| {z }
+
+> stockout cost
+
+.
+
+The expectation E[Ctotal (a, Q, t )] is called the expected total cost. Assuming that the stockout cost is negligible, the expected total cost becomes 
+
+E[Ctotal (a, Q, t )] ≃ CoQE [Rt] + ChE
+
+Z t
+
+> 0
+
+(x − Ds + QR s)ds 
+
+
+
+= CoQE [Rt] + Chxt − ChE
+
+Z t
+
+> 0
+
+Dsds 
+
+
+
++ ChQE 
+
+Z t
+
+> 0
+
+Rsds 
+
+
+
+= CoQE [Rt] + Chxt − Ch
+
+Z t
+
+> 0
+
+E[Ds]ds + ChQE 
+
+Z t
+
+> 0
+
+Rsds 
+
+
+
+.
+
+By Fubini’s theorem, (7) E[Rt] = E
+
+X
+
+> n≥1
+
+1{Tn<t }
+
+ = X
+
+> n≥1
+
+P (Tn < t ),
+
+and again by Fubini’s theorem, (8) E
+
+Z t
+
+> 0
+
+Rs ds 
+
+
+
+=
+
+Z t
+
+> 0
+
+E[Rs] ds =
+
+Z t
+
+> 0
+
+X
+
+> n≥1
+
+P (Tn < s ) ds. 
+
+Hence, 
+
+E[Ctotal (a, Q, t )] = CoQ X
+
+> n≥1
+
+P (Tn < t ) + Chxt − Ch
+
+Z t
+
+> 0
+
+E[Ds]ds 
+
++ ChQ
+
+Z t
+
+> 0
+
+X
+
+> n≥1
+
+P (Tn < s ) ds. (9) 
+
+Remark 2.4. For any n ≥ 1, the identity 
+
+Z t
+
+> 0
+
+1{Tn<s } ds = ( t − Tn)+ = t 1{Tn<t } − Tn1{Tn<t }4 RYOYA KOIDE 
+
+holds. Taking expectations and summing over n, and using Fubini’s theorem again due to non-negativity, we obtain 
+
+E
+
+Z t
+
+> 0
+
+Rs ds 
+
+
+
+= X
+
+> n≥1
+
+E
+
+Z t
+
+> 0
+
+1{Tn<s } ds 
+
+
+
+= X
+
+> n≥1
+
+E[( t − Tn)+]= X
+
+> n≥1
+
+
+
+t P (Tn < t ) − E[Tn1{Tn<t }]
+
+
+
+.(10) Therefore, combining (10) and (8), we obtain (11) X
+
+> n≥1
+
+
+
+t P (Tn < t ) − E[Tn1{Tn<t }]
+
+
+
+=
+
+Z t
+
+> 0
+
+X
+
+> n≥1
+
+P (Tn < s ) ds. 
+
+Regarding the Laplace transform of stopping times, the following well-known result holds. 
+
+Theorem (cf. J.Bertoin (1996) [5], Sato (1999) [24]) . Let {Xt} be a subordinator (a one-dimensional, possibly killed, non-decreasing L´ evy process), and define 
+
+τ + 
+
+> b
+
+= inf {t > 0 | Xt > b }.
+
+Let Ψ( θ) = log E[exp( θX 1)] denote the Laplace exponent. Then, 
+
+E[exp( −sτ + 
+
+> b
+
+)] = exp( −bΦ( s)) , where Ψ(Φ( s)) = s, (s > 0) .
+
+Using this theorem, we will now examine the Laplace transforms of specific subordinators in detail. 3. Main Results 
+
+In (5) and (9), the terms involving Tn are difficult to compute unless its distribution is explicitly known. In general, there are only few subordinators for which the distribution of the FPT can be written explicitly. In this section, we derive the Laplace transform of the FPT for a specific subordinator. 3.1. Case where the Cumulative Demand is a Drifted Poisson Process. Definition 3.1 (Cumulative Demand ). Let μ > 0, λ > 0, and α > 0, and let {Nt}t≥0 be a 
+
+λ-Poisson process. We define the cumulative demand process {Dt} as follows: (12) Dt = μt + αN t.
+
+We review the special function used in deriving the Laplace transform of the first passage time of {Dt}.
+
+Definition 3.2 (Lambert W function [7]) . The complex function W (z) satisfying 
+
+W (z)eW (z) = z
+
+is called the Lambert W function. By choosing an appropriate branch, W (z) can be regarded as a function from R to R, and results concerning its derivative are also known. 
+
+Lemma 3.3 (Derivative of the Lambert W function [7]) . For the real-valued Lambert W function W (x),
+
+ddx W (x) = 1(1 + W (x)) exp( W (x)) = W (x)
+
+x(1 + W (x)) , if x̸ = 0 .
+
+The Laplace transform of the FPT for a drifted Poisson process can be expressed using the Lambert W function. 5
+
+Theorem 3.4. Let Tn be the FPT of the drifted Poisson process Dt = μt + αN t defined above. Let W (x) denote the Lambert W function. Then the Laplace transform of Tn is given as follows: 
+
+(13) E[e−sT n ] = exp 
+
+
+
+−(a + ( n − 1) Q)
+
+
+
+− 1
+
+α W
+
+ αλ μ exp 
+
+ αμ (s + λ)
+
+ 
+
++ 1
+
+μ (s + λ)
+
+ 
+
+.
+
+Proof. We compute the Laplace exponent. 
+
+ψ(θ) = log E[eθD 1 ] = θμ + λ(eθα − 1) The Laplace transform of Tn is given by 
+
+E[e−sT n ] = exp( −(a + ( n − 1) Q)Φ( s)) , where ψ(Φ( s)) = s. 
+
+We compute the inverse function of ψ.
+
+s = ψ(θ) = θμ + λ(eθα − 1) 
+
+s = θμ + λ(eθα − 1) 
+
+λe θα = −θμ + s + λλe θα = −θμ + A (A = s + λ)
+
+y = λ exp 
+
+
+
+−α y − Aμ
+
+
+
+(y = −θμ + A)
+
+y = λ exp 
+
+ αA μ
+
+
+
+exp 
+
+
+
+− αy μ
+
+
+
+y exp 
+
+ αμ y
+
+
+
+= λ exp 
+
+ αμ A
+
+
+
+αμ y exp 
+
+ αμ y
+
+
+
+= αλ μ exp 
+
+ αμ A
+
+
+
+αμ y = W
+
+ αλ μ exp 
+
+ αμ A
+
+ 
+
+(W : Lambert W function) 
+
+−αθ + αμ A = W
+
+ αλ μ exp 
+
+ αμ A
+
+ 
+
+θ = − 1
+
+α W
+
+ αλ μ exp 
+
+ αμ A
+
+ 
+
++ 1
+
+μ A
+
+Therefore, Φ( s) = − 1
+
+α W
+
+ αλ μ exp 
+
+ αμ (s + λ)
+
+ 
+
++ 1
+
+μ (s + λ) .
+
+Hence, the Laplace transform of Tn is given by 
+
+E[e−sT n ] = exp 
+
+
+
+−(a + ( n − 1) Q)
+
+
+
+− 1
+
+α W
+
+ αλ μ exp 
+
+ αμ (s + λ)
+
+ 
+
++ 1
+
+μ (s + λ)
+
+ 
+
+.
+
+□
+
+Corollary 3.5. Under the assumptions of Theorem 3.4 , it holds that 
+
+E[Tn] = a + ( n − 1) Qμ + αλ ,(14) Var[ Tn] = α2λ(a + ( n − 1) Q)(μ + αλ )3 .(15) 6 RYOYA KOIDE 
+
+Proof. Let Φ( s) := 1
+
+α W
+
+ αλ μ exp 
+
+ αμ (s + λ)
+
+ 
+
+− 1
+
+μ (s + λ) , K := a + ( n − 1) Q
+
+be defined. We will organize the differentiation rules for the Laplace transform. We have 
+
+dds E[e−sT n ] = dds exp( −KΦ( s)) = −K exp( −KΦ( s)) dΦ
+
+ds (s)= −KE [e−sT n ] dΦ
+
+ds (s) = −KE [e−sT n ] dΦ
+
+ds (s) = −K exp( −KΦ( s)) dΦ
+
+ds (s).
+
+We will also organize the second-order derivatives of the Laplace transform. We get 
+
+d2
+
+ds 2 E[e−sT n ] = dds 
+
+
+
+−KE [e−sT n ] dΦ
+
+ds (s)
+
+
+
+= −K
+
+ dds E[e−sT n ] dΦ
+
+ds (s) + E[e−sT n ] d2Φ
+
+ds 2 (s)
+
+
+
+= −K
+
+
+
+−KE [e−sT n ] dΦ
+
+ds (s) × dΦ
+
+ds (s) + E[e−sT n ] d2Φ
+
+ds 2 (s)
+
+
+
+= −KE [e−sT n ] −K
+
+ dΦ
+
+ds (s)
+
+2
+
++ d2Φ
+
+ds 2 (s)
+
+!
+
+= −K exp( −KΦ( s)) −K
+
+ dΦ
+
+ds (s)
+
+2
+
++ d2Φ
+
+ds 2 (s)
+
+!
+
+.dΦ
+
+ds (s) = dds 
+
+
+
+− 1
+
+α W
+
+ αλ μ exp 
+
+ αμ (s + λ)
+
+ 
+
++ 1
+
+μ (s + λ)
+
+
+
+= − 1
+
+αdW ds 
+
+ αλ μ exp 
+
+ αμ (s + λ)
+
+ 
+
++ 1
+
+μ .
+
+Compute the first and second derivatives of Φ. We have Let B = αμ and C = αλ μ .
+
+dΦ
+
+ds (s) = − 1
+
+αdW ds (C exp ( Bs + C)) + 1
+
+μ .
+
+Furthermore, 
+
+d2Φ
+
+ds 2 (s) = − 1
+
+αd2Wds 2 (C exp ( Bs + C)) .
+
+The derivative of W (C exp( Bs + C)) can be computed as follows: 
+
+dW ds (C exp ( Bs + C)) = W (C exp ( Bs + C)) 1 + W (C exp ( Bs + C)) (C exp ( Bs + C)) −1 (BC exp ( Bs + C)) = B W (C exp ( Bs + C)) 1 + W (C exp ( Bs + C)) .
+
+Furthermore, 
+
+d2Wds 2 (C exp ( Bs + C)) = B dds 
+
+ W (C exp ( Bs + C)) 1 + W (C exp ( Bs + C)) 
+
+
+
+= B dW ds (C exp ( Bs + C)) 11 + W (C exp ( Bs + C)) + B × W (C exp ( Bs + C)) dds 
+
+ 11 + W (C exp ( Bs + C)) 
+
+7
+
+= B × B W (C exp ( Bs + C)) 1 + W (C exp ( Bs + C)) × 11 + W (C exp ( Bs + C)) + B × W (C exp ( Bs + C)) × (−1)  
+
+> dW ds
+
+(C exp ( Bs + C)) (1 + W (C exp ( Bs + C))) 2
+
+= B × B W (C exp ( Bs + C)) 1 + W (C exp ( Bs + C)) × 11 + W (C exp ( Bs + C)) 
+
+− B × W (C exp ( Bs + C)) × 1(1 + W (C exp ( Bs + C))) 2 × B W (C exp ( Bs + C)) 1 + W (C exp ( Bs + C)) = B2 W (C exp ( Bs + C)) (1 + W (C exp ( Bs + C))) 2 − B2 (W (C exp ( Bs + C))) 2
+
+(1 + W (C exp ( Bs + C))) 3
+
+= B2 W (C exp ( Bs + C)) (1 + W (C exp ( Bs + C))) 2
+
+
+
+1 − (W (C exp ( Bs + C))) (1 + W (C exp ( Bs + C))) 
+
+
+
+= B2 W (C exp ( Bs + C)) (1 + W (C exp ( Bs + C))) 2 × 11 + W (C exp ( Bs + C)) = B2 W (C exp ( Bs + C)) (1 + W (C exp ( Bs + C))) 3 .
+
+It follows that 
+
+dds E[e−sT n ]= −K exp( −KΦ( s)) dΦ
+
+ds (s)= −(a + ( n − 1) Q) exp 
+
+
+
+−(a + ( n − 1) Q)
+
+
+
+− 1
+
+α W
+
+ αλ μ exp 
+
+ αμ (s + λ)
+
+ 
+
++ 1
+
+μ (s + λ)
+
+ 
+
+×
+
+
+
+− 1
+
+α B W (C exp ( Bs + C)) 1 + W (C exp ( Bs + C)) + 1
+
+μ
+
+
+
+= −(a + ( n − 1) Q) exp 
+
+
+
+−(a + ( n − 1) Q)
+
+
+
+− 1
+
+α W
+
+ αλ μ exp 
+
+ αμ (s + λ)
+
+ 
+
++ 1
+
+μ (s + λ)
+
+ 
+
+×
+
+− 1
+
+μW
+
+ αλ μ exp 
+
+ αμ s + αλ μ
+
+ 
+
+1 + W
+
+ αλ μ exp 
+
+ αμ s + αλ μ
+
+ + 1
+
+μ
+
+ .
+
+Therefore, the expected value of E[Tn] is given by: 
+
+E[Tn] = − dds E[e−sT n ] s=0 
+
+= ( a + ( n − 1) Q) exp 
+
+
+
+−(a + ( n − 1) Q)
+
+ 1
+
+α W
+
+ αλ μ e αλ μ
+
+
+
+− λμ
+
+ 
+
+×
+
+− 1
+
+μW
+
+ αλ μ e αλ μ
+
+
+
+1 + W
+
+ αλ μ e αλ μ
+
+ + 1
+
+μ
+
+
+
+= ( a + ( n − 1) Q) exp 
+
+
+
+−(a + ( n − 1) Q)
+
+ 1
+
+ααλ μ − λμ
+
+ 
+
+× − 1
+
+μ
+
+> αλ μ
+
+1 + αλ μ
+
++ 1
+
+μ
+
+!
+
+= a + ( n − 1) Qμ + αλ .8 RYOYA KOIDE 
+
+Similarly, calculating the second moment yields: 
+
+d2
+
+ds 2 E[e−sT n ]= dds 
+
+
+
+−KE [e−sT n ] dΦ
+
+ds (s)
+
+
+
+= −K exp( −KΦ( s)) −K
+
+ dΦ
+
+ds (s)
+
+2
+
++ d2Φ
+
+ds 2 (s)
+
+!
+
+= −(a + ( n − 1) Q) exp 
+
+
+
+−(a + ( n − 1) Q)
+
+
+
+− 1
+
+α W
+
+ αλ μ e αμ (s+λ)
+
+
+
++ 1
+
+μ (s + λ)
+
+ 
+
+× −(a + ( n − 1) Q)
+
+
+
+− 1
+
+αdW ds (C exp ( Bs + C)) + 1
+
+μ
+
+2
+
+− 1
+
+α B2 W (C exp ( Bs + C)) (1 + W (C exp ( Bs + C))) 3
+
+
+
+= −(a + ( n − 1) Q) exp 
+
+
+
+−(a + ( n − 1) Q)
+
+
+
+− 1
+
+α W
+
+ αλ μ e αμ (s+λ)
+
+
+
++ 1
+
+μ (s + λ)
+
+ 
+
+×
+
+−(a + ( n − 1) Q)
+
+− 1
+
+μW
+
+ αλ μ exp 
+
+ αμ s + αλ μ
+
+ 
+
+1 + W
+
+ αλ μ exp 
+
+ αμ s + αλ μ
+
+ + 1
+
+μ
+
+
+
+> 2
+
+− αμ2
+
+W
+
+ αλ μ exp 
+
+ αμ s + αλ μ
+
+ 
+
+1 + W
+
+ αλ μ exp 
+
+ αμ s + αλ μ
+
+ 3
+
+ .
+
+Hense, 
+
+E[T 2 
+
+> n
+
+] = −(a + ( n − 1) Q) ×
+
+−(a + ( n − 1) Q)
+
+− 1
+
+μW
+
+ αλ μ e αλ μ
+
+
+
+1 + W
+
+ αλ μ e αλ μ
+
+ + 1
+
+μ
+
+
+
+> 2
+
+− αμ2
+
+W
+
+ αλ μ e αλ μ
+
+
+
+1 + W
+
+ αλ μ e αλ μ
+
+ 3
+
+
+
+= −(a + ( n − 1) Q) ×
+
+−(a + ( n − 1) Q) − 1
+
+μ
+
+> αλ μ
+
+1 + αλ μ
+
++ 1
+
+μ
+
+!2
+
+− αμ2
+
+> αλ μ
+
+
+
+1 + αλ μ
+
+3
+
+
+
+=
+
+ a + ( n − 1) Qμ + αλ 
+
+2
+
++ α2λ(a + ( n − 1) Q)(μ + αλ )3 .
+
+From these results, we obtain Var[ Tn] = E[T 2 
+
+> n
+
+] − E[Tn]2 = α2λ(a + ( n − 1) Q)(μ + αλ )3 .
+
+□9
+
+3.2. Case where the Cumulative Demand is a Drifted Compound Poisson Process. 
+
+As a generalization of the drifted Poisson process, considering a drifted compound Poisson process is not only a mathematical generalization but also a valuable extension in practice, since it can reproduce situations in which the magnitude of sudden demand changes is random each time. 
+
+Definition 3.6 (Cumulative Demand) . Let μ > 0, λ > 0, and let {Nt}t≥0 be a λ-Poisson process. Let {Jk}n≥1 be a sequence of random variables that are independent of {Dt}t≥0 and independent and identically distributed. We define the cumulative demand process {Dt}t≥0 as follows: (16) Dt = μt +
+
+> Nt
+
+X
+
+> k=1
+
+Jk.
+
+In this case, let Tn be the FPT defined above, and let ψ(θ) be the Laplace exponent of Dt.Then, 
+
+E[e−sT n ] = exp( −(a + ( n − 1) Q)Φ( s)) ,where ψ(Φ( s)) = s. 
+
+Let LJ1 (θ) denote the Laplace transform of J1, and compute the Laplace exponent ψ(θ). 
+
+ψ(θ) = log E[eθD 1 ] = log E
+
+"
+
+exp θμ + θ
+
+> N1
+
+X
+
+> k=1
+
+Jk
+
+!# 
+
+= θμ + log E
+
+"
+
+exp θ
+
+> N1
+
+X
+
+> k=1
+
+Jk
+
+!# 
+
+E
+
+"
+
+exp θ
+
+> N1
+
+X
+
+> k=1
+
+Jk
+
+!# 
+
+= E
+
+"
+
+E
+
+"
+
+exp θ
+
+> N1
+
+X
+
+> k=1
+
+Jk
+
+!
+
+N1
+
+## 
+
+= X
+
+> m≥0
+
+E
+
+"
+
+exp θ
+
+> m
+
+X
+
+> k=1
+
+Jk
+
+!# 
+
+P (N1 = m)= X
+
+> m≥0
+
+E [exp( θJ 1)] m P (N1 = m) ∵ Jk i.i.d. = X
+
+> m≥0
+
+LJ1 (θ)me−λ λm
+
+m!= e−λ exp( λL J1 (θ)) Therefore, log E
+
+"
+
+exp θ
+
+> N1
+
+X
+
+> k=1
+
+Jk
+
+!# 
+
+= log exp( λ(LJ1 (θ) − 1)) = λ(LJ1 (θ) − 1) .
+
+Hence, (17) ψ(θ) = θμ + λ(LJ1 (θ) − 1) .
+
+Case where the Jump Sizes Follow an Exponential Distribution. Theorem 3.7. Let {Dt}t≥0 be defined as in (16), and assume that Jk are independent and identically distributed and follow an exponential distribution with parameter η. In this case, for 
+
+θ < η ,
+
+(18) E[e−sT n ] = exp 
+
+
+
+−(a + ( n − 1) Q) 12μ
+
+n
+
+(μη + s + λ) − p(μη + s + λ)2 − 4μsη 
+
+o
+
+.10 RYOYA KOIDE 
+
+Proof. Since LJ1 (θ) = ηη−θ , it follows from (17) that 
+
+ψ(θ) = θμ + λ
+
+ ηη − θ − 1
+
+
+
+= θμ + λθ η − θ .
+
+We compute the inverse function of ψ.
+
+s = ψ(θ) = θμ + λ
+
+ ηη − θ − 1
+
+
+
+= θμ + λθ η − θθμ (η − θ) + λθ = s(η − θ)
+
+μθ 2 − (μη + s + λ)θ + sη = 0 Φ( s) = θ = 12μ
+
+n
+
+(μη + s + λ) − p(μη + s + λ)2 − 4μsη 
+
+o
+
+.
+
+The other solution of the quadratic equation does not satisfy θ < η , and is therefore not appro-priate. Hence, 
+
+E[e−sT n ] = exp( −(a + ( n − 1) Q)Φ( s)) = exp 
+
+
+
+−(a + ( n − 1) Q) 12μ
+
+n
+
+(μη + s + λ) − p(μη + s + λ)2 − 4μsη 
+
+o
+
+.
+
+□
+
+Corollary 3.8. Under the assumptions of Theorem 3.7, it holds that 
+
+(19) E[Tn] = η(a + ( n − 1) Q)
+
+μη + λ ,
+
+(20) Var [Tn] = 2ηλ (a + ( n − 1) Q)(μη + λ)3 .
+
+Proof. The calculation follows the same approach as Corollary 3.5. Let Φ( s) := 12μ
+
+n
+
+(μη + s + λ) − p(μη + s + λ)2 − 4μsη 
+
+o
+
+, K := a + ( n − 1) Q
+
+Recall the following result regarding the differentiation of the Laplace transform of Tn:
+
+dds E[e−sT n ] = −K exp( −KΦ( s)) dΦ
+
+ds (s).d2
+
+ds 2 E[e−sT n ] = −K exp( −KΦ( s)) −K
+
+ dΦ
+
+ds (s)
+
+2
+
++ d2Φ
+
+ds 2 (s)
+
+!
+
+.
+
+Compute the first and second derivatives of Φ. 
+
+dΦ
+
+ds (s) = 12μ
+
+(
+
+1 − 2( μη + s + λ) − 4μη 
+
+2p(μη + s + λ)2 − 4μsη 
+
+)
+
+= 12μ
+
+(
+
+1 − 2s + 2 λ − 2μη 
+
+2p(μη + s + λ)2 − 4μsη 
+
+)
+
+= 12μ
+
+(
+
+1 − s + λ − μη 
+
+p(μη + s + λ)2 − 4μsη 
+
+)
+
+.d2Φ
+
+ds 2 (s) = − 12μ ×
+
+p(μη + s + λ)2 − 4μsη − (s + λ − μη ) (s+λ−μη )
+
+√(μη +s+λ)2−4μsη 
+
+
+
+{(μη + s + λ)2 − 4μsη } 3211 
+
+= − 12μ ×
+
+(μη + s + λ)2 − 4μsη − (s + λ − μη )2
+
+{(μη + s + λ)2 − 4μsη } 32
+
+= − 12μ × {4μη (s + λ) − 4μsη }{(μη + s + λ)2 − 4μsη } 32
+
+= − 2η(s + λ) − 2μsη 
+
+{(μη + s + λ)2 − 4μsη } 32
+
+.
+
+Moreover,We verify the value at 0. Φ(0) = 0 .dΦ
+
+ds (0) = 12μ
+
+
+
+1 − λ − μη μη + λ
+
+
+
+= 12μ
+
+ 2μη μη + λ
+
+
+
+= ημη + λ .d2Φ
+
+ds 2 (0) = − 2ηλ 
+
+{(μη + λ)2} 32
+
+= − 2ηλ 
+
+(μη + λ)3 .
+
+Therefore, the expectation is given by 
+
+E[Tn] = − dds E[e−sT n ] s=0 
+
+= K exp( −KΦ(0)) dΦ
+
+ds (0) = η(a + ( n − 1) Q)
+
+μη + λ .
+
+Regarding the second moment, we have 
+
+E[T 2 
+
+> n
+
+] = d2
+
+ds 2 E[e−sT n ] s=0 
+
+= −K exp( −KΦ(0)) −K
+
+ dΦ
+
+ds (0) 
+
+2
+
++ d2Φ
+
+ds 2 (0) 
+
+!
+
+= ( a + ( n − 1) Q)2
+
+ ημη + λ
+
+2
+
++ ( a + ( n − 1) Q) 2ηλ 
+
+(μη + λ)3
+
+= η2(a + ( n − 1) Q)2
+
+(μη + λ)2 + 2ηλ (a + ( n − 1) Q)(μη + λ)3 .
+
+As for the variance, we obtain Var[ Tn] = E[T 2 
+
+> n
+
+] − E[Tn]2 = 2ηλ (a + ( n − 1) Q)(μη + λ)3 .
+
+□
+
+Case where the Jump Sizes Follow a Gamma Distribution. 
+
+As a generalization of Theorem 3.7, we consider a compound Poisson process whose jump sizes follow a Gamma distribution. In this case, the Laplace transform cannot be expressed in closed form. However, since its derivatives at the origin can be computed explicitly, the expectation and variance can still be obtained. 
+
+Theorem 3.9. Let {Dt}t≥0 be defined as in (16), and assume that Jk are independent and identically distributed and follow a Gamma distribution with parameters β and η. Then, 
+
+E[Tn] = η(a + ( n − 1) Q)
+
+μη + βλ ,
+
+Var[ Tn] = β(β + 1) ηλ (a + ( n − 1) Q)(μη + βλ )3 .12 RYOYA KOIDE 
+
+Proof. Let LJ1 =
+
+ ηη−θ
+
+β
+
+. Then, for θ < η , the Laplace Exponent Ψ can be calculated as follows: 
+
+ψ(θ) = θμ + λ
+
+ ηη − θ
+
+β
+
+− 1
+
+!
+
+.dψ dθ (θ) = μ + λβη β (η − θ)−(β+1) .d2ψdθ 2 (θ) = λβ (β + 1) ηβ (η − θ)−(β+2) .
+
+Let ψ−1 = Φ denote the inverse function of ψ. Then, it holds that Φ(0) = 0 (∵ ψ(0) = 0) ,dΦ
+
+ds (0) = 1
+
+dψ dθ (0) = 1
+
+μ + λβη −1 = ημη + βλ ,d2Φ
+
+ds 2 (0) = −
+
+d2ψdθ 2 (0) 
+
+ dψ dθ (0) 
+
+3 = − λβ (β + 1) η−2
+
+(μ + λβη −1)3 = − β(β + 1) ηλ 
+
+(μη + βλ )3 .
+
+Therefore, the expectation is given by 
+
+E[Tn] = − dds E[e−sT n ] s=0 
+
+= K exp( −KΦ(0)) = dΦ
+
+ds (0) η(a + ( n − 1) Q)
+
+μη + βλ .
+
+The second moment is given by 
+
+E[T 2 
+
+> n
+
+] = d2
+
+ds 2 E[e−sT n ] s=0 
+
+= −K exp( −KΦ(0)) −K
+
+ dΦ
+
+ds (0) 
+
+2
+
++ d2Φ
+
+ds 2 (0) 
+
+!
+
+= −(a + ( n − 1) Q) −(a + ( n − 1) Q)
+
+ ημη + βλ 
+
+2
+
+− β(β + 1) ηλ 
+
+(μη + βλ )3
+
+!
+
+=
+
+ η(a + ( n − 1) Q)
+
+μη + βλ 
+
+2
+
++ β(β + 1) ηλ (a + ( n − 1) Q)(μη + βλ )3 .
+
+The variance is given by Var[ Tn] = E[T 2 
+
+> n
+
+] − E[Tn]2 = β(β + 1) ηλ (a + ( n − 1) Q)(μη + βλ )3 .
+
+□
+
+3.3. Generalization of the Cumulative Demand. 
+
+Based on the previous discussion, we further generalize the model. 
+
+Definition 3.10 (Generalized Cumulative Demand ). Let μ, α, λ, λ ′ > 0. Let {Nt}t≥0 be a 
+
+λ-Poisson process, {N ′ 
+
+> t
+
+}t≥0 be a λ′-Poisson process, and {Jk}k≥1 be a sequence of independent and identically distributed random variables. Assume that {Nt}t≥0, {N ′ 
+
+> t
+
+}t≥0, and {Jk}k≥1 are mutually independent. We define the cumulative demand process {Dt}t≥0 as (21) Dt = μt + αN t + 
+
+> N′
+> t
+
+X
+
+> k=1
+
+Jk.13 
+
+In this case, for 
+
+Tn = inf {s > T n−1 | Ds ≥ a + ( n − 1) Q} ,
+
+we derive E[e−sT n ], E[Tn], and Var[ Tn]. Let ψ(θ) denote the Laplace exponent of Dt. Then, 
+
+E[e−sT n ] = exp( −(a + ( n − 1) Q)Φ( s)) ,where ψ(Φ( s)) = s. 
+
+Let LJ1 (θ) denote the Laplace transform of J1. We compute the Laplace exponent ψ(θ): 
+
+ψ(θ) = log E[eθD 1 ] = θμ + λ(eθα − 1) + λ′(LJ1 (θ) − 1) .
+
+Theorem 3.11. Let {Dt}t≥0 be defined as in (21), and assume that Jk are independent and identically distributed and follow a Gamma distribution with parameters β, η . Then, 
+
+(22) E[Tn] = η(a + ( n − 1) Q)
+
+μη + αλ + βλ ′ ,
+
+(23) Var [Tn] = (α2η3λ + β(β + 1) ηλ ′)( a + ( n − 1) Q)(μη + αηλ + βλ ′)3 .
+
+Proof. Since LJ1 =
+
+ ηη−θ
+
+β
+
+, for θ < η , the Laplace Exponent Ψ can be calculated as follows: 
+
+ψ(θ) = log E[eθD 1 ] = θμ + λ(eθα − 1) + λ′
+
+ ηη − θ
+
+β
+
+− 1
+
+!
+
+,dψ dθ (θ) = μ + αλe αθ + λ′βη β (η − θ)−(β+1) ,d2ψdθ 2 (θ) = α2λe αθ + λ′β(β + 1) ηβ (η − θ)−(β+2) .
+
+Let Φ denote the inverse function of ψ. Then, it holds that Φ(0) = 0 (∵ ψ(0) = 0) ,dΦ
+
+ds (0) = 1
+
+dψ dθ (0) = 1
+
+μ + αλ + λ′βη −1 = ημη + αλη + βλ ′ ,d2Φ
+
+ds 2 (0) = −
+
+d2ψdθ 2 (0) 
+
+ dψ dθ (0) 
+
+3 = − α2λ + λ′β(β + 1) η−2
+
+(μ + αλ + λ′βη −1)3 = − α2η3λ + β(β + 1) ηλ ′
+
+(μη + αλη + βλ ′)3 .
+
+Therefore, we have 
+
+E[Tn] = − dds E[e−sT n ] s=0 
+
+= K exp( −KΦ(0)) dΦ
+
+ds (0) = η(a + ( n − 1) Q)
+
+μη + αλ + βλ ′ ,E[T 2 
+
+> n
+
+] = d2
+
+ds 2 E[e−sT n ] s=0 
+
+= −K exp( −KΦ(0)) −K
+
+ dΦ
+
+ds (0) 
+
+2
+
++ d2Φ
+
+ds 2 (0) 
+
+!
+
+= −(a + ( n − 1) Q) −(a + ( n − 1) Q)
+
+ ημη + αλ + βλ ′
+
+2
+
+− (α2η3λ + β(β + 1) ηλ ′)(μη + αηλ + βλ ′)3
+
+14 RYOYA KOIDE 
+
+=
+
+ η(a + ( n − 1) Q)
+
+μη + αλ + βλ ′
+
+2
+
++ (α2η3λ + β(β + 1) ηλ ′)( a + ( n − 1) Q)(μη + αηλ + βλ ′)3 .
+
+For the variance, we obtain Var[ Tn] = E[T 2 
+
+> n
+
+] − E[Tn]2 = (α2η3λ + β(β + 1) ηλ ′)( a + ( n − 1) Q)(μη + αηλ + βλ ′)3 .
+
+□
+
+3.4. On the Expected Total Cost. 
+
+Although we do not directly use the distribution of Tn, we consider the generalized cumulative demand process and investigate the expected value of the total inventory cost derived from it. Consider the cumulative demand process 
+
+Dt = μt + αN t + 
+
+> N′
+> t
+
+X
+
+> k=1
+
+Jk.
+
+Here, {Nt}t≥0 is a λ-Poisson process, {N ′ 
+
+> t
+
+}t≥0 is a λ′-Poisson process, and {Jk}k≥1 is a sequence of nonnegative independent and identically distributed random variables. We assume that these processes are mutually independent. 
+
+Lemma 3.12. For any s > 0 and b > 0,
+
+(24) P (Tn < s ) = P (Ds ≥ b) = 
+
+> ∞
+
+X
+
+> i=0
+> ∞
+
+X
+
+> j=0
+
+pi(s) qj (s) P
+
+> j
+
+X
+
+> k=1
+
+Jk ≥ b − μs − αi 
+
+!
+
+holds, where 
+
+pi(s) = e−λs (λs )i
+
+i! , qj (s) = e−λ′s (λ′s)j
+
+j! .
+
+Proof. Since the cumulative demand process Dt is nondecreasing, {Tn < s } ⇐⇒ {Ds ≥ b}
+
+holds, and thus P (Tn < s ) = P (Ds ≥ b). 
+
+P (Ds ≥ b) = 
+
+> ∞
+
+X
+
+> i=0
+> ∞
+
+X
+
+> j=0
+
+P (Ds ≥ b | Ns = i, N ′ 
+
+> s
+
+= j) P (Ns = i, N ′ 
+
+> s
+
+= j).
+
+Because the Poisson processes Ns and N ′ 
+
+> s
+
+are independent, 
+
+P (Ns = i, N ′ 
+
+> s
+
+= j) = P (Ns = i)P (N ′ 
+
+> s
+
+= j) = pi(s) qj (s).
+
+Under the condition ( Ns, N ′
+
+> s
+
+) = ( i, j ), 
+
+Ds = μs + αi +
+
+> j
+
+X
+
+> k=1
+
+Jk a.s. Therefore, 
+
+P (Ds ≥ b | Ns = i, N ′ 
+
+> s
+
+= j) = P
+
+> j
+
+X
+
+> k=1
+
+Jk ≥ b − μs − αi 
+
+!
+
+.
+
+□
+
+Lemma 3.13. Let {Jk}k≥1 be independent and identically distributed random variables following a Gamma distribution with parameters β, η > 0. Then for any integer j ≥ 1 and x ∈ R,
+
+(25) P
+
+> j
+
+X
+
+> k=1
+
+Jk ≥ x
+
+!
+
+=
+
+
+
+1, x ≤ 0,
+
+Γ( jβ, ηx )Γ( jβ ) , x > 0,
+
+where Γ( ·, ·) denotes the upper incomplete gamma function. 15 
+
+In particular, when β = 1 ,
+
+(26) P
+
+> j
+
+X
+
+> k=1
+
+Jk ≥ x
+
+!
+
+= e−ηx j−1X
+
+> r=0
+
+(ηx )r
+
+r! .
+
+Proof. If x ≤ 0, since Jk ≥ 0, it is clear that Pjk=1 Jk ≥ x.Assume x > 0. Using the Laplace transform of the Gamma distribution 
+
+E[esJ 1 ] = 
+
+ ηη − s
+
+β
+
+and independence, we obtain 
+
+E
+
+h
+
+e−s Pjk=1 Jk
+
+i
+
+=
+
+ ηη − s
+
+jβ 
+
+.
+
+This coincides with the Laplace transform of the Gamma distribution with parameters jβ, η .Therefore, jX
+
+> k=1
+
+Jk
+
+follows a Gamma distribution with parameters jβ, η . Hence, 
+
+P
+
+> j
+
+X
+
+> k=1
+
+Jk ≥ x
+
+!
+
+=
+
+Z ∞
+
+> x
+
+ηjβ 
+
+Γ( jβ ) ujβ −1e−ηu du. 
+
+By the change of variables y = ηu ,
+
+P
+
+> j
+
+X
+
+> k=1
+
+Jk ≥ x
+
+!
+
+= 1Γ( jβ )
+
+Z ∞
+
+> ηx
+
+yjβ −1e−y dy = Γ( jβ, ηx )Γ( jβ ) .
+
+When β = 1, jβ = j is an integer. Consider Γ( j, z ) = 
+
+Z ∞
+
+> z
+
+yj−1e−y dy. 
+
+Let Ij−1(z) := R ∞ 
+
+> z
+
+yj−1e−y dy .
+
+Ij−1(z) = 
+
+h
+
+−yj−1e−yi∞ 
+
+> z
+
++ ( j − 1) 
+
+Z ∞
+
+> z
+
+yj−2e−y dy. 
+
+Since lim y→∞ yj−1e−y = 0, 
+
+Ij−1(z) = zj−1e−z + ( j − 1) Ij−2(z).
+
+Repeating integration by parts recursively yields 
+
+Ij−1(z) = e−z 
+
+zj−1 + ( j − 1) zj−2 + ( j − 1)( j − 2) zj−3 + · · · + ( j − 1)! 
+
+
+
+.
+
+Rearranging coefficients gives 
+
+Ij−1(z) = ( j − 1)! e−zj−1X
+
+> r=0
+
+zr
+
+r! .
+
+Thus, Γ( j, z ) = ( j − 1)! e−zj−1X
+
+> r=0
+
+zr
+
+r! .
+
+Therefore, Γ( j, ηx ) = ( j − 1)! e−ηx j−1X
+
+> r=0
+
+(ηx )r
+
+r! .16 RYOYA KOIDE 
+
+□
+
+Remark 3.14. The same result can also be obtained by performing a direct computation in the case where the jump sizes Jk follow an exponential distribution. 
+
+Theorem 3.15. Consider the cumulative demand process 
+
+Dt = μt + αN t + 
+
+> N′
+> t
+
+X
+
+> k=1
+
+Jk.
+
+Here, {Nt}t≥0 is a λ-Poisson process, {N ′ 
+
+> t
+
+}t≥0 is a λ′-Poisson process, and {Jk}k≥1 is a sequence of nonnegative independent and identically distributed random variables. Assume that these are mutually independent. Then, for any s > 0 and b > 0,
+
+E[Ctotal (a, Q, t )] = CoQ X
+
+> n≥1
+
+P (Dt ≥ a + ( n − 1) Q)+ Chxt − Cht2
+
+2
+
+ μ + αλ + λ′E[J1]
+
++ ChQ
+
+Z t
+
+> 0
+
+X
+
+> n≥1
+
+P (Ds ≥ a + ( n − 1) Q) ds. (27) 
+
+Proof. The result follows from (9) and (24). □
+
+If the distribution of Jk is specified explicitly, we obtain the following corollary. 
+
+Corollary 3.16. Let {Jk}k≥1 be independent and identically distributed random variables fol-lowing a Gamma distribution with parameters β, η > 0. Then the expected total cost is given by 
+
+E[Ctotal (a, Q, t )] = CoQ X
+
+> n≥1
+> ∞
+
+X
+
+> i=0
+> ∞
+
+X
+
+> j=0
+
+pi(t)qj (t) P
+
+> j
+
+X
+
+> k=1
+
+Jk ≥ a + ( n − 1) Q − μt − αi 
+
+!
+
++ Chxt − Cht2
+
+2
+
+
+
+μ + αλ + λ′ βη
+
+
+
++ ChQ
+
+Z t
+
+> 0
+
+X
+
+> n≥1
+> ∞
+
+X
+
+> i=0
+> ∞
+
+X
+
+> j=0
+
+pi(s)qj (s) P
+
+> j
+
+X
+
+> k=1
+
+Jk ≥ a + ( n − 1) Q − μs − αi 
+
+!
+
+ds, (28) 
+
+where 
+
+pi(s) = e−λs (λs )i
+
+i! , qj (s) = e−λ′s (λ′s)j
+
+j! ,
+
+and 
+
+P
+
+> j
+
+X
+
+> k=1
+
+Jk ≥ y
+
+!
+
+=
+
+
+
+1, y ≤ 0,
+
+Γ( jβ, ηy )Γ( jβ ) , y > 0,
+
+holds.In particular, when β = 1 ,
+
+E[Ctotal (a, Q, t )] = CoQ X
+
+> n≥1
+> ∞
+
+X
+
+> i=0
+> ∞
+
+X
+
+> j=0
+
+pi(t)qj (t) Φ j (a + ( n − 1) Q − μt − αi )+ Chxt − Cht2
+
+2
+
+
+
+μ + αλ + λ′
+
+> η
+
+
+
++ ChQ
+
+Z t
+
+> 0
+
+X
+
+> n≥1
+> ∞
+
+X
+
+> i=0
+> ∞
+
+X
+
+> j=0
+
+pi(s)qj (s) Φ j (a + ( n − 1) Q − μs − αi )ds. (29) 17 
+
+Here, 
+
+ϕj (y) = P
+
+> j
+
+X
+
+> k=1
+
+Jk ≥ y
+
+!
+
+=
+
+
+
+1, y ≤ 0,e−ηy j−1X
+
+> r=0
+
+(ηy )r
+
+r! , y > 0.
+
+Theorem 3.17 (Comparison between Finite-Horizon and Long-Run Average) . Assume E[J1] <
+
+∞ and define 
+
+m :=  μ + αλ + λ′E[J1].
+
+Then, 
+
+(30) lim 
+
+> t→∞
+
+1
+
+t E[Ctotal (a, Q, t )] = Com + Chx, 
+
+and this limit does not depend on Q (nor on a). Proof. By monotonicity, 
+
+{Tn < t } ⇐⇒ { Dt ≥ a + ( n − 1) Q}
+
+holds, and therefore 
+
+E[Rt] = X
+
+> n≥1
+
+P (Tn < t ) = X
+
+> n≥1
+
+P (Dt ≥ a + ( n − 1) Q).
+
+Hence, from the previously derived representation of the total cost, 
+
+E[Ctotal (a, Q, t )] = CoQ E [Rt] + Chxt − Ch
+
+Z t
+
+> 0
+
+E[Ds] ds + ChQ
+
+Z t
+
+> 0
+
+E[Rs] ds. 
+
+Next, we compute E[Ds]. By independence and linearity, 
+
+E[Ds] = μs + α E [Ns] + E[N ′
+
+> s
+
+]E[J1] =  μ + αλ + λ′E[J1]s =: ms. 
+
+Thus, Z t
+
+> 0
+
+E[Ds] ds = m
+
+2 t2.
+
+To establish the long-run average, we provide upper and lower bounds relating Rt and Dt. Since 
+
+Rt counts the number of thresholds reached by Dt, we have 
+
+a + ( Rt − 1) Q ≤ Dt < a + RtQ. 
+
+Therefore, 
+
+Dt − aQ ≤ Rt ≤ Dt − aQ + 1 .
+
+Taking expectations and dividing by t,1
+
+tE[Dt] − aQ ≤ E[Rt]
+
+t ≤ 1
+
+tE[Dt] − aQ + 1
+
+t .
+
+Since E[Dt] = mt , letting t → ∞ yields lim 
+
+> t→∞
+
+E[Rt]
+
+t = mQ .
+
+Furthermore, 1
+
+t2
+
+Z t
+
+> 0
+
+E[Rs] ds =
+
+Z 10
+
+E[Rut ]
+
+t du −→ 
+
+Z 10
+
+mQ u du = m
+
+2Q .
+
+Hence, Z t
+
+> 0
+
+E[Rs] ds ∼ m
+
+2Q t2.18 RYOYA KOIDE 
+
+Substituting these into the total cost expression, 1
+
+t E[Ctotal (a, Q, t )] = CoQ E[Rt]
+
+t + Chx − Ch
+
+2 mt + ChQ · 1
+
+t
+
+Z t
+
+> 0
+
+E[Rs] ds. 
+
+We have 
+
+CoQ E[Rt]
+
+t → Com, 
+
+and 
+
+ChQ · 1
+
+t
+
+Z t
+
+> 0
+
+E[Rs] ds = ChQ · t · 1
+
+t2
+
+Z t
+
+> 0
+
+E[Rs] ds → ChQ · t · m
+
+2Q = Ch
+
+2 mt. 
+
+Thus, the terms proportional to t cancel, and we obtain lim 
+
+> t→∞
+
+1
+
+t E[Ctotal (a, Q, t )] = Com + Chx = Co
+
+ μ + αλ + λ′E[J1] + Chx. 
+
+Since the limit does not contain Q, the long-run average cost does not depend on Q (nor on 
+
+a). □
+
+Corollary 3.18. If Jk follows an exponential distribution with parameter η,
+
+(31) lim 
+
+> t→∞
+
+1
+
+t E[Ctotal (a, Q, t )] = Co
+
+
+
+μ + αλ + λ′
+
+η
+
+
+
++ Chx. 
+
+If Jk follows a Gamma distribution with parameters β, η ,
+
+(32) lim 
+
+> t→∞
+
+1
+
+t E[Ctotal (a, Q, t )] = Co
+
+
+
+μ + αλ + βλ ′
+
+η
+
+
+
++ Chx. 
+
+Acknowledgements 
+
+The author is deeply grateful to Professor Seiji Hiraba and Takumu Ooi for their continuous support, insightful suggestions, and invaluable guidance. The author also thanks Professor Aya Ishigaki and Yuriko Ono for fruitful collaboration and stimulating discussions. 
+
+References 
+
+[1] Nezih Altay, Frank Rudisill, and Lewis A Litteral. Adapting wright’s modification of holt’s method to fore-casting intermittent demand. International Journal of Production Economics , 111(2):389–408, 2008. [2] David Applebaum. L´ evy Processes and Stochastic Calculus , volume 116. Cambridge university press, 2009. [3] Alain Bensoussan, Metin C ¸ akanyildirim, and Suresh P Sethi. Optimality of base-stock and (s, s) policies for inventory problems with information delays. Journal of optimization theory and applications , 130:153–172, 2006. [4] Alain Bensoussan, Lama Moussawi-Haidar, and Metin C ¸ akanyıldırım. Inventory control with an order-time constraint: optimality, uniqueness and significance. Annals of Operations Research , 181:603–640, 2010. [5] Jean Bertoin. L´ evy processes , volume 121. Cambridge university press Cambridge, 1996. [6] Samuel N Cohen and Robert James Elliott. Stochastic calculus and applications , volume 2. Springer, 2015. [7] R. M. Corless, G. H. Gonnet, D. E. G. Hare, D. J. Jeffrey, and D. E. Knuth. On the Lambert W function. 
+
+Adv. Comput. Math. , 5(4):329–359, 1996. [8] J.D. Croston. Forecasting and stock control for intermittent demands. Operational Research Quarterly ,23(3):289–303, 1972. [9] Richard Durrett and R Durrett. Essentials of stochastic processes , volume 1. Springer, 2012. [10] Rick Durrett. Probability: theory and examples , volume 49. Cambridge university press, 2019. [11] Li-Ting Huang, I-Chien Hsieh, and Cheng-Kiang Farn. On ordering adjustment policy under rolling forecast in supply chain planning. Computers & Industrial Engineering , 60(3):397–410, 2011. [12] Ryoya Koide, Yurika Ono, and Aya Ishigaki. Impact analysis on the time delay of inventory adjustment using the L´ evy process. Proceedings of the Japan Joint Automatic Control Conference , 67:235–236, 2024. [13] Ryoya Koide, Yurika Ono, and Aya Ishigaki. Inventory control using a drifted poisson process: Applicabil-ity to actual intermittent demand data. In Proceedings of the 2025 IEEE 14th International Workshop on Computational Intelligence and Applications (IWCIA 2025) , pages 91–96, Hiroshima, Japan, 2025. IEEE. [14] Ryoya Koide, Yurika Ono, and Aya Ishigaki. Inventory Control Using a L´ evy process for Evaluating Total Costs under Intermittent Demand. 2025. 19 
+
+[15] Ryoya Koide, Yurika Ono, and Aya Ishigaki. Inventory management of emergency relief supplies using sto-chastic processes. In Proceedings of the 19th Annual Meeting of Japan Association for Earthquake Engineering ,Okinawa, Japan, 2025. [16] Nikolaos Kourentzes. Intermittent demand forecasts with neural networks. International Journal of Produc-tion Economics , 143(1):198–206, 2013. [17] Nikolaos Kourentzes. Intermittent demand forecasts with neural networks. International Journal of Produc-tion Economics , 143(1):198–206, 2013. [18] Kumar Muthuraman, Sridhar Seshadri, and Qi Wu. Inventory management with stochastic lead times. Math-ematics of Operations Research , 40(2):302–327, 2015. [19] Konstantinos Nikolopoulos. We need to talk about intermittent demand forecasting. European Journal of Operational Research , 291(2):549–559, 2021. [20] Kei Noba and Kazutoshi Yamazaki. On singular control for L´ evy processes. Mathematics of Operations Research , 48(3):1213–1234, 2023. [21] Kei Noba and Kazutoshi Yamazaki. On stochastic control under poissonian intervention: optimality of a barrier strategy in a general l´ evy model. Journal of Applied Probability , pages 1–24, 2025. [22] Bernt Øksendal and Agn` es Sulem. Applied Stochastic Control of Jump Diffusions . Springer, 2nd edition, 2007. [23] Sandun C Perera and Suresh P Sethi. A survey of stochastic inventory models with fixed costs: Optimality of (s, s) and (s, s)-type policies—discrete-time case. Production and Operations Management , 32(1):131–153, 2023. [24] Ken-Iti Sato. L´ evy Processes and Infinitely Divisible Distributions , volume 68. Cambridge university press, 1999. [25] Shengjie Wang, Yanfei Kang, and Fotios Petropoulos. Combining probabilistic forecasts of intermittent de-mand. European Journal of Operational Research , 315(3):1038–1048, 2024. [26] Kazutoshi Yamazaki. Inventory control for spectrally positive L´ evy demand processes. Mathematics of Op-erations Research , 42(1):212–237, 2017. [27] Ferhat Yuna, Burak Erkayman, and Mustafa Yılmaz. Inventory control model for intermittent demand: a comparison of metaheuristics. Soft Computing , 27(10):6487–6505, 2023. [28] G. Peter Zhang. Time series forecasting using a hybrid arima and neural network model. Neurocomputing ,50:159–175, 2003. [29] Haoyi Zhou, Shanghang Zhang, Jieqi Peng, Shuai Zhang, Jianxin Li, Hui Xiong, and Wancai Zhang. Informer: Beyond efficient transformer for long sequence time-series forecasting. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 35, pages 11106–11115, 2021. 
+
+Department of Mathematics, Faculty of Science and Technology, Tokyo University of Science, 2641 Yamazaki, Noda-shi, Chiba prefecture, 278-8510, Japan. 
+
+Email address : koideryoya@gmail.com

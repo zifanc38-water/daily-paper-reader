@@ -1,0 +1,237 @@
+{
+  "mode": "skims",
+  "generated_at": "2026-03-24T01:47:10.233680+00:00",
+  "stats": {
+    "mode": "skims",
+    "forced_all_quick": true,
+    "min_score": 8.0,
+    "deep_divecandidates": 6,
+    "deep_cap": null,
+    "deep_selected": 0,
+    "quick_candidates": 6,
+    "quick_skim_target": null,
+    "quick_selected": 6
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2602.19439v2",
+      "title": "OptiRepair: Closed-Loop Diagnosis and Repair of Supply Chain Optimization Models with LLM Agents",
+      "abstract": "Supply chain optimization models frequently become infeasible because of modeling errors. Diagnosis and repair require scarce OR expertise: analysts must interpret solver diagnostics, trace root causes across echelons, and fix formulations without sacrificing operational soundness. Whether AI agents can perform this task remains untested. We decompose this task into two phases: a domain-agnostic feasibility phase that iteratively repairs any LP using IIS-guided diagnosis, and a domain-specific validation phase that enforces five rationality checks grounded in inventory theory. We test 22 API models from seven families on 976 multi-echelon supply chain problems and train two 8B-parameter models with self-taught reasoning and solver-verified rewards. The trained models reach 81.7% Rational Recovery Rate (RRR) -- the fraction of problems resolved to both feasibility and operational rationality -- versus 42.2% for the best API model and 21.3% on average. The gap concentrates in Phase 1 repair, where API models average 27.6% recovery rate versus 97.2% for trained models. Two gaps separate current AI from reliable model repair: solver interaction, as API models restore only 27.6% of infeasible formulations; and operational rationale, as roughly one in four feasible repairs violate supply chain theory. Each gap requires a different intervention -- targeted training closes the solver interaction gap, while explicit specification as solver-verifiable checks closes the rationality gap. For organizations adopting AI in operational planning, formalizing what 'rational' means in their context is the higher-return investment.",
+      "authors": [
+        "Ruicheng Ao",
+        "David Simchi-Levi",
+        "Xinshang Wang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG",
+        "math.OC"
+      ],
+      "published": "2026-02-23T02:19:05+00:00",
+      "link": "https://arxiv.org/pdf/2602.19439v2",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "diagnosis and repair of multi-echelon supply chain optimization models",
+      "llm_evidence_cn": "多级供应链优化模型的诊断与修复",
+      "llm_evidence": "多级供应链优化模型的诊断与修复",
+      "canonical_evidence": "多级供应链优化模型的诊断与修复",
+      "llm_tldr_en": "Uses LLM agents to automatically diagnose and repair infeasible supply chain optimization models.",
+      "llm_tldr_cn": "利用大模型智能体自动诊断和修复不可行的供应链优化模型。",
+      "llm_tldr": "利用大模型智能体自动诊断和修复不可行的供应链优化模型。",
+      "llm_tags": [
+        "query:ato:composite"
+      ],
+      "matched_query_tag": "query:ato:composite",
+      "matched_query_text": "Papers central to 帮我搜索 assemble to order 相关的论文, especially work that connects or combines: m; p; assemble to order production strategy; assemble-to-order manufacturing systems; inventory control in assemble to order systems; managing demand uncertainty in ATO systems; recent research papers on assemble to order systems; optimization models for assemble to order production; literature review of assemble to order supply chains; inventory policies for assemble to order manufacturing.",
+      "matched_requirement_id": "req-composite-ato",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.19625v1",
+      "title": "Laplace Transforms of Stopping Times for Subordinator with Applications to Inventory Control",
+      "abstract": "Intermittent demand fluctuations pose significant challenges in disaster logistics and medical supply systems. In this study, we formulate cumulative demand as a generalized Lévy process composed of a drift term, Poisson jumps, and compound Poisson jumps, and analyze a continuous-time inventory model. The proposed framework provides a unified formulation that encompasses both drifted Poisson processes and drifted compound Poisson processes.   From a mathematical perspective, we treat the reorder time as a first-passage problem of a subordinator and derive its Laplace transform via the Laplace exponent. In particular, for the drifted Poisson case, we obtain an explicit representation of the inverse Laplace exponent using the Lambert W function, which yields an analytic expression for the Laplace transform of the first-passage time. Furthermore, when the jump sizes follow exponential and Gamma distributions, we derive explicit formulas for the mean and variance of the reorder times, thereby clarifying the moment structure of first-passage times for generalized Lévy demand processes.   From an operations research perspective, we explicitly characterize the expected total cost over a finite time horizon based on the distribution of cumulative demand. This study presents an analytical framework that integrates first-passage theory of Lévy processes with continuous-time inventory control.",
+      "authors": [
+        "Ryoya Koide"
+      ],
+      "primary_category": "math.PR",
+      "categories": [
+        "math.PR",
+        "math.OC"
+      ],
+      "published": "2026-02-23T09:14:04+00:00",
+      "link": "https://arxiv.org/pdf/2602.19625v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "continuous-time inventory model for intermittent demand fluctuations",
+      "llm_evidence_cn": "针对间歇性需求波动的连续时间库存模型",
+      "llm_evidence": "针对间歇性需求波动的连续时间库存模型",
+      "canonical_evidence": "针对间歇性需求波动的连续时间库存模型",
+      "llm_tldr_en": "Analyzes inventory control under stochastic demand using Laplace transforms for reorder time optimization.",
+      "llm_tldr_cn": "利用拉普拉斯变换分析随机需求下的库存控制，优化再订货点决策。",
+      "llm_tldr": "利用拉普拉斯变换分析随机需求下的库存控制，优化再订货点决策。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory control in assemble to order systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.19625v2",
+      "title": "Laplace Transforms of Stopping Times for Subordinator with Applications to Inventory Control",
+      "abstract": "Intermittent demand fluctuations pose significant challenges in disaster logistics and medical supply systems. In this study, we formulate cumulative demand as a generalized Lévy process composed of a drift term, Poisson jumps, and compound Poisson jumps, and analyze a continuous-time inventory model. The proposed framework provides a unified formulation that encompasses both drifted Poisson processes and drifted compound Poisson processes.   From a mathematical perspective, we treat the reorder time as a first-passage problem of a subordinator and derive its Laplace transform via the Laplace exponent. In particular, for the drifted Poisson case, we obtain an explicit representation of the inverse Laplace exponent using the Lambert W function, which yields an analytic expression for the Laplace transform of the first-passage time. Furthermore, when the jump sizes follow exponential and Gamma distributions, we derive explicit formulas for the mean and variance of the reorder times, thereby clarifying the moment structure of first-passage times for generalized Lévy demand processes.   From an operations research perspective, we explicitly characterize the expected total cost over a finite time horizon based on the distribution of cumulative demand. This study presents an analytical framework that integrates first-passage theory of Lévy processes with continuous-time inventory control.",
+      "authors": [
+        "Ryoya Koide"
+      ],
+      "primary_category": "math.PR",
+      "categories": [
+        "math.PR",
+        "math.OC"
+      ],
+      "published": "2026-02-23T09:14:04+00:00",
+      "link": "https://arxiv.org/pdf/2602.19625v2",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Inventory control model for intermittent demand fluctuations",
+      "llm_evidence_cn": "针对间歇性需求波动的库存控制模型",
+      "llm_evidence": "针对间歇性需求波动的库存控制模型",
+      "canonical_evidence": "针对间歇性需求波动的库存控制模型",
+      "llm_tldr_en": "Analyzes continuous-time inventory models using Lévy processes to handle intermittent demand fluctuations.",
+      "llm_tldr_cn": "利用Lévy过程分析连续时间库存模型，以处理灾难物流中的间歇性需求波动。",
+      "llm_tldr": "利用Lévy过程分析连续时间库存模型，以处理灾难物流中的间歇性需求波动。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory control in assemble to order systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.24180v1",
+      "title": "Learning Flexible Job Shop Scheduling under Limited Buffers and Material Kitting Constraints",
+      "abstract": "The Flexible Job Shop Scheduling Problem (FJSP) originates from real production lines, while some practical constraints are often ignored or idealized in current FJSP studies, among which the limited buffer problem has a particular impact on production efficiency. To this end, we study an extended problem that is closer to practical scenarios--the Flexible Job Shop Scheduling Problem with Limited Buffers and Material Kitting. In recent years, deep reinforcement learning (DRL) has demonstrated considerable potential in scheduling tasks. However, its capacity for state modeling remains limited when handling complex dependencies and long-term constraints. To address this, we leverage a heterogeneous graph network within the DRL framework to model the global state. By constructing efficient message passing among machines, operations, and buffers, the network focuses on avoiding decisions that may cause frequent pallet changes during long-sequence scheduling, thereby helping improve buffer utilization and overall decision quality. Experimental results on both synthetic and real production line datasets show that the proposed method outperforms traditional heuristics and advanced DRL methods in terms of makespan and pallet changes, and also achieves a good balance between solution quality and computational cost. Furthermore, a supplementary video is provided to showcase a simulation system that effectively visualizes the progression of the production line.",
+      "authors": [
+        "Shishun Zhang",
+        "Juzhan Xu",
+        "Yidan Fan",
+        "Chenyang Zhu",
+        "Ruizhen Hu",
+        "Yongjun Wang",
+        "Kai Xu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-02-27T17:03:34+00:00",
+      "link": "https://arxiv.org/pdf/2602.24180v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Flexible job shop scheduling with material kitting constraints",
+      "llm_evidence_cn": "带有物料配套约束的柔性作业车间调度",
+      "llm_evidence": "带有物料配套约束的柔性作业车间调度",
+      "canonical_evidence": "带有物料配套约束的柔性作业车间调度",
+      "llm_tldr_en": "Addresses flexible job shop scheduling with limited buffers and kitting, relevant to assembly manufacturing.",
+      "llm_tldr_cn": "研究带有有限缓冲区和物料配套约束的柔性作业车间调度，与组装制造相关。",
+      "llm_tldr": "研究带有有限缓冲区和物料配套约束的柔性作业车间调度，与组装制造相关。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "assemble-to-order manufacturing systems",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.04065v1",
+      "title": "Online Order Fulfillment with Replenishment",
+      "abstract": "In modern e-commerce and service operations, firms must jointly manage inventory replenishment and real-time order fulfillment to maximize profit under demand uncertainty. While each component has been studied extensively in isolation, their interaction remains underexplored. This paper investigates a fundamental operational question: which lever plays a more decisive role in overall system performance, replenishment or fulfillment?   We model the system as a one-location online order fulfillment problem with lost sales and stochastic customer arrivals, each offering heterogeneous rewards. Replenishment follows either a base-stock or constant-order policy, while real-time fulfillment decisions are made using online algorithms. Our core performance metric is the expected average profit per replenishment cycle, evaluated across all combinations of these policies and algorithms. Our main theoretical result shows that when the replenishment cycle is long, the cumulative regret of online fulfillment remains of the same order as in a corresponding single-cycle problem, even under repeated replenishment, revealing a form of regret stability. This phenomenon also extends to a multi-location setting. We further develop a regret-based framework that quantitatively compares the value of improving replenishment versus improving fulfillment, and we characterize regimes in which optimizing replenishment yields a larger revenue impact than refining the online fulfillment algorithm (and vice versa). Motivated by examples where myopic algorithms underperform, we introduce a novel look-ahead online algorithm that anticipates future replenishment and demand. Numerical experiments verify that this algorithm outperforms myopic baselines. Overall, our results provide both theoretical and managerial insights into situations where inventory replenishment policies are more influential and vice versa.",
+      "authors": [
+        "Zi Ling",
+        "Jiashuo Jiang",
+        "Linwei Xin"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC"
+      ],
+      "published": "2026-03-04T13:41:31+00:00",
+      "link": "https://arxiv.org/pdf/2603.04065v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "jointly manage inventory replenishment and order fulfillment under demand uncertainty",
+      "llm_evidence_cn": "在需求不确定下共同管理库存补货与订单履行",
+      "llm_evidence": "在需求不确定下共同管理库存补货与订单履行",
+      "canonical_evidence": "在需求不确定下共同管理库存补货与订单履行",
+      "llm_tldr_en": "Investigates the interaction between inventory replenishment and online order fulfillment strategies.",
+      "llm_tldr_cn": "研究了库存补货与在线订单履行策略之间的相互作用。",
+      "llm_tldr": "研究了库存补货与在线订单履行策略之间的相互作用。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory control in assemble to order systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.19621v1",
+      "title": "DeepStock: Reinforcement Learning with Policy Regularizations for Inventory Management",
+      "abstract": "Deep Reinforcement Learning (DRL) provides a general-purpose methodology for training inventory policies that can leverage big data and compute. However, off-the-shelf implementations of DRL have seen mixed success, often plagued by high sensitivity to the hyperparameters used during training. In this paper, we show that by imposing policy regularizations, grounded in classical inventory concepts such as \"Base Stock\", we can significantly accelerate hyperparameter tuning and improve the final performance of several DRL methods. We report details from a 100% deployment of DRL with policy regularizations on Alibaba's e-commerce platform, Tmall. We also include extensive synthetic experiments, which show that policy regularizations reshape the narrative on what is the best DRL method for inventory management.",
+      "authors": [
+        "Yaqi Xie",
+        "Xinru Hao",
+        "Jiaxi Liu",
+        "Will Ma",
+        "Linwei Xin",
+        "Lei Cao",
+        "Yidong Zhang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-20T03:58:18+00:00",
+      "link": "https://arxiv.org/pdf/2603.19621v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "reinforcement learning for inventory policies with base stock regularization",
+      "llm_evidence_cn": "基于基础库存正则化的强化学习库存策略",
+      "llm_evidence": "基于基础库存正则化的强化学习库存策略",
+      "canonical_evidence": "基于基础库存正则化的强化学习库存策略",
+      "llm_tldr_en": "Uses DRL with base-stock regularization for inventory management, deployed on Alibaba's Tmall platform.",
+      "llm_tldr_cn": "利用带有基础库存正则化的深度强化学习进行库存管理，并在阿里巴巴天猫平台部署。",
+      "llm_tldr": "利用带有基础库存正则化的深度强化学习进行库存管理，并在阿里巴巴天猫平台部署。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory policies for assemble to order manufacturing",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    }
+  ]
+}

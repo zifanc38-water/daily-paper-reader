@@ -1,0 +1,5947 @@
+Title: Online Order Fulfillment with Replenishment
+
+URL Source: https://arxiv.org/pdf/2603.04065v1
+
+Published Time: Thu, 05 Mar 2026 02:04:12 GMT
+
+Number of Pages: 64
+
+Markdown Content:
+# Online Order Fulfillment with Replenishment 
+
+Zi Ling 
+
+Booth School of Business, University of Chicago, Chicago, IL zling@chicagobooth.edu 
+
+Jiashuo Jiang 
+
+Department of Industrial Engineering & Decision Analytics, Hong Kong University of Science and Technology jsjiang@ust.hk 
+
+Linwei Xin 
+
+School of Operations Research and Information Engineering, Cornell University, Ithaca, NY lx267@cornell.edu 
+
+In modern e-commerce and service operations, firms must jointly manage inventory replenishment and real-time order fulfillment to maximize profit under demand uncertainty. While each component has been studied extensively in isolation, their interaction remains underexplored. This paper investigates a fundamental operational question: which lever plays a more decisive role in overall system performance, replenishment or fulfillment? We model the system as a one-location online order fulfillment problem with lost sales and stochastic customer arrivals, each offering heterogeneous rewards. Replenishment follows either a base-stock or constant-order policy, while real-time fulfillment decisions are made using online algorithms. Our core performance metric is the expected average profit per replenishment cycle, evaluated across all combinations of these policies and algorithms. Our main theoretical result shows that when the replenishment cycle is long, the cumulative regret of online fulfillment remains of the same order as in a corresponding single-cycle problem, even under repeated replenishment, revealing a form of regret stability. This phenomenon also extends to a multi-location setting. We further develop a regret-based framework that quantitatively compares the value of improving replenishment versus improving fulfillment, and we characterize regimes in which optimizing replenishment yields a larger revenue impact than refining the online fulfillment algorithm (and vice versa). Motivated by examples where myopic algorithms underperform, we introduce a novel look-ahead online algo-rithm that anticipates future replenishment and demand. Numerical experiments verify that this algorithm outperforms myopic baselines. Overall, our results provide both theoretical and managerial insights into situations where inventory replenishment policies are more influential and vice versa. 
+
+Key words : Online fulfillment; Inventory replenishment; Regret analysis; Lost sales 
+
+History : March 5, 2026 
+
+## 1. Introduction 
+
+How to effectively fulfill online orders under uncertainty is a major challenge for retailers, especially given the massive volume and associated costs in modern e-commerce. For example, Amazon’s 
+
+1 
+
+> arXiv:2603.04065v1 [math.OC] 4 Mar 2026 Ling, Jiang and Xin: Online Order Fulfillment with Replenishment
+> 2
+
+shipping expenses surged from $27.7 billion in 2018 to $89.5 billion in 2023 1. A key aspect of online order fulfillment is the real-time allocation of limited inventory to orders that arrive sequentially from diverse locations and can be fulfilled from multiple fulfillment centers (FCs) across the coun-try. Assigning an order to a particular FC incurs a specific shipping cost, and each incoming order must be accepted or rejected immediately, subject to inventory constraints over a finite-horizon (i.e., within an inventory replenishment cycle). Retailers therefore must carefully coordinate inven-tory replenishment with real-time order allocation decisions, as replenishment delays directly affect availability and fulfillment. While effective allocation can reduce shipping costs and improve cus-tomer service, untimely restocking leads to stockouts or costly last-minute adjustments. Unfortunately, these two decision streams have largely been studied in isolation in the existing literature. Specifically, the problem of online fulfillment optimization has attracted substantial research interest since its introduction in the seminal work of Xu et al. (2009). A particularly compelling aspect of this area is its strong connection to industry practice, with many important contributions developed in collaboration with companies, including Xu et al. (2009), Acimovic and Graves (2015), Andrews et al. (2019), and DeValve et al. (2023). However, most of these studies focus solely on online fulfillment, largely neglecting the inventory replenishment dimension of the problem. In contrast, a separate body of literature on classical inventory control focuses exclusively on replenishment decisions, without incorporating online fulfillment. Inventory replenishment has been studied for over seven decades, beginning with the work of Arrow et al. (1951), and has pro-duced extensive research on a wide range of models and replenishment policies. Despite substantial progress in characterizing the structure of optimal policies and developing effective heuristics, the existing literature predominantly assumes an offline fulfillment setting, i.e., demand is fulfilled after it is realized at each period, subject to available inventory, with no online decision component. This focus is partly rooted in the traditional brick-and-mortar retail context in which much of the early research was conducted. The rise of e-commerce and platform logistics has made real-time inventory allocation decisions central, yet their interaction with replenishment remains underexplored. Although there has been recent work attempting to bridge this gap, no existing study jointly addresses online fulfillment and dynamic replenishment over multiple periods, let alone incorpo-rates replenishment lead times, a key practical feature of inventory systems. Addressing this gap presents significant challenges. First, defining an appropriate performance benchmark is far from straightforward. A clairvoyant planner with full information could trivially optimize both replenish-ment and fulfillment decisions. However, in the absence of such foresight–particularly when future   
+
+> 1https://www.statista.com/statistics/806498/amazon-shipping-costs/ Ling, Jiang and Xin: Online Order Fulfillment with Replenishment
+> 3
+
+demand beyond the next replenishment cannot be anticipated–the problem becomes substantially more complex, and finding an optimal algorithm becomes highly challenging. Second, the decision process involves complex interdependence: replenishment is proactive and forward-looking, requir-ing anticipation of future demand, while online fulfillment is reactive, responding to real-time orders that directly affect future inventory levels. This intricate coupling results in a high-dimensional stochastic control problem that is generally intractable to solve exactly. Since replenishment and fulfillment are deeply intertwined, decisions in one domain can signifi-cantly amplify (or undermine) the effectiveness of the other. To illustrate this interplay, consider a scenario where replenishment is so precisely calibrated that inventory aligns perfectly with demand upon arrival. In such an idealized setting, the choice of fulfillment algorithm – whether optimal, strategic, or even greedy – has minimal impact, as inventory is always in the right place at the right time. Conversely, if replenishment is poorly planned, even the most sophisticated real-time fulfillment algorithms may fall short, unable to offset stockouts or mistimed inventory arrivals. These contrasting scenarios highlight a fundamental and practically relevant question: Which lever plays a more decisive role in overall system performance, replenishment or fulfillment? 
+
+1.1. Our Contributions 
+
+In this paper, we develop a framework that integrates online fulfillment decisions with dynamic inventory replenishment. Specifically, we study a single-resource (i.e., single-location) online order fulfillment problem with replenishment, where customers of different types–offering different rewards–arrive sequentially over multiple replenishment cycles. Inventory is replenished using either a constant-order or a base-stock policy, both of which are well-established in the inventory control literature. Fulfillment decisions, on the other hand, are made either online—without access to any future demand information—or offline, with partial foresight. Here, we define partial foresight as knowledge of all demand realizations within the current replenishment cycle, prior to the arrival of the next replenishment order. This benchmark aligns with the traditional setting that optimizes fulfillment within a single cycle without replenishment. In contrast, full foresight refers to perfect information about all future demand across multiple cycles, rendering replenishment decisions trivial and thus unsuitable as an effective benchmark. Our performance metric is the expected average profit per replenishment cycle, accounting for both the rewards from fulfilled orders and the inventory holding costs. We evaluate performance using a regret framework, where regret is defined as the profit gap between an online fulfillment algorithm and an offline benchmark with partial foresight. This framework allows a rigorous quantification of the relative impact of fulfillment algorithms and replenishment policies on overall system per-formance. Our contributions are threefold. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+> 4
+
+First, we show that the average regret across multiple replenishment cycles grows at the same order as the regret in a single cycle without replenishment. In other words, introducing replenish-ment dynamics does not fundamentally increase the difficulty of online fulfillment, and regret does not accumulate over cycles. Moreover, our analysis naturally extends to settings involving multiple resources. Second, we provide a quantitative comparison between optimizing replenishment and optimizing fulfillment. We show that for certain replenishment cycle lengths (particularly small T ), improving the replenishment policy can yield greater long-run gains than improving the fulfillment algorithm. More specifically, when lead times are short, it is well known that base-stock policies outperform constant-order policies. In such settings, we show that a base-stock policy combined with a simple greedy fulfillment algorithm (i.e., accepting all arriving customers while inventory is available) can outperform a constant-order policy paired with a sophisticated fulfillment algorithm. This highlights that, under favorable conditions, replenishment decisions may have a larger impact on performance than fulfillment, partially answering which lever matters more. Third, we extend our analysis to look-ahead online fulfillment algorithms that anticipate future demand across multiple replenishment cycles, assuming knowledge of future demand distribution. Prior approaches, including the myopic offline benchmark with partial foresight and the earlier online fulfillment algorithms, focus on a single replenishment cycle and ignore long-term effects. We construct a counterexample showing that a myopic offline algorithm with partial foresight can underperform a purely online algorithm, when neither uses knowledge of future demand. Motivated by this, we develop and numerically evaluate a look-ahead online algorithm that balances current realized rewards with information about future demand. Simulations show substantial gains over both myopic offline and traditional online baselines, especially with long lead times or high demand variability. 
+
+1.2. Literature Review 
+
+Our paper is mainly related to three research streams: online fulfillment algorithms, lost-sales inventory models with lead times, and joint fulfillment and replenishment. 
+
+Online fulfillment algorithms: While this topic has since attracted substantial research interest, much of the literature has treated online fulfillment in isolation, without incorporating inventory replenishment considerations. In particular, online fulfillment research has focused on developing algorithms with provable performance guarantees. Early studies emphasize the value of forward-looking decision-making. For example, Xu et al. (2009) highlight the cost benefits of periodic reevaluation over myopic decisions, while Acimovic and Graves (2015) propose anticipatory heuris-tics that can significantly reduce shipping costs. A distinctive feature of the fulfillment problem is Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+> 5
+
+the multi-item setting, where orders consist of multiple products. In this context, several studies focus on LP-based allocation and rounding schemes (e.g., Jasin and Sinha 2015, Ma 2023, Amil et al. 2025, Zhao et al. 2025) leading to algorithms with provable performance guarantees. Parallel efforts have focused on developing low-regret online algorithms. An early contribution by Reiman and Wang (2008) demonstrates that a single re-solving step can substantially reduce the order of magnitude of regret in network revenue management. More recently, significant progress has been made toward achieving constant regret, with applications spanning the multi-secretary problem (e.g., Arlotto and Gurvich 2019), network revenue management (e.g., Bumpensanti and Wang 2020), and general online resource allocation problems (e.g., Vera and Banerjee 2021, Baner-jee and Freund 2025). Building on this line of work, Xie et al. (2024) extend the Bayes-Selector framework to fulfillment settings, highlighting the benefits of delayed real-time decision-making and revealing the insight that “a little delay is all we need.” Li et al. (2025) extend the study to settings with unknown demand distributions. When demand and reward distributions are continu-ous, Bray (2025) and Jiang et al. (2025) demonstrate that constant regret is no longer achievable, and regret grows logarithmically over time. Online algorithms with constant regret have also been studied in two-way matching models (e.g., Wei et al. 2023) and multi-way matching models (e.g., Kerimov et al. 2025). We refer interested readers to Balseiro et al. (2024) for a comprehensive survey on this topic. Our study extends the algorithmic analysis to online settings with recurring replenishment. Alongside these algorithmic advancements, recent studies have explored emerging practical con-texts, including the integration of order fulfillment with dynamic pricing (Lei et al. 2018), online ful-fillment in omnichannel contexts (Gao et al. 2022), real-time personalized order-holding (Aminian et al. 2023), middle-mile transportation management (Feng et al. 2024), and order fulfillment with time window (Zhou et al. 2025). 
+
+Lost-sales inventory models with lead times: Alongside advances in online fulfillment research, significant attention has been directed toward inventory management. Among the vari-ous models studied, the lost-sales inventory model with lead times, first introduced by Karlin and Scarf (1958), stands out as a foundational framework due to its practical relevance and analytical challenges. Although numerous papers have attempted to compute the exact optimal policy, it remains poorly understood because of the curse of dimensionality. In recent years, research has shifted toward analyzing simple yet effective policies. Two particularly important classes are: (i) base-stock policies, which are asymptotically optimal as the lost-sales penalty grows large (e.g., Huh et al. 2009, Wei et al. 2021), with Bu et al. (2023) further extending this optimality to perish-able settings; and (ii) constant-order policies, which are asymptotically optimal as the lead time grows (e.g., Goldberg et al. 2016, Xin and Goldberg 2016, Xin 2021). We refer readers to Goldberg Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+> 6
+
+et al. (2021) for a comprehensive review of asymptotic analysis in inventory systems. In this paper, we adapt these two families of heuristic policies as our replenishment policies, in conjunction with online fulfillment decisions. 
+
+Joint fulfillment and replenishment: Several recent studies have begun to bridge this gap. Lim et al. (2020) integrate replenishment decisions with reactive fulfillment through a robust optimization framework, wherein the retailer allocates inventory across warehouses prior to demand realization and subsequently fulfills orders from the allocated stock. Govindarajan et al. (2021) analyze a one-time inventory placement problem followed by online fulfillment in omnichannel retail networks, while Arlotto et al. (2026) study a similar setting, deriving regret bounds under a joint regret metric that simultaneously captures placement and fulfillment decisions. Bai et al. (2025) jointly optimize initial inventory placement together with dynamic delivery-time commitments. Although these studies represent important progress toward integrating replenishment and online fulfillment, they fall short of capturing the fully dynamic, multi-replenishment setting that is the focus of our work. In particular, Lim et al. (2020) assume that fulfillment decisions are made after all demands are realized, rather than in a one-by-one fashion, while Govindarajan et al. (2021), Arlotto et al. (2026), Bai et al. (2025) all focus on a single, static inventory placement decision, without considering recurring replenishment. The critical gap remains: no existing work jointly addresses online fulfillment and dynamic replenishment over multiple replenishment cycles. Our paper closes this gap by studying an online order fulfillment problem with dynamic inventory replenishment with lead times. 
+
+1.3. Outline of Paper 
+
+The remainder of the paper is organized as follows. Section 2 introduces the system model and notation, including the replenishment policies and the classes of online fulfillment algorithms and offline (partial-foresight) benchmarks studied in this paper. Section 3 presents the main regret analysis and establishes regret stability across replenishment cycles. Section 4 develops a regret-based framework for comparing the relative impact of improving replenishment versus improving fulfillment, and characterizes regimes in which one lever plays a more decisive role. Section 5 proposes a look-ahead fulfillment algorithm that leverages information about order arrivals and future demand distributions, and provides numerical evidence of its performance advantages over myopic baselines. Section 6 extends the regret-stability insights to a multi-resource setting. Finally, Section 7 concludes the paper. All proofs are deferred to the electronic companion. 
+
+## 2. Model 
+
+In this section, we introduce our model. We consider a single-location lost-sales inventory system operating over a finite horizon of N ∈ N replenishment cycles, each consisting of T ∈ N discrete time Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+7
+
+periods. We will extend the model to a multi-location setting (i.e., multiple inventory resources) in Section 6. In each period, at most one customer arrives. Let [ M ] ≜ {1, . . . , M }. There are M
+
+customer types and each type j ∈ [M ] offers a reward rj upon acceptance, with strictly increasing values 0 < r 1 < r 2 < . . . < r M . Here, different types can be interpreted as customers from different locations with distinct fulfillment costs. We assume M ≥ 2 to avoid the single-type case: when 
+
+M = 1, acceptance occurs immediately whenever inventory is available and the problem reduces to the classical single-product lost-sales replenishment model, making comparisons between fulfillment algorithms meaningless. Arrivals are independent and identically distributed (i.i.d.) across periods and cycles: type j ∈ [M ] arrives with probability λj , and no customer arrives with probability 
+
+λ0 = 1 − PMj=1 λj . Let μ ≜ 1 − λ0 denote the probability that a customer arrives in a period. For each replenishment cycle n ∈ [N ], let ( jn 
+
+> 1
+
+, . . . , j nT ) ∈ ([ M ] ∪ { 0})T denote the realized sequence of arrivals, where jnt = j indicates a type-j customer arriving at period t ∈ [T ] and jnt = 0 indicates no arrival. The arrivals over all cycles are denoted as H ≜ {jnt : n ∈ [N ], t ∈ [T ]}. For t1 ≤ t2 and cycle 
+
+n, define the type-j cumulative demand by Dnj [t1, t 2] ≜ Pt2 
+
+> t=t1
+
+I{jnt = j}. In particular, Dnj [t, t ] = 
+
+I{jnt = j} represent the realized type-j demand in period t of cycle n. For brevity, we write Dn ≜
+
+PMj=1 Dnj [1 , T ] to represent the total demand in cycle n. Note that {Dn}n∈[N ] are i.i.d. with Dn ∼
+
+Binomial ( T, 1 − λ0). 
+
+State and inventory. Let L ∈ N denote the deterministic lead time for replenishment. We fix a fulfillment algorithm, denoted by alg (online, offline, or as specified when needed), and introduce a replenishment parameter z that is chosen by the policy and is independent of the realized demand path H. Given a realized arrival path H, we define: 
+
+• In, alg  
+
+> t
+
+(z, H): on-hand inventory at the beginning of period t in cycle n;
+
+• qn+l, alg (z, H): the order that arrives at the beginning of cycle n + l for l = 1 , . . . , L . Hence, the order placed at the start of cycle n is qn+L, alg (z, H). Accordingly, the pipeline at the start of cycle n is 
+
+qn, alg (z, H) ≜  qn+1 ,alg (z, H), . . . , q n+L−1,alg (z, H) ,
+
+and the system state is  In, alg 1 (z, H), qn, alg (z, H). Here In, alg 1 (z, H) is the start–of–cycle inventory after arrival of replenishment qn, alg (z, H), and In, alg   
+
+> T+1
+
+(z, H) is the end–of–cycle leftover after fulfill-ment. A unit holding cost h (h > 0) is incurred on In, alg   
+
+> T+1
+
+(z, H) at the end of each cycle. 
+
+Replenishment policies. At the beginning of cycle n, prior to fulfillment, a new order is placed that will arrive L cycles later, i.e., qn+L, alg (z, H), based on ( In, alg 1 (z, H), qn, alg (z, H)). Note that our replenishment problem is more general than the classical lost-sales inventory problem (associated with the single-type case M = 1), which is notoriously difficult to analyze and has been Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+8
+
+extensively studied in the literature since the seminal work of Karlin and Scarf (1958). Because the optimal replenishment policy is out of reach, we focus on two well-studied heuristic policies from the literature: 
+
+• Base-Stock Policy (z = S). Each policy is associated with a target inventory position S
+
+(optimized in advance). After cycle n, the on-hand inventory and the replenishment order are updated according to: 
+
+qn+L, alg (S, H) = S − In, alg 1 (S, H) −
+
+> L−1
+
+X
+
+> l=1
+
+qn+l, alg (S, H), (1) 
+
+In+1 ,alg 1 (S, H) = In, alg   
+
+> T+1
+
+(S, H) + qn+1 ,alg (S, H),
+
+with the usual pipeline shift qn+1 ,alg (S, H) = ( qn+2 ,alg (S, H), . . . , q n+L, alg (S, H)). Unless other-wise stated, we allow any feasible initial state  I1,alg 1 (S, H), q1,alg (S, H) whose initial inven-tory position satisfies I1,alg 1 (S, H) + PL−1 
+
+> l=1
+
+q1+ l, alg (S, H) ≤ S, with all components integer and nonnegative. This accommodates arbitrary starting pipelines while keeping the analysis independent of a particular initialization. 
+
+• Constant-Order Policy (z = c). Each policy is associated with a fixed order quantity c
+
+(optimized in advance). Under a constant-order policy, the replenishment arriving at the start of each cycle has fixed size c, i.e., qn, alg (c, H) = c for all n. The on-hand inventory is then updated by In+1 ,alg 1 (c, H) = In, alg   
+
+> T+1
+
+(c, H) + c. Since we focus on the long-run average setting, we allow the initial state I1,alg 1 (c, H) to be any feasible value which is integer and nonnegative, as it is well-known that the long-run average performance of the constant order policy is independent of the initial inventory levels. We therefore set I1,alg 1 (c, H) = c without loss of generality. Since base-stock policies are known to outperform constant-order policies for small L, we treat them as the “good” and “bad” reference replenishment policies. 
+
+Fulfillment algorithms. In parallel with replenishment policies, the system chooses an online fulfillment algorithm to decide whether to accept or reject each arriving customer. Let xn, alg  
+
+> t
+
+∈ { 0, 1}
+
+denote the acceptance indicator in period t of cycle n under a fulfillment algorithm (denoted by “alg”), with feasibility xn, alg  
+
+> t
+
+≤ I{jnt̸ = 0 } and xn, alg  
+
+> t
+
+≤ In, alg  
+
+> t
+
+(z, H), and inventory dynamics 
+
+In, alg  
+
+> t+1
+
+(z, H) = In, alg  
+
+> t
+
+(z, H) − xn, alg  
+
+> t
+
+. The per-cycle profit is 
+
+V n, alg (T, I n, alg 1 (z, H)) ≜
+
+> T
+
+X
+
+> t=1
+
+rjnt xn, alg  
+
+> t
+
+− hI n, alg   
+
+> T+1
+
+(z, H), for z ∈ { S, c }. (2) Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+9
+
+We now define our performance metrics. Let πalg  
+
+> b
+
+(T, S, N ) denote the expected average profit per cycle under a base-stock replenishment policy with base-stock level S and fulfillment algorithm alg 
+
+(which can be random): 
+
+πalg  
+
+> b
+
+(T, S, N ) ≜ 1
+
+N EH,alg 
+
+" NX
+
+> n=1
+
+V n, alg (T, I n, alg 1 (S, H)) 
+
+#
+
+, (3) where the expectation is taken over the randomness in demand arrivals across all N cycles and any algorithmic randomness. Similarly, under a constant-order policy with quantity c, we define 
+
+πalg  
+
+> c
+
+(T, c, N ) ≜ 1
+
+N EH,alg 
+
+" NX
+
+> n=1
+
+V n, alg (T, I n, alg 1 (c, H)) 
+
+#
+
+. (4) We also define πalg  
+
+> b
+
+(T, S, ∞) ≜ lim N →∞ πalg  
+
+> b
+
+(T, S, N ) and πalg  
+
+> c
+
+(T, c, ∞) ≜ lim N →∞ πalg  
+
+> c
+
+(T, c, N ) as the long-run average profits. We aim to compare the performance of different combinations of fulfillment algorithms and replenishment policies, and to provide insights into which lever (fulfillment or replenishment) plays a more significant role in overall system performance. 
+
+2.1. Offline Fulfillment Algorithm 
+
+In this subsection, we describe offline fulfillment algorithms with partial foresight. Recall that par-tial foresight means that, within a given replenishment cycle n, the algorithm knows the entire realized demand vector {Dnj [1 , T ]}j∈[M ] in advance and makes all accept/reject decisions before the arrival of the next replenishment order. Throughout the paper, unless otherwise specified, the term “offline fulfillment algorithm” refers to a fulfillment algorithm with partial foresight. Within this class, a natural benchmark is the myopic (or greedy) offline algorithm–we use the two terms interchangeably–which prioritizes fulfilling higher-reward customer types first. Specifi-cally, it sequentially accepts demand from the highest-reward type to the lowest until inventory is depleted, without accounting for the order pipeline. Accordingly, when the fulfillment algorithm is the myopic offline benchmark, we replace the superscript “alg” by “off” in all previously defined objects (e.g., In, off  
+
+> t
+
+(z, H), πoff  
+
+> b
+
+(T, S, N ), πoff  
+
+> c
+
+(T, c, N )). Importantly, under replenishment and lead times, this partial-foresight “offline” benchmark does not necessarily upper bound the profit attain-able by well-designed online algorithms that account for this problem, so it serves as a reference point rather than an oracle upper bound. This failure to upper bound arises because the myopic offline algorithm is not generally optimal in a multi-cycle setting with replenishment: it overlooks the potential value of strategically conserving inventory by rejecting low-reward customers. It may be more beneficial to reserve inventory for fulfilling higher-reward demand in future cycles rather than depleting it immediately. As such, in Section 5, we introduce a more sophisticated offline algorithm with look-ahead that explicitly trades off current-cycle rewards against future-cycle opportunities. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+10 
+
+2.2. Online Fulfillment Algorithm 
+
+In this subsection, we describe online fulfillment algorithms. In the online setting, at each period t
+
+within a replenishment cycle n, the decision-maker observes the realized demand sequence Dj [1 , t −
+
+1] and has knowledge of the distribution for the remaining demand. For instance, the Bayes Selec-tor, a well-performing online algorithm (e.g., Vera and Banerjee 2021), uses expected remaining demand Λ j [t, T ] ≜ (T − t + 1) λj for each type j to guide accept/reject decisions. Likewise, when the fulfillment algorithm is online, we write a superscript “on” in place of “alg” (e.g., In, on  
+
+> t
+
+(z, H)). We start from the definition of regret for a single cycle of length T without replenishment. Suppose both offline and online algorithms start from the same inventory I. Let V off (T, I, H) and 
+
+V on (T, I, H) be their total rewards over this cycle (i.e., excluding holding costs; recall V n, alg defined earlier denotes per-cycle profit in the replenishment model). The regret of an online algorithm, in the classical single-cycle setting without any replenishment decisions, is defined as follows: REG ≜ EH,on 
+
+V off (T, I, H) − V on (T, I, H) .
+
+It has been well studied under various online algorithms in the literature. Building on this, we make the following assumption to extend the concept of regret to the multi-cycle setting. 
+
+Assumption 1. An online fulfillment algorithm makes sequential accept/reject decisions without access to future realizations and achieves polynomially bounded regret 
+
+REG ≤ C1T α,
+
+for some constants C1 > 0 and α ∈ [0 , 1] , independent of I and T .
+
+Assumption 1 captures a broad class of online fulfillment algorithms. The ideal case is α = 0, where the algorithm achieves constant regret, indicating near-optimal performance compared with the optimal offline benchmark with hindsight. For example, the Bayes Selector algorithm (Vera and Banerjee 2021) attains α = 0 with C1 = 2rM e−λmin 
+
+> λ2min
+
+, where λmin ≜ min j λj > 0. Larger values of α reflect increasing difficulty in matching the offline performance as the horizon length grows. Note that it is without loss of generality to assume α ≤ 1, because the regret per cycle cannot grow faster than linearly in T . Even an extremely naive online algorithm, such as one that never accepts, incurs a regret no more than the total offline reward in a cycle, which is at most O(T ). Note that for both the myopic offline and the above assumed online fulfillment algorithms, in-cycle fulfillment decisions depend on In, alg  
+
+> t
+
+(z, H) and the information about demand within the cycle, but not on the replenishment pipeline qn, alg (z, H). In Section 5, we explore how incorporating information about future replenishment orders qn, alg (z, H) into the online fulfillment algorithm can improve long-term performance. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+11 
+
+The following result characterizes the relationship between the ending inventories of the myopic offline algorithm and an online algorithm within a given cycle, assuming they start from the same initial inventory. This is useful for our later analysis of multiple cycles. Throughout Lemma 1, we suppress the replenishment parameter z and write In, on  
+
+> t
+
+(H) and In, off  
+
+> t
+
+(H), since within a cycle the fulfillment decision depends only on the start-of-cycle inventory and the realized demand path. 
+
+Lemma 1. Under Assumption 1, for any cycle n, if the start-of-cycle inventories coincide (In, on 1 (H) = In, off 1 (H)), then for every demand path H,
+
+In, on   
+
+> T+1
+
+(H) − In, off   
+
+> T+1
+
+(H) ≥ 0.
+
+Moreover, the expected inventory gap is bounded: 
+
+EH,on 
+
+In, on   
+
+> T+1
+
+(H) − In, off   
+
+> T+1
+
+(H) ≤ C2T α,
+
+for some constant C2 > 0 independent of the start-of-cycle inventories and T .
+
+## 3. Replenishment Policies 
+
+In this section, we incorporate the replenishment component into the system. Recall that we focus on two well-studied heuristics: the base-stock policy and the constant-order policy. We are interested in comparing the performance of the online and offline fulfillment algorithms under the same replenishment policy; specifically, we aim to bound 
+
+πoff  
+
+> b
+
+(T, S off , N ) − πon  
+
+> b
+
+(T, S on , N ) and πoff  
+
+> c
+
+(T, c off , N ) − πon  
+
+> c
+
+(T, c on , N ),
+
+where Son and Soff denote the optimal base-stock levels for the online and offline fulfillment algo-rithms, and con and coff denote the corresponding optimal constant-order quantities. 
+
+3.1. Base-Stock Policy 
+
+In this section, we focus on base-stock policies. Recall that Lemma 1 bounds the difference in ending inventory between the online and offline algorithms during the first cycle, assuming they start from the same initial inventory. The next result extends to the multi-cycle setting. 
+
+Lemma 2. Under Assumption 1, the same initial inventory pipeline and base-stock policy with 
+
+S, for any cycle n and every demand path H, the start-of-cycle inventory difference between the online and the myopic offline algorithms can be bounded by: 
+
+In, on  
+
+> 1
+
+(S, H) − In, off  
+
+> 1
+
+(S, H) ≥ 0, EH,on 
+
+In, on  
+
+> 1
+
+(S, H) − In, off  
+
+> 1
+
+(S, H) ≤ C2LT α;
+
+and similarly for the end-of-cycle inventory: 
+
+In, on   
+
+> T+1
+
+(S, H) − In, off   
+
+> T+1
+
+(S, H) ≥ 0, EH,on 
+
+In, on   
+
+> T+1
+
+(S, H) − In, off   
+
+> T+1
+
+(S, H) ≤ C2(L + 1) T α,
+
+where C2 is the constant as defined in Lemma 1. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+> 12
+
+An immediate observation from Lemma 2 is that the bound on the inventory gap grows linearly with the replenishment lead time L, while preserving the same order with respect to the cycle length 
+
+T as in the single-cycle analysis. This arises from the use of a base-stock replenishment policy, which continuously stabilizes the inventory level around the target base-stock level S, preventing discrepancies from compounding over time. As a result, the gap does not accumulate over multiple cycles. By leveraging this property, we can bound the performance gap. 
+
+Theorem 1. Under Assumption 1, 
+
+πoff  
+
+> b
+
+(T, S off , N ) − πon  
+
+> b
+
+(T, S on , N ) ≤ C1T α + hC 2(L + 1) T α = O(T α),
+
+where C1 and C2 are as defined in Assumption 1 and Lemma 1, respectively. 
+
+This result shows that even when the online and the myopic offline fulfillment algorithms inde-pendently optimize their respective base-stock levels Son and Soff , the resulting performance gap remains the same order of magnitude as the case when starting from the same initial inventory level Lemma 2. This again validates that base-stock replenishment preserves the same regret order regarding T when accounting for both fulfillment and replenishment decisions. 
+
+3.2. Constant-Order Policy 
+
+In the previous subsection, we analyzed the regret of online fulfillment under a base-stock replenish-ment policy, leveraging the natural correction mechanism provided by dynamic base-stock adjust-ments to control inventory differences over time. In contrast, under a constant-order replenishment policy, the order quantity remains fixed across cycles, regardless of the evolving inventory state. This lack of adaptivity introduces new challenges: inventory mismatches between the online and the myopic offline algorithms can accumulate and propagate across cycles, requiring a fundamentally different approach to bounding the inventory difference. 
+
+Setup for this subsection. Let f n, on (I) and f n, off (I) denote the number of fulfilled demands of all types in cycle n, starting from initial inventory I , under the online and offline algorithms, respectively. We assume that the fixed replenishment order quantity satisfies 0 ≤ c < T (1 − λ0) and T (1 − λ0) − c = T δ c + o(T ), for some constant δc > 0.
+
+The motivation is that the binomial demand Dn has fluctuations on the order of √T , so keeping a gap of order T between the mean demand and the order quantity yields a meaningful safety buffer and leads to a strictly negative drift in the resulting inventory recursion, which in turn provides control of stockout events and carryover inventory in the heavy-traffic analysis. This regime is also consistent with the constant-order optimizers used later. Since at most T units can be fulfilled Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+13 
+
+within a cycle, choosing c larger than order T cannot improve the number of fulfilled demands and only increases carryover, so one may restrict attention to c = O(T ). In addition, if c ≥ T (1 − λ0)then the inventory recursion has nonnegative drift and the expected carryover inventory grows, which is suboptimal whenever there is any nontrivial holding cost. Before bounding the inventory difference under constant-order replenishment, we first establish a key structural property as follows. 
+
+Lemma 3. Under Assumption 1 and the same constant-order policy with order quantity c, for any cycle n and every demand path H, the end-of-cycle inventory under the myopic offline algo-rithm is always less than or equal to the end-of-cycle inventory under the online algorithm, i.e., 
+
+In, off   
+
+> T+1
+
+(c, H) ≤ In, on   
+
+> T+1
+
+(c, H).
+
+This lemma ensures the online algorithm starts every cycle with at least as much inventory as the myopic offline algorithm, so its per-cycle fulfilled-reward regret is bounded at the rate in Assumption 1. Building on this, we next analyze the difference in end-of-cycle inventory between two algorithms, which directly impacts the holding cost. Under the myopic offline fulfillment algorithm, the end-of-cycle inventory In, off   
+
+> T+1
+
+(c, H) follows the same distribution as the steady-state waiting time in the corresponding GI/GI/1 queue with the interarrival distribution Dn ∼ Binomial( T, 1 − λ0) and the processing time the constant c. To characterize its expectation, we invoke a classical result in Kingman (1962), which provides an expression for the expected waiting time in a GI/GI/1 queue, which we directly apply to the context of our fulfillment setting. 
+
+Lemma 4 (Theorem 1 in Kingman (1962)) . For all c ≤ E[Dn] and n ≥ 1,
+
+EH
+
+In, off   
+
+> T+1
+
+(c, H) =
+
+> n
+
+X
+
+> j=1
+
+1
+
+j EH
+
+ jc −
+
+> j
+
+X
+
+> i=1
+
+Di
+
+!+ .
+
+While Lemma 4 gives an exact expression for the expected end-of-cycle inventory under the myopic offline algorithm, we still need a handle on the online counterpart to bound inventory gaps and profit. However, the online algorithm does not admit a simple closed-form recursion like the offline case, due to its potentially more conservative fulfillment behavior. To address this, we leverage a key observation (used in the proof of Lemma 3): for any I ≥ 0, 
+
+f n, off (I) ≥ f n, on (I). Therefore, we define the nonnegative difference as 
+
+ϵn ≜ f n, off (In, on 1 (c, H)) − f n, on (In, on 1 (c, H)) ∈ [0 , T ],
+
+which represents the additional demand fulfilled by the myopic offline algorithm relative to the online algorithm in cycle n. By Lemma 1, we have EH,on [ϵn] ≤ C2T α for all n ≥ 1. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+14 
+
+We can then derive a recursive representation for the end-of-cycle inventory under the online algorithm across cycles. Specifically, the evolution of In, on   
+
+> T+1
+
+(c, H) follows: 
+
+I1,on  
+
+> T+1
+
+(c, H) = c − (f 1,off (c) − ϵ1) = c − min {c, D 1} + ϵ1 = ( c − D1)+ + ϵ1,I2,on  
+
+> T+1
+
+(c, H) = ( c − D1)+ + ϵ1 + c − min {(c − D1)+ + ϵ1 + c, D 2} + ϵ2
+
+= [( c − D1)+ + ϵ1 + c − D2]+ + ϵ2,
+
+...
+
+In, on   
+
+> T+1
+
+(c, H) = ( c + In−1,on   
+
+> T+1
+
+(c, H) − Dn)+ + ϵn.
+
+Equivalently, if we define a modified offline sequence by ˜I1,off  
+
+> T+1
+
+(c, H) = ( c − D1)+, ˜In, off   
+
+> T+1
+
+(c, H) = 
+
+ ˜In−1,off   
+
+> T+1
+
+(c, H) + c + ϵn−1 − Dn
+
++
+
+,
+
+then it follows that 
+
+In, on   
+
+> T+1
+
+(c, H) = ˜In, off   
+
+> T+1
+
+(c, H) + ϵn.
+
+Here, ˜In, off   
+
+> T+1
+
+(c, H) can be interpreted as the end-of-cycle inventory under a modified myopic offline algorithm where the initial inventory at cycle 1 is c and it replenishes ( c + ϵn−1) units at the beginning of cycle n for n > 1. Building on this structure and Lemma 4, we next establish an upper bound on the expected end-of-cycle inventory under the online fulfillment algorithm. 
+
+Lemma 5. Suppose α < 1. If T is sufficiently large that T (1 − λ0) > c + C2T α, then under Assumption 1, for any cycle n, there exists a θ > 0, such that βθ < 1 and 
+
+EH,on [In, on   
+
+> T+1
+
+(c, H)] ≤ − (eθ )−1 ln(1 − βθ ) + C2T α,
+
+where βθ ≜ exp  θc + θC 2T α + C2 
+
+> 2
+
+T α−1h(2 θT ) · (λ0 + (1 − λ0)e−2θ )T / 2 , h (u) ≜ (1 + u) ln(1 + u) − u. 
+
+In particular, for all sufficiently large T , βθ ≤ e−κT for some κ > 0, so −(eθ )−1 ln(1 − βθ ) = o(1) 
+
+and 
+
+EH,on 
+
+In, on   
+
+> T+1
+
+(c, H) = O(T α).
+
+Lemma 5 upper-bounds the online algorithm’s expected end-of-cycle inventory by capturing the joint effect of the fixed order quantity c and the additional gap C2T α induced by online decisions. For α < 1, the condition T (1 − λ0) > c + C2T α holds for all sufficiently large T , which in turn guarantees an inventory bound under the online algorithm used to control holding costs in the proof of Theorem 2. When α = 1, the condition can be empty, while in that regime we can use a stability argument at the optimal con and coff to obtain a linear-in-T bound. 
+
+Theorem 2. Under Assumption 1, Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+> 15
+
+(i) Case α < 1. There exists T0 < ∞ such that for all T ≥ T0 there exists θ > 0 with βθ < 1 and 
+
+πoff  
+
+> c
+
+(T, c off , N ) − πon  
+
+> c
+
+(T, c on , N ) ≤ C1T α + h · C2T α − (eθ )−1 ln (1 − βθ ) , (5) 
+
+where C1, C 2 and βθ are defined in Assumption 1, Lemma 1 and Lemma 5, respectively, with 
+
+βθ evaluated at c = coff . So the per-cycle gap is O(T α).
+
+(ii) Case α = 1 . There exists a finite constant K (independent of N ) such that 
+
+πoff  
+
+> c
+
+(T, c off , N ) − πon  
+
+> c
+
+(T, c on , N ) ≤ C1T + hKT = O(T ). (6) Across both replenishment policies, base-stock and constant-order, the per-cycle performance gap between the online and myopic offline algorithms is polynomial in T with exponent α when T
+
+is large. Under constant orders, there is an additional exponentially small term in T that vanishes as T grows, so the cumulative gap over N cycles ultimately scales as O(N T α) for both policies. This suggests that, although replenishment policies affect operations, for long cycles the dominant driver of regret is the quality of the online fulfillment decisions rather than the replenishment algorithm. From a managerial perspective, this highlights the importance of investing in stronger online fulfillment algorithms when replenishments are infrequent. When T is small, however, randomness plays a larger role and replenishments occur more fre-quently relative to the fulfillment process. In this regime, the choice of replenishment policy intu-itively has greater influence on overall performance, and the constant-order case may not yet exhibit the clean O(N T α) behavior. This motivates our next analysis: with limited T , how should one assess the relative importance of online fulfillment decisions versus replenishment policies? 
+
+## 4. Replenishment vs. Online Fulfillment 
+
+In this section, we will study under what conditions replenishment decisions matter more than online fulfillment decisions. To build intuition, we first present a simulation study examining the interaction between these two decisions across different replenishment cycle lengths. Specifically, we simulate average profit outcomes under four policy combinations: (i) an online Bayes Selector (BS) algorithm (Vera and Banerjee 2021) or an online greedy algorithm (accept all arrivals while in stock), each paired with (ii) either a base-stock or a constant-order policy. Figure 1 shows a clear regime change. For large T , the BS-based policies dominate their greedy counterparts under both replenishment algorithms, consistent with Section 3, indicating that fulfill-ment decision is the primary driver when cycles are long. In contrast, when T is small, replenishment can dominate: base-stock with greedy fulfillment outperforms constant-order with BS, suggest-ing that under short replenishment cycles (frequent replenishment), improving the replenishment algorithm can outweigh refinements in online fulfillment. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+16                       
+
+> Figure 1 Average profit versus cycle length Tunder four policy combinations (online BS vs. online greedy)
+> ×(base-stock vs. constant-order). Parameters: L= 2 ,N= 1 ,000 ,h= 2 ,[r1, r 2, r 3] = [5 ,8,10] ,
+> [λ0, λ 1, λ 2, λ 3] = [0 .3,0.2,0.3,0.2] , and K= 10 ,000 sample paths.
+
+Motivated by these findings, we next compare the performance of the base-stock policy (πb) and the constant-order policy (πc) when paired with either the myopic offline fulfillment or different 
+
+online fulfillment algorithms . Since we focus on long-run average profit ( N → ∞ ) in this section, we abbreviate πb ≜ πb(T, S, ∞) and πc ≜ πc(T, c, ∞) for notational simplicity. Define the gaps 
+
+πoff  
+
+> b
+
+− πoff  
+
+> c
+
+≜ η0, πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+≜ η1, πoff  
+
+> c
+
+− πon  
+
+> c
+
+≜ η2,
+
+where πgreedy  
+
+> b
+
+denotes the average profit under the base-stock replenishment policy with online greedy fulfillment, and πon  
+
+> c
+
+denotes the average profit under the constant-order policy with the general online fulfillment algorithm (as assumed in Assumption 1). Here, the online greedy algorithm refers to an algorithm that simply accepts all arriving customers as long as inventory is available, without any attempt to balance future opportunities or optimize inventory usage. In contrast, a general online fulfillment algorithm (e.g., the online algorithm in Vera and Banerjee (2021)) is designed to control inventory consumption more carefully based on estimated future demand. Comparing the greedy algorithm to a general online algorithm provides a meaningful benchmark: the greedy algorithm represents a worst-case, non-optimized fulfillment behavior, while the general online algorithm reflects more strategic decision-making. These definitions yield the following relationship: 
+
+πgreedy  
+
+> b
+
+− πon  
+
+> c
+
+= η0 − η1 + η2. (7) Since the online greedy algorithm is suboptimal compared to another general online algorithm (0 < α < 1), and the base-stock policy typically outperforms constant-order replenishment, the difference πgreedy  
+
+> b
+
+− πon  
+
+> c
+
+provides a useful indicator. In particular, if 
+
+πgreedy  
+
+> b
+
+− πon  
+
+> c
+
+≥ 0,Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+17 
+
+then the gain from improved replenishment outweighs the loss from using a weaker online fulfillment algorithm. Thus, this provides a sufficient condition for determining when replenishment is the dominant factor affecting profit outcomes. We therefore expect a threshold T ∗ such that this sufficient condition holds for all T ≤ T ∗, i.e., replenishment becomes the dominant driver when cycles are short. 
+
+4.1. Base-Stock vs. Constant-Order under Offline Fulfillment 
+
+In this subsection, we will analyze the offline profit gap η0 ≜ πoff  
+
+> b
+
+− πoff  
+
+> c
+
+. Rather than work directly with profits, we bound the corresponding long-run average costs under myopic offline fulfillment, using a uniform per-unit penalty p for lost sales or backorders, for base-stock and constant-order policies. This cost objective differs from the earlier profit formulations with class-dependent rewards, so we introduce compact cost-based notation and the associated optimal policy parameters tailored to the minimization problem. Let CL ,S  
+
+> b
+
+(h, p ) and CB,S  
+
+> b
+
+(h, p ) denote the long-run average costs of a base-stock policy with level 
+
+S in the lost-sales and backorder systems, respectively, with holding cost h and penalty p. Let 
+
+SL ∗(h, p ) ∈ arg min S CL ,S  
+
+> b
+
+(h, p ) and SB∗(h, p ) ∈ arg min S CB,S  
+
+> b
+
+(h, p ) be the corresponding optimal base-stock levels. Similarly, let Cc 
+
+> c
+
+(h, p ) be the long-run average cost of a constant-order policy with order quantity c, and define c∗(h, p ) ∈ arg min c Cc 
+
+> c
+
+(h, p ). Note that all objects may depend on 
+
+T and L. Throughout this subsection, we treat T, L as fixed and focus on variation in h, p, S and 
+
+c, suppressing the explicit dependence on T, L in the notation. We will use several standard bridges between lost-sales and backorder base-stock models. For completeness, we state them in Section EC.4 (Lemma EC.1). These results allow us to bound the lost-sales cost by analyzing a corresponding backorder system with suitably adjusted penalty parameters. We write Pk for the probability that the total demand arriving over the entire pipeline window (namely across ( L + 1) cycles with T periods each) equals k. Under our Bernoulli-arrival model, this aggregate demand is binomial with ( L + 1) T trials and success probability 1 − λ0, so 
+
+Pk ≜ Pr 
+
+> L+1
+
+X
+
+> n=1
+
+Dn = k
+
+!
+
+=
+
+(L + 1) Tk
+
+
+
+(1 − λ0)kλ(L+1) T −k 
+
+> 0
+
+.
+
+Using these exact probabilities, we obtain computable upper and lower bounds on the lost-sales cost under a base-stock policy by comparing to backorder systems with adjusted penalties (by Lemma EC.1(a)). In both expressions below, the first sum represents the expected holding cost when the total pipeline demand K does not exhaust the base-stock level (i.e., ( S − K)+); the second sum represents the expected shortage when demand exceeds the base-stock level (i.e., ( K − S)+), multiplied by the appropriate adjusted penalty. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+18 
+
+Upper bound (evaluate at the backorder optimizer with penalty p+Lh ): 
+
+¯a1 (T, h, p, L ) ≜ h
+
+> ¯SB(h,p )
+
+X
+
+> k=0
+
+  ¯SB(h, p ) − k Pk + ( p + Lh )
+
+> (L+1) T
+
+X
+
+> k= ¯SB(h,p )+1
+
+ k − ¯SB(h, p ) Pk.
+
+Lower bound (evaluate at the backorder optimizer with penalty p/ (L+1) ): 
+
+a1 (T, h, p, L ) ≜ h
+
+> SB(h,p )
+
+X
+
+> k=0
+
+ SB(h, p ) − k Pk + pL + 1 
+
+> (L+1) T
+
+X
+
+> k=SB(h,p )+1
+
+ k − SB(h, p ) Pk,
+
+where ¯SB(h, p ) ≜ SB∗ (h, p + Lh ) and SB(h, p ) ≜ SB∗ (h, p/ (L + 1)) are the base-stock levels that minimize the corresponding backorder costs. Equivalently, they satisfy the critical fractiles 
+
+P ¯SB(h,p ) 
+
+> k=0
+
+Pk = p+Lh p+( L+1) h and PSB(h,p ) 
+
+> k=0
+
+Pk = pp+( L+1) h . Intuitively, ¯ a1 evaluates holding and shortage using a larger shortage penalty p+Lh (therefore it lies above the true lost-sales cost), while a1
+
+uses a smaller effective penalty p/ (L+1) (therefore it lies below), with both quantities computed exactly from the binomial law of total pipeline demand. 
+
+Lemma 6. For all T , the long-run average cost of the lost-sales system with the optimal base-stock level SL ∗(h, p ) is bounded as: 
+
+a1 (T, h, p, L ) ≤ CL ,S L ∗(h,p ) 
+
+> b
+
+(h, p ) ≤ ¯a1 (T, h, p, L ) ,
+
+where ¯a1 (T, h, p, L ) and a1 (T, h, p, L ) are as defined above. 
+
+This two-sided bound follows by comparing lost sales to two backorder systems with adjusted penalties (Lemma EC.1), and then choosing the newsvendor-optimal base-stock levels in those backorder systems. Intuitively, converting lost sales to backorders with a smaller penalty p/ (L + 1) yields a cost that is too optimistic (a lower bound), whereas inflating the penalty to p + Lh yields a conservative backorder cost (an upper bound). Because backorder costs decompose into expected overstock and understock with respect to total pipeline demand, the resulting envelopes a1 and ¯ a1
+
+are explicitly computable from the exact binomial probabilities Pk.We now turn to the constant-order replenishment policy and derive an exact expression for its long-run cost under myopic offline fulfillment. For n ≥ 1, let Pn,k be the exact probability mass function of the binomially distributed demand over n cycles: Pn,k ≜ Pr ( Pni=1 Di = k) =  nT k
+
+ (1 − λ0)k λnT −k 
+
+> 0
+
+.
+
+Lemma 7. For all T , the exact solution for Cc∗(h,p ) 
+
+> c
+
+(h, p ) is given by: 
+
+Cc∗(h,p ) 
+
+> c
+
+(h, p ) = a2(T, h, p ) ≜ h
+
+> ∞
+
+X
+
+> n=1
+> nc ∗(h,p )
+
+X
+
+> k=0
+
+
+
+c∗(h, p ) − kn
+
+
+
+Pn,k + pT (1 − λ0) − pc ∗(h, p ),
+
+where the optimal order quantity c∗(h, p ) satisfies: 
+
+> ∞
+
+X
+
+> n=1
+
+Pr 
+
+> n
+
+X
+
+> i=1
+
+Di ≤ nc ∗(h, p )
+
+!
+
+= ph .Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+> 19
+
+To obtain the exact expression in Lemma 7, we follow the same idea as in Lemma 6: instead of tracing the full inventory path, we work with the distribution of total pipeline demand. With the exact binomial probabilities for aggregate demand, the expected cost reduces to a closed-form series combining holding and lost-sales terms. Optimizing c then yields a newsvendor-style condition for 
+
+c∗(h, p ), which in turn gives a2(T, h, p ). With the cost bounds for base-stock and constant-order policies in hand, we can now bound 
+
+η0 ≜ πoff  
+
+> b
+
+− πoff  
+
+> c
+
+.
+
+Theorem 3. The difference in long-run average profit per cycle between the base-stock policy and the constant-order policy under the myopic offline fulfillment algorithm is bounded as: 
+
+a2(T, h, r 1) − ¯a1(T, h, r M , L ) ≤ πoff  
+
+> b
+
+− πoff  
+
+> c
+
+≤ a2(T, h, r M ) − a1(T, h, r 1, L ),
+
+where ¯a1(·), a1(·) and a2(·) are as defined in Lemmas 6 and 7. Proof sketch. We outline the argument for the lower bound in Theorem 3 and the upper bound follows by the same logic with the roles of the two policies reversed. For each policy, rewrite the long-run profit as the expected total demand value (i.e., the sum of rewards over all arrivals) minus (holding cost + the value of lost sales). The total demand value depends only on the realized demand stream and is therefore identical under both replenishment policies. It cancels when taking the difference, and thus it suffices to compare the corresponding cost terms. To obtain a lower bound on πoff  
+
+> b
+
+− πoff  
+
+> c
+
+, we make the comparison conservative for base-stock and favorable for constant-order: in the base-stock system we value each lost sale at the highest reward rM and optimize its base-stock level, whereas in the constant-order system we value each lost sale at the lowest reward r1 and optimizing its order quantity. Combining the resulting base-stock cost bounds with the closed-form cost expression for the constant-order policy in Lemmas 6 and 7 yields a2(T, h, r 1) − ¯a1(T, h, r M , L )as a valid lower bound. □
+
+To formalize the asymptotic scaling of these bounds on the profit gap with the cycle length T ,we state the following corollary. 
+
+Corollary 1. As T → ∞ (with L, h, p fixed), the three functions satisfy: 
+
+¯a1(T, h, p, L ) = Θ( √T ), a1(T, h, p, L ) = Θ( √T ) and a2(T, h, p ) = Θ( √T ).
+
+Discussion about scaling in T . Theorem 3 provides computable bounds on the profit gap between base-stock and constant-order policies under myopic offline fulfillment. We now summarize how these bounds scale with the cycle length T .When T is small (short cycles), replenishments are frequent and each period contributes O(1) expected holding/shortage cost, so both policies track demand closely. Aggregating over T periods Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+> 20
+
+then makes a2, ¯a1, a 1 grow approximately linearly in T . This is iconsistent with the formulas: 
+
+a2(T, h, p ) contains the explicit linear term pT (1 −λ0), and the sums in ¯ a1, a 1 run over k = 0 , . . . , (L+1) T with O(1) summands, yielding first-order Θ( T ). As T becomes large, the behavior is instead driven by stochastic fluctuations of cumulative demand over a pipelin. In particular, the Binomial variability over ( L + 1) T periods induces devi-ations of order √T around the mean inventory position. Corollary 1 formalizes this intuition and shows that, as T → ∞ (with L, h, p fixed), each of the three functions ¯ a1(T, h, p, L ), a1(T, h, p, L ), and a2(T, h, p ) scales as Θ( √T ). Consequently, the bounds in Theorem 3 imply that, in the large-T
+
+regime, the profit gap between the base-stock and constant-order policies grows at rate ′(√T ), whereas for short cycles their costs are essentially linear in T .
+
+4.2. Offline vs. Greedy under Base-Stock Policy 
+
+We next analyze the profit difference between the myopic offline fulfillment algorithm and the 
+
+online greedy algorithm under the base-stock policy. We first fix a common base-stock replenishment algorithm and compare their per-cycle rewards under that same replenishment algorithm. With a common base stock, the inventory trajectories are identical: in each cycle, both algorithms serve as many demands as inventory allows and stop when inventory is depleted. So let I∞,S  
+
+> 1
+
+and q∞,S denote the stationary start-of-cycle inventory and order quantity under both fulfillment policies with the same base-stock level S. Thus, conditional on the same start-of-cycle inventory and demand sequence, any profit difference is solely due to fulfillment rewards, not holding or lost-sales costs. 
+
+Setup for this subsection. Let Rn, off (In 
+
+> 1
+
+, Hn) and Rn, greedy (In 
+
+> 1
+
+, Hn) denote the reward earned in cycle n under the offline and greedy fulfillment, respectively, given on-hand inventory In 
+
+> 1
+
+and realized arrivals Hn ≜ {jnt : t ∈ [T ]}. Let Sgreedy and Soff denote base-stock levels that maximize the long-run average profit under the greedy and offline fulfillment, respectively. We do not attempt to characterize these optimizers in closed form. Fix a base-stock level S and define the (mean lead-time) slack ∆ T ≜ (L + 1) T (1 − λ0) − S > 0. We work in an interior base-stock regime :(L + 1) T λ M < S < (L + 1) T (1 − λ0), ∆T = Θ( T β ) for some β ∈ [0 , 1] . (8) That is, for all sufficiently large T , there exist constants 0 < K 1 ≤ ¯K1 < ∞ (independent of T ) such that K1T β ≤ ∆T ≤ ¯K1T β . The interval in (8) is consistent with the optimizer: if S ≥ (L + 1) T (1 −
+
+λ0), then the base stock meets or exceeds mean lead-time demand, which induces persistently large inventory positions (of order T ) and is dominated whenever holding costs are strictly positive; if 
+
+S ≤ (L+1) T λ M , then (in expectation) the highest-reward class alone can exhaust the entire pipeline over L+1 cycles, leading to large lost-sales and poor long-run reward. The additional slack condition ∆T = Θ( T β ) simply records that the distance between the base-stock level and mean lead-time Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+21 
+
+demand grows polynomially in T . This covers the classical case in which the base-stock tracks mean lead-time demand up to a Θ( √T ) safety term, and it also allows larger slacks (up to linear order) when the profit tradeoff favors operating further below mean demand. We assume that Sgreedy and 
+
+Soff both satisfy (8) with the same exponent β, and write ∆ greedy  
+
+> T
+
+≜ (L + 1) T (1 − λ0) − Sgreedy and ∆off  
+
+> T
+
+≜ (L + 1) T (1 − λ0) − Soff .To quantify how the above base-stock level S translates into the stationary start-of-cycle inven-tory that enters the reward-gap bounds, we next summarize the steady-state properties of the base-stock pipeline. 
+
+Lemma 8. Under the base-stock policy with level S satisfying (8) , the inventory pipeline 
+
+(In 
+
+> 1
+
+, q n+1 , . . . , q n+L) admits a stationary distribution. In stationarity, the pipeline marginals are identical, qn+1 d
+
+= · · · d
+
+= qn+L. Moreover, there exists a finite constant K2 independent of T such that, in stationarity, 
+
+E
+
+
+
+I∞,S  
+
+> 1
+
+− SL + 1 
+
+
+
+≤ K2
+
+√T . (9) 
+
+Consequently, 1
+
+> T
+
+
+
+I∞,S  
+
+> 1
+
+− SL+1 
+
+
+
+→ 0 in probability as T → ∞ .
+
+With Lemma 8 in hand, we can control the steady-state shortfall of start-of-cycle inventory from mean demand under a given base-stock level, which yields a sharper upper bound on the offline–greedy reward gap. 
+
+Theorem 4. The difference in long-run average profit per cycle between the myopic offline and the online greedy fulfillment algorithms under their respective optimal base-stock levels is upper bounded by: 
+
+πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+≤ (rM − r1) 1 − λ0 − λ1
+
+1 − λ0
+
+∆off 
+
+> T
+
+L + 1 +
+
+
+
+K2 + p(1 − λ0)λ0
+
+√T
+
+!
+
+.
+
+In particular, since ∆off  
+
+> T
+
+= Θ( T β ), the profit gap scales as O(T β + √T ).Proof sketch. We upper bound the gap by comparing both algorithms under the same base-stock level Soff . With a common base stock, replenishment and holding costs depend only on how many units are consumed, so both algorithms follow the same inventory trajectory; and the profit differ-ence is entirely due to how inventory is allocated across demand types. The offline algorithm can beat greedy only in stockout cycles, by “swapping” units that greedy spends on early low-reward requests to instead serve later high-reward requests. The number of such swaps is limited by the demand overshoot ( D − I)+, i.e., the customers greedy cannot serve. This overshoot is driven by two effects: the √T -scale randomness of binomial demand and the systematic slack between the base stock and mean lead-time demand, which contributes order ∆ off  
+
+> T
+
+/(L + 1) = Θ( T β ) to the typ-ical shortfall (up to another √T term from steady-state concentration). Since each swap gains at most rM − r1, the total gap is at most a constant times T β + √T , yielding the stated bound. □Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+22 
+
+The upper bound in Theorem 4 shows that the offline–greedy gap is controlled by the base-stock slack and √T -scale demand fluctuations. We next complement it with a matching lower bound that attributes a comparable loss to greedy whenever the steady-state start-of-cycle inventory falls in an intermediate “rationing” range. Define 
+
+Ak ≜
+
+> M
+
+X
+
+> j=k
+
+rj λj − rk−1
+
+> M
+
+X
+
+> j=k
+
+λj , k = 2 , . . . , M, A ≜ min  
+
+> 2≤k≤M
+
+Ak.
+
+Note that A > 0 under the nondegeneracy r1 < r 2 < . . . < r M and PM −1 
+
+> j=1
+
+λj > 0. 
+
+Theorem 5. The difference in long-run average profit per cycle between the myopic offline and the online greedy fulfillment algorithms under their respective optimal base-stock levels is lower bounded by: for all T ≥ 1,
+
+πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+≥ A
+
+1 − λ0
+
+· ∆greedy 
+
+> T
+
+4( L + 1) Pr T λ M < I ∞,S greedy  
+
+> 1
+
+≤ T (1 − λ0) − ∆greedy 
+
+> T
+
+4( L + 1) 
+
+!
+
+− M1
+
+√T , (10) 
+
+where M1 = PMj=1 
+
+pλj (1 − λj ).Moreover, there exists T1 < ∞ such that for all T ≥ T1,
+
+πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+≥ A
+
+2(1 − λ0)( L + 1) ∆greedy  
+
+> T
+
+−
+
+ AK 2
+
+1 − λ0
+
++ M1
+
+ √T . (11) 
+
+In particular, since ∆greedy  
+
+> T
+
+= Θ( T β ), the RHS is Θ( T β ) − Θ( √T ).Proof sketch. We couple the offline and greedy algorithms under the same base-stock level Sgreedy 
+
+similar to the proof of Theorem 4, so the long-run profit gap reduces to the steady-state reward gap in a single cycle. To lower bound this reward gap, we compare both algorithms to a deterministic “mean-arrival” benchmark. The offline algorithm’s expected reward under random arrivals is within 
+
+O(√T ) of its deterministic reward (Lemma EC.2), while the greedy algorithm’s expected reward is no larger than its deterministic counterpart (by Jensen’s inequality). Hence the offline–greedy gap is at least the deterministic reward difference D(I) minus an O(√T ) relaxation error. A direct evaluation shows D(I) = 0 when inventory is abundant, but D(I) grows linearly as inventory falls below mean demand: offline effectively reserves scarce units for high-reward classes, whereas greedy spreads limited inventory across the demand mix and “dilutes” reward. Finally, under the greedy base-stock, the stationary start-of-cycle inventory is concentrated within O(√T )of its target level (Lemma 8), so the typical shortfall from mean demand is of order ∆ greedy  
+
+> T
+
+.Averaging D(I) over this stationary distribution yields a profit gap of order ∆ greedy  
+
+> T
+
+, up to the 
+
+O(√T ) relaxation term. □
+
+Corollary 2. If β > 1/2, then πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+= Θ( T β ).Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+23 
+
+Taken together, Theorems 4 and 5 characterize how the offline–greedy profit gap depends on the slack from mean lead-time demand. Under the interior base-stock regime (8), the upper bound scales as O(T β + √T ), reflecting two sources of mismatch: the systematic slack ∆ T and the intrinsic 
+
+√T demand fluctuations. The lower bound in Theorem 5 shows that, up to the same √T relaxation term, the gap is at least of order ∆ greedy  
+
+> T
+
+. Consequently, when β > 1/2, Corollary 2 implies a tight scaling πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+= Θ( T β ). The constants reveal the main drivers: the gap grows with the reward spread rM − r1 and with the prevalence of non-type-1 arrivals among non-empty requests (1 − λ0 − λ1)/(1 − λ0), while the lower-bound slope is captured by A, which measures how much the offline algorithm gains from prioritizing higher-reward classes when inventory is scarce. 
+
+4.3. Online vs. Offline Fulfillment under Constant-Order Policy 
+
+We now analyze the last term η2 in the decomposition πgreedy  
+
+> b
+
+− πon  
+
+> c
+
+= η0 − η1 + η2, where η2 captures the expected profit loss of the myopic offline algorithm relative to the online fulfillment algorithm, both operating under the same constant-order replenishment. An upper bound for πoff  
+
+> c
+
+− πon  
+
+> c
+
+was established in Section 3.2; hence, to bracket the gap, it suffices here to bound the opposite direction 
+
+πon  
+
+> c
+
+− πoff  
+
+> c
+
+.
+
+Remark. As discussed in Section 2, the myopic offline algorithm is not globally optimal: it uses only within-cycle foresight and ignores cross-cycle trade-offs. Accordingly, it can be outperformed by a purely online policy, which explains why a nonzero upper bound on η2 may arise. An illustrative example will be provided in Section 5. 
+
+Theorem 6. The expected average profit difference between the online algorithm (assumed in Assumption 1) and the myopic offline algorithm is upper bounded by: 
+
+πon  
+
+> c
+
+− πoff  
+
+> c
+
+≤ (rM − r1 − h)C2T α.
+
+Proof sketch. For any fixed constant order, Lemma 3 implies the online algorithm always ends a cycle with (weakly) more inventory than the myopic offline algorithm, and thus cannot have lower holding cost. By Lemma 1, the expected end-of-cycle inventory gap is at most C2T α. This gap can be viewed as an upper bound on the number of units on which the online allocation deviates from the myopic offline allocation. In the best case, each such unit can increase reward by at most 
+
+rM − r1 (replacing a low-reward service with a high-reward one) while incurring at least one unit of holding cost h from being carried. Therefore, πon  
+
+> c
+
+− πoff  
+
+> c
+
+≤ (rM − r1 − h)C2T α, and the bound remains valid after optimizing over constant-order levels. □
+
+Theorem 6 shows that, under a constant-order policy, the online–offline profit gap is sublinear (at most O(T α)) in the cycle length. Combined with the linear bounds obtained for base-stock policies, this indicates that, in the overall comparison πgreedy  
+
+> b
+
+− πon  
+
+> c
+
+, the dominant terms come from the base-stock side. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+24 
+
+4.4. Comparison between Replenishment and Online Fulfillment 
+
+We have the following result regarding the comparison between the influence of replenishment and online fulfillment policies. 
+
+Corollary 3. Combining the effects of replenishment and fulfillment, the long-run average profit difference between the online greedy algorithm with base-stock replenishment and the general online algorithm with constant-order replenishment satisfies the computable lower bound 
+
+πgreedy  
+
+> b
+
+− πon  
+
+> c
+
+≥ a2(T, h, r 1) − ¯a1(T, h, r M , L )
+
+−
+
+ A
+
+2(1 − λ0)( L + 1) ∆greedy  
+
+> T
+
+−
+
+ AK 2
+
+1 − λ0
+
++ M1
+
+ √T
+
+
+
+− (rM − r1 − h) · C2T α,
+
+(12) 
+
+and the upper bound 
+
+πgreedy  
+
+> b
+
+− πon  
+
+> c
+
+≤ a2(T, h, r M ) − a1(T, h, r 1, L )
+
+−
+
+(
+
+A
+
+1 − λ0
+
+· ∆greedy 
+
+> T
+
+4( L + 1) Pr T λ M < I ∞,S greedy  
+
+> 1
+
+≤ T (1 − λ0) − ∆greedy 
+
+> T
+
+4( L + 1) 
+
+!
+
+− M1
+
+√T
+
+)
+
++
+
+n
+
+C1T α + hC2T α − 1 
+
+> eθ
+
+ln(1 − βθ ) · 1α< 1 + hKT · 1α=1 
+
+o
+
+. (13) 
+
+Interpretation and scaling. The bounds separate three forces: (i) a replenishment component ,coming from the difference between base-stock and constant-order costs via a2, ¯a1, a 1; (ii) a greedy-basestock component , which is of order at most T β + √T and at least ∆ greedy  
+
+> T
+
+− √T by Theorems 4 and 5; and (iii) an online-constant component , of order at most T α under Assumption 1 by Theo-rem 6. For the replenishment part, we may write ∆LB rep (T ) := a2(T, h, r M ) − a1(T, h, r 1, L ), ∆UB rep (T ) := a2(T, h, r 1) − ¯a1(T, h, r M , L ),
+
+which are exactly the replenishment terms appearing in the lower and upper bounds. For small T (short cycles), the closed-form expressions show that a2, ¯a1, a 1 all grow essentially linearly in T , so ∆ LB rep (T ) and ∆ UB rep (T ) are of order T , and all three components in (12) and (13) scale roughly linearly in T . As T → ∞ , Corollary 1 implies a2, ¯a1, a 1 = Θ( √T ), hence the replenishment contributions ∆ LB rep (T ) and ∆ UB rep (T ) grow at most of the order of √T . In contrast, the greedy-basestock penalty scales as O(T β + √T ), while the online-constant component is O(T α). Thus, for large T , improvements in the fulfillment algorithm can change profit by Ω( T β ) when β > 1/2, whereas improving the replenishment algorithm (base-stock versus constant order) can only change profit by O(√T ). In this asymptotic regime, the quality of the fulfillment algorithm is therefore the first-order driver of performance, while replenishment design has a second-order effect. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+> 25
+
+Implication of our results. Much recent research emphasizes online fulfillment (refer to details in Section 1.2), often treating replenishment as fixed or exogenous. In contrast, replenishment design itself has received less systematic attention. Our results suggest that careful replenishment can yield gains that persist even when paired with a simple greedy fulfillment; in fact, across broad parameter ranges, base-stock with greedy can outperform constant-order with a relatively better online policy. The bounds indicate that the relative advantage of replenishment is especially pro-nounced for shorter cycles and remains meaningful in many regimes. Taken together, these findings again bring the importance of the design of inventory replenishment, or elevating replenishment from a background assumption to a first-order decision variable, especially for shorter cycles or when the base-stock slack is at most of order √T .
+
+## 5. Look-Ahead Online Fulfillment 
+
+In Section 4.3, we established a positive upper bound for πon  
+
+> c
+
+− πoff  
+
+> c
+
+. However, intuitively, an offline algorithm should generally perform better than an online algorithm, since it has access to more information in advance, specifically the realized demand over each replenishment cycle. Despite this, we have previously pointed out that the myopic offline algorithm is not necessarily optimal in our model. This limitation arises from the myopic offline algorithm’s failure to account for inventory reservation, which could improve fulfillment outcomes in future cycles. To illustrate this, we provide an example where the online Bayes Selector algorithm defined in Vera and Banerjee (2021) (denoted by Algorithm BS) achieves a higher expected profit than the myopic offline algorithm. 
+
+Example 1. Consider a two-cycle horizon ( N = 2) with two periods per cycle ( T = 2). There are three customer types with rewards ( r1, r 2, r 3) = (1 , 9, 10) and per–period arrival probabilities (λ1, λ 2, λ 3) = (0 .3, 0.3, 0.1) (implying a no-arrival probability of 0 .3). The holding cost is h = 0 .5per unit per cycle; inventory starts at I11 = 1; and one unit is replenished at the start of cycle 2 (q2 = 1). Expected profits are obtained by averaging payoffs over all 256 four-period demand paths. The myopic offline algorithm yields 16 .4669, whereas the online Bayes Selector attains 16 .6289. ♢
+
+To understand why the online Algorithm BS performs better than the myopic offline algorithm in Example 1, consider a specific sample path in the first replenishment cycle: j11 = 1 , j 12 = 0 .
+
+The myopic offline algorithm, following its myopic approach, will accept the type-1 demand in period 1, as inventory is available. However, the online Algorithm BS will reject this demand, choosing to reserve inventory for potentially higher-rewarded demands in the next period. In a single-cycle setting, this decision may not always be beneficial, as there is no guarantee of higher-rewarded demand appearing. Nevertheless, in a multi-cycle setting with replenishment, this decision unintentionally preserves more inventory for future cycles, where it can be used for higher-rewarded demand, leading to an overall increase in expected profit. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+26 
+
+5.1. Algorithm 
+
+Based on this observation, we propose a new online fulfillment algorithm that incorporates look-ahead algorithms to anticipate future demand under a replenishment setting. This approach aims to enhance decision-making by considering the long-term benefits of inventory reservation while balancing the risks associated with unfulfilled demand. We formally introduce this proposed algo-rithm as follows. To define the offline fulfillment algorithm with look-ahead, we consider a setting where the decision at period t in cycle n accounts for both current and future demand, along with future replenishment arrivals over the next ˜N cycles. Let vnt,j and vnt, 0j denote, respectively, the number of accepted and rejected type-j customers arriving over the remaining periods t, . . . , T in cycle n.Similarly, let vn+ij and vn+i 
+
+> 0j
+
+represent the number of accepted and rejected type-j customers in future cycle n + i for i ∈ { 1, 2, . . . , ˜N }. Let Int denote the on-hand inventory at period t in cycle 
+
+n and On+i denote the replenishment order arriving at cycle n + i. The offline fulfillment with look-ahead solves the following optimization problem, based on realized future demand Dnj [t, T ]within the current cycle: max 
+
+> v
+
+X 
+
+> j∈[M]
+
+
+
+rj + ˜N · h
+
+
+
+· vnt,j +
+
+> ˜N
+
+X
+
+> i=1
+
+h
+
+rj + ( ˜N − i) · h
+
+i
+
+· vn+ij
+
+ − h ˜N · Int
+
+s.t. X 
+
+> j∈[M]
+
+vnt,j ≤ Int ,vnt,j + vnt, 0j = Dnj [t, T ], ∀j ∈ [M ],
+
+X 
+
+> j∈[M]
+
+vnt,j +
+
+> k
+
+X
+
+> i=1
+
+vn+ij
+
+!
+
+≤ Int +
+
+> k
+
+X
+
+> i=1
+
+On+i, ∀k ∈ [ ˜N ],vn+ij + vn+i 
+
+> 0j
+
+= Λ n+ij [1 , T ], ∀j ∈ [M ], i ∈ [ ˜N ],vnt,j , v nt, 0j , v n+ij , v n+i 
+
+> 0j
+
+≥ 0, ∀j ∈ [M ], i ∈ [ ˜N ].
+
+(14) The objective accounts for holding costs after the current cycle over the next ˜N cycles n + 1 , . . . , n +˜N . The term −h ˜N I nt subtracts the baseline cost of carrying the current inventory through this window, and an acceptance in cycle n + i avoids holding only in cycles n + i + 1 , . . . , n + ˜N , giving the coefficient ( ˜N − i)h. This formulation ensures that fulfillment decisions align with both current realized demand and anticipated future replenishment and demands. To design an online fulfillment algorithm based on this structure, we replace the realized demand 
+
+Dnj [t, T ] in (14) with the expected future demand Λ nj [t, T ]. Thus, at each period t in cycle n, the online algorithm solves a modified version of the optimization using expected demand forecasts instead of realized observations. Let vnt,j t and vnt, 0jt be the corresponding solution values. Based on this principle, we propose a real-time decision algorithm as in Algorithm 1. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+27 
+
+Algorithm 1 Look-Ahead Online Fulfillment Algorithm  
+
+> 1:
+
+for t = 1 , 2, . . . , T do  
+
+> 2:
+
+Observe the realized demand sequence jn 
+
+> 1
+
+, j n 
+
+> 2
+
+, . . . , j nt . 
+
+> 3:
+
+Solve the look-ahead optimization problem for vnt,j t and vnt, 0jt . 
+
+> 4:
+
+if vnt,j t ≥ vnt, 0jt then  
+
+> 5:
+
+Accept customer jnt and update inventory: It+1 ← It − 1.  
+
+> 6:
+
+else  
+
+> 7:
+
+Reject customer jnt and maintain inventory: It+1 ← It. 
+
+> 8:
+
+end if  
+
+> 9:
+
+end for 
+
+Remark 1. This look-ahead algorithm can be easily extended to the multi-resource setting by generalizing the inventory and replenishment constraints in (14) to apply component-wise across all resources. More broadly, for any online allocation problem whose offline version can be formulated as a linear program, our algorithm extends naturally by incorporating expected future demand and adding constraints for future replenishments. This makes the approach applicable to a wide class of multi-resource and dynamic allocation problems. In the next subsection, we conduct numerical experiments to evaluate the performance of the Look-Ahead Online Fulfillment Algorithm. We compare its profit outcomes against traditional online algorithms without look-ahead capabilities, to assess how effectively the Look-Ahead algo-rithm improves profit under varying scenarios. 
+
+5.2. Simulation 
+
+To evaluate the performance of various fulfillment algorithms under a replenishment system, we conduct simulations comparing four algorithms: the myopic offline algorithm, the online Algorithm BS, the offline look-ahead algorithm, and the online look-ahead algorithm—all under a base-stock replenishment framework. In the following simulations, we initialize at an even pipeline that exactly hits the base-stock position: 
+
+I1,alg 1 (S, H) = 
+
+j SL+1 
+
+k
+
+, q1,alg (S, H) = 
+
+j SL+1 
+
+k
+
+, . . . , 
+
+j SL+1 
+
+k 
+
+,
+
+and set qL+1 ,alg (S, H) = S −I1,alg 1 (S, H)−PL−1 
+
+> l=1
+
+q1+ l, alg (S, H). This choice yields integer, nonnegative quantities and avoids transient bias—extreme initializations (e.g., all stock on hand with an empty pipeline or vice versa) can materially skew early-cycle revenues when N is small. To comprehensively assess their performance, we design experiments across three key dimensions: (1) lead times L and look-ahead cycles ˜N ; (2) number of periods T ; and (3) holding cost h, demand rewards r and arrival rates λ.Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+28 
+
+5.2.1. Lead time and look-ahead cycles For look-ahead under a base-stock policy, the practical upper bound of look-ahead cycles is ˜N = L, since at most L future replenishments can be anticipated. Increasing ˜N improves foresight but raises computational and operational complexity. We therefore study ˜N ∈ { 0, 1, . . . , 5} for lead times L ∈ { 8, 10 } and report average profit per period (total profit divided by N T ). Parameters in Figure 2 are: T = 50, N = 50, h = 2, [ r1, r 2, r 3] = [1 , 9, 10], [ λ0, λ 1, λ 2, λ 3] = [0 .2, 0.2, 0.3, 0.3], and K = 10 , 000 sample paths. 
+
+Observations. Figure 2 shows that, for any ˜N > 0, the look-ahead variants dominate their non–look-ahead counterparts: offline (look-ahead) outperforms offline (myopic), and online (look-ahead) improves upon online BS. This shows that anticipatory inventory reservation is valuable even when the online policy relies on demand forecasts. Second, even a short horizon is effective: moving from ˜N = 0 to ˜N = 1 already yields a noticeable gain, and the curves follow a concave pat-tern with shrinking marginal benefits. Beyond ˜N = 3, improvements are negligible, where reserving inventory for more than three future cycles brings little added value once the additional holding costs are accounted for. Practically, a modest look-ahead horizon captures most of the benefit while keeping computation low. Third, longer lead times increase the value of foresight. Comparing L = 8 (Figure 2a) and L = 10 (Figure 2b), the gap between look-ahead policies and their non–look-ahead baselines widens, because longer supply pipelines increase the variability of available inventory at the start of each cycle, creating more opportunities for inter-cycle substitution. 
+
+(a) Lead time L = 8 (b) Lead time L = 10  
+
+> Figure 2 Average profit under the myopic offline and online BS algorithms with and without look-ahead across different lead times and number of look-ahead cycles.
+
+5.2.2. Number of periods in one cycle We next vary the number of periods T while fixing N = 50, L = 10 with ˜N = 5, h = 3, [ r1, r 2, r 3] = [1 , 9, 10], [ λ0, λ 1, λ 2, λ 3] = [0 .2, 0.2, 0.3, 0.3], and 
+
+K = 10 , 000. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+29 
+
+Observations. Figure 3 shows that all policies improve as T increases and approach stable plateaus, as demand mixing better matches expectations over longer cycles. Across the entire range of T , look-ahead consistently dominates non–look-ahead (offline look-ahead ≥ offline myopic and online look-ahead ≥ online BS). Although the gaps narrow slightly with larger T as randomness averages out, the advantage of look-ahead remains economically meaningful throughout.  
+
+> Figure 3 Average profit under the myopic offline and online BS algorithms with and without look-ahead across different number of periods in one cycle.
+
+5.2.3. Holding costs, rewards and arrival rates Finally, we jointly vary ( h, r, λ ) because these primitives interact to shape both the profit level and the headroom for policy improvement, so changing one at a time can yield ambiguous movements in the improvement gap. For example, increasing the arrival rate of high–reward types can raise the value of look-ahead (reserved inventory is more likely to be deployed on valuable demand) but can also lower it (even myopic policies naturally allocate less to low–reward types), so the net effect on the profit gap is ambiguous. Therefore, rather than seeking a monotone pattern in any single primitive, we evaluate how much profit improvement look-ahead delivers across combinations of these variables that jointly affect profits. In the experiments, we fix T = 50, N = 50, and L = 10, and vary ( h, r, λ ) and Table 1 reports average profit per period and the percentage uplift delivered by look-ahead in both offline and online settings. Across all configurations in Table 1, the look-ahead variants deliver a persistent gain of roughly 1%–2% in average profit per period over their non–look-ahead counterparts (both offline and online). At operational scale, such percentage lifts translate into substantial dollar value given the large transaction volumes and inventory carrying costs. The magnitude appears “modest” only because, in this class of settings, the headroom for improvement is intrinsically limited: the base-line gap between offline myopic and online BS without replenishment is already small, since the Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+30 
+
+well–designed online algorithms capture most of the available value (see simulations in, e.g., Vera and Banerjee (2021), Xie et al. (2024), Bumpensanti and Wang (2020)). This point is also evi-dent in our table, where the online (look-ahead) policy frequently exceeds offline (myopic) . Taken together with the small baseline gap, this highlights both the limited headroom and the practical value of adding short-horizon anticipation. We further expect the advantage of look-ahead to be more pronounced as system variability rises: (i) With more volatile demand mixes (greater temporal fluctuations in type composition), myopic algorithms tend to over-allocate to low-value types in unlucky periods; look-ahead explicitly weighs near-term opportunities against expected future high-value arrivals, improving intertempo-ral matching; (ii) With multiple resources , the effective shadow prices evolve over time and across resources; the look-ahead planner internalizes future cross-resource bottlenecks and substitution options, reducing myopic cannibalization; (iii) Under replenishment disruptions (e.g., a missed delivery for one cycle), the option value of inventory increases; look-ahead creates protective buffers and reallocates stock toward periods with higher expected marginal value. In all three cases, the ability to consider even a short forward horizon systematically converts additional variability into value. 
+
+Table 1 Average Profits per Period (i.e., Total profits / ( N T )) and Percentage Improvements under Offline and Online Algorithms with and without Look-ahead.                                                                                                                                                                                                                                  
+
+> Rewards Demand λhOffline (Myopic) Offline (Look ahead) ↑%Online BS Online BS (Look ahead) ↑%
+> [1 ,9,10] [0 .2,0.3,0.3] 25.6265 5.6898 1.13% 5.5937 5.6472 0.96% [1 ,9,10] [0 .2,0.3,0.3] 35.5343 5.6340 1.80% 5.4932 5.5801 1.58% [1 ,9,10] [0 .2,0.2,0.4] 25.7304 5.7902 1.04% 5.6966 5.7341 0.66% [1 ,9,10] [0 .2,0.2,0.4] 35.6298 5.7293 1.77% 5.5897 5.6663 1.37% [1 ,9,10] [0 .2,0.1,0.5] 25.8250 5.8876 1.07% 5.7816 5.8402 1.01% [1 ,9,10] [0 .2,0.1,0.5] 35.7256 5.8266 1.76% 5.6829 5.7700 1.53% [1 ,5,10] [0 .2,0.3,0.3] 24.4475 4.4985 1.15% 4.4121 4.4656 1.21% [1 ,5,10] [0 .2,0.3,0.3] 34.3738 4.4480 1.69% 4.3392 4.3976 1.35% [1 ,5,10] [0 .2,0.2,0.4] 24.9404 4.9966 1.14% 4.9102 4.9616 1.05% [1 ,5,10] [0 .2,0.2,0.4] 34.8643 4.9583 1.93% 4.8286 4.9009 1.50% [1 ,5,10] [0 .2,0.1,0.5] 25.4372 5.5000 1.16% 5.4048 5.4559 0.95% [1 ,5,10] [0 .2,0.1,0.5] 35.3463 5.4527 1.99% 5.3087 5.3978 1.68% [1 ,2,10] [0 .2,0.3,0.3] 23.5797 3.6219 1.18% 3.5560 3.5877 0.89% [1 ,2,10] [0 .2,0.3,0.3] 33.5174 3.6030 2.43% 3.4891 3.5556 1.90% [1 ,2,10] [0 .2,0.2,0.4] 24.3636 4.4132 1.14% 4.3362 4.3766 0.93% [1 ,2,10] [0 .2,0.2,0.4] 34.2878 4.3907 2.40% 4.2452 4.3472 2.40% [1 ,2,10] [0 .2,0.1,0.5] 25.1417 5.2024 1.18% 5.1149 5.1635 0.95% [1 ,2,10] [0 .2,0.1,0.5] 35.0591 5.1748 2.29% 5.0254 5.1089 1.66%
+
+## 6. Extension to Multi-Resource Online Fulfillment 
+
+In this section, we will extend our results that regret does not accumulate over cycles to the setting with multiple inventory resources, enabling analysis of more complex and realistic systems Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+31 
+
+with differentiated resource types. We begin by introducing an extended model tailored to the multi-resource setting. Most structural elements of the original model remain unchanged: the system still operates over 
+
+N replenishment cycles, each containing T periods, with at most one customer arriving per period. There are M customer types with arrival probabilities {λj }j∈[M ]. The realized demand process 
+
+Dnj [t1, t 2] is defined as the same in Section 2. The key extension is the introduction of d distinct inventory resources; the state and replenishment policies are updated accordingly. 
+
+Multiple resources. We introduce d ∈ N distinct inventory resources indexed by ℓ ∈ [d]. Any type j ∈ [M ] can be fulfilled using any resource ℓ ∈ [d], earning reward rjℓ upon acceptance. We assume rewards are not all identical, i.e., there exist j1̸ = j2 and some ℓ such that rj1ℓ̸ = rj2ℓ.
+
+State and inventory (multi–resource). Let Lℓ ∈ N be the deterministic lead time for resource 
+
+ℓ. Fix a fulfillment algorithm alg (online, offline, or as specified when needed) and a replenishment parameter vector z = ( zℓ)ℓ∈[d] chosen by the policy and independent of the realized arrival path H.Given H, define for each resource ℓ:
+
+• In, alg  
+
+> t,ℓ
+
+(z, H): on–hand inventory of resource ℓ at the beginning of period t in cycle n;
+
+• qn+l, alg  
+
+> ℓ
+
+(z, H): the order of resource ℓ that arrives at the beginning of cycle n+l for l = 1 , . . . , L ℓ.Hence, the order of resource ℓ placed at the start of cycle n is qn+Lℓ,alg  
+
+> ℓ
+
+(z, H). Accordingly, the per–resource pipeline at the start of cycle n is 
+
+qn, alg  
+
+> ℓ
+
+(z, H) ≜
+
+
+
+qn+1 ,alg  
+
+> ℓ
+
+(z, H), . . . , q n+Lℓ−1,alg  
+
+> ℓ
+
+(z, H)
+
+
+
+,
+
+and we collect order pipelines and inventories across resources as 
+
+Qn, alg (z, H) ≜  qn, alg  
+
+> ℓ
+
+(z, H) 
+
+> ℓ∈[d]
+
+, In, alg  
+
+> t
+
+(z, H) ≜  In, alg  
+
+> t,ℓ
+
+(z, H) 
+
+> ℓ∈[d]
+
+.
+
+The system state at the start of cycle n is  In, alg 1 (z, H), Qn, alg (z, H). Here In, alg 1,ℓ (z, H) is the start–of–cycle inventory of resource ℓ (after any arrival qn, alg  
+
+> ℓ
+
+), and In, alg  
+
+> T+1 ,ℓ
+
+(z, H) is the end–of–cycle leftover of resource ℓ. If resource–specific holding costs hℓ apply, the end–of–cycle holding charge is Pdℓ=1 hℓIn, alg  
+
+> T+1 ,ℓ
+
+(z, H). 
+
+Replenishment policies (multi–resource). The two policies are adapted as follows: 
+
+• Base-Stock Policy (z = S ≜ (Sℓ)ℓ∈[d]). Each resource ℓ has a target position Sℓ (optimized in advance). For every cycle n and resource ℓ,
+
+qn+Lℓ,alg  
+
+> ℓ
+
+(S, H) = Sℓ − In, alg 1,ℓ (S, H) −
+
+> Lℓ−1
+
+X
+
+> l=1
+
+qn+l, alg  
+
+> ℓ
+
+(S, H), (15) 
+
+In+1 ,alg 1,ℓ (S, H) = In, alg  
+
+> T+1 ,ℓ
+
+(S, H) + qn+1 ,alg  
+
+> ℓ
+
+(S, H),Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+32 
+
+with pipeline shift qn+1 ,alg  
+
+> ℓ
+
+(S, H) = ( qn+2 ,alg  
+
+> ℓ
+
+, . . . , q n+Lℓ+1 ,alg  
+
+> ℓ
+
+). Unless otherwise noted, we allow any feasible initial state  I1,alg 1 (S, H), Q1,alg (S, H) with componentwise integer, nonnegative entries and per–resource positions satisfying 
+
+I1,alg 1,ℓ (S, H) + 
+
+> Lℓ−1
+
+X
+
+> l=1
+
+q1+ l, alg  
+
+> ℓ
+
+(S, H) ≤ Sℓ for all ℓ ∈ [d].
+
+• Constant-Order Policy (z = c ≜ (cℓ)ℓ∈[d]). Each resource ℓ orders a fixed quantity cℓ every cycle: 
+
+qn, alg  
+
+> ℓ
+
+(c, H) = cℓ for all cycles n, In+1 ,alg 1,ℓ (c, H) = In, alg  
+
+> T+1 ,ℓ
+
+(c, H) + cℓ.
+
+In the long-run average ( N → ∞ ), performance is independent of the lead times {Lℓ}. We allow any feasible initial state; without loss of generality and for simplicity, we take I1,alg 1,ℓ (c, H) = 
+
+cℓ, ∀ℓ ∈ [d].
+
+Profit and performance metrics. The objective remains to maximize the total expected reward from accepted customers minus holding costs across all resources and cycles. Similarly, we denote by πalg  
+
+> b
+
+(T, S, N ) (resp., πalg  
+
+> c
+
+(T, c, N )) the expected average profit per cycle under a base-stock replenishment policy with S = ( Sℓ)ℓ∈[d] (resp., a constant-order replenishment policy with 
+
+c = ( cℓ)ℓ∈[d]) and fulfillment algorithm alg , computed over all resources and N replenishment cycles. For brevity, we slightly abuse the notation π to in both the single- and multi-resource settings and the arguments S, c make the context clear. This extended framework enables the study of more practical settings involving multiple inven-tory types (e.g., warehouses, machines, or locations), and lays a foundation for analyzing the performance of online fulfillment algorithms under richer system dynamics. In the multi-resource fulfillment setting, we continue to apply Assumption 1 to characterize a broad class of online fulfillment algorithms achieving a per-cycle regret of at most C1T α relative to the offline (partial-foresight) benchmark without replenishment. This assumption remains valid in the multi-resource case, as similar online algorithms have been developed and analyzed for generalized resource allocation problems (see, e.g., (Vera and Banerjee 2021, Xie et al. 2024)). However, the structural result in Lemma 1 extends only partially to this setting. Specifically, it guarantees that under Assumption 1, if the start-of-cycle inventories coincide ( In, on 1,ℓ (H) = 
+
+In, off 1,ℓ (H), ∀ℓ), then the total difference in end-of-cycle inventory across all resources is nonnegative for every demand path H and bounded in expectation: 
+
+> d
+
+X
+
+> ℓ=1
+
+In, on  
+
+> T+1 ,ℓ
+
+(H) − In, off  
+
+> T+1 ,ℓ
+
+(H) ≥ 0, and EH,on 
+
+" dX
+
+> ℓ=1
+
+ In, on  
+
+> T+1 ,ℓ
+
+(H) − In, off  
+
+> T+1 ,ℓ
+
+(H)#
+
+≤ C2T α. (16) While this inequality gives a bounded deviation in total inventory, it does not imply that the deviation for each individual resource ℓ is also bounded. Indeed, one resource could accumulate a Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+33 
+
+large surplus while another depletes completely. Therefore, to analyze holding costs and resource-level decisions, we must establish stronger per-resource guarantees as in the following lemma. 
+
+Lemma 9. Under Assumption 1, for any cycle n, if the start-of-cycle inventories coincide (In, on 1,ℓ (H) = In, off 1,ℓ (H), ∀ℓ), then there exists a reward-optimal myopic offline allocation algorithm (when the optimizer is not unique) such that for any ℓ ∈ [d],
+
+−C3T α ≤ EH,on 
+
+In, on  
+
+> T+1 ,ℓ
+
+(H) − In, off  
+
+> T+1 ,ℓ
+
+(H) ≤ C3T α, (17) 
+
+for some constant C3 > 0 independent of the start-of-cycle inventories and T .Remark. When the myopic offline optimizer is not unique (e.g., due to reward ties across resources), we fix an arbitrary reward-optimal selection. This does not affect the following regret comparisons because all such selections attain the same total reward. In the next two subsections, we extend the inventory–difference and profit–regret results from the no-replenishment setting to the multi-resource online fulfillment model with replenishment. We evaluate these performance metrics under a given replenishment policy, thereby generalizing the analysis in Section 3. Similarly, let Son and Soff denote the optimal base-stock levels for the online and offline fulfillment algorithms, and con and coff denote the corresponding optimal constant-order quantities in the multi-resource setting. 
+
+6.1. Base-Stock Replenishment 
+
+Following Section 3.1, we proceed in two steps: first establish bounds on the inventory difference of each resource in every cycle between two algorithms in Lemma 10, and then bound the profit difference across all resources and cycles in Theorem 7. 
+
+Lemma 10. Under Assumption 1, the same initial inventory pipeline and base-stock policy with 
+
+S = {Sℓ}ℓ∈[d] , for any cycle n, the start-of-cycle inventory difference between the online and the myopic offline algorithms can be bounded by: 
+
+−Lℓ · C3T α ≤ EH,on 
+
+In, on  
+
+> 1,ℓ
+
+(S, H) − In, off  
+
+> 1,ℓ
+
+(S, H) ≤ (L2 
+
+> ℓ
+
+− Lℓ + 1) · C3T α, ∀ℓ ∈ [d]; 
+
+and similarly for the end-of-cycle inventory: 
+
+−(Lℓ + 1) · C3T α ≤ EH,on 
+
+In, on  
+
+> T+1 ,ℓ
+
+(S, H) − In, off  
+
+> T+1 ,ℓ
+
+(S, H) ≤ (L2 
+
+> ℓ
+
+− Lℓ + 2) · C3T α, ∀ℓ ∈ [d].
+
+Theorem 7. Under Assumption 1, 
+
+πoff  
+
+> b
+
+(T, Soff , N ) − πon  
+
+> b
+
+(T, Son , N ) ≤ C1T α +
+
+> d
+
+X
+
+> ℓ=1
+
+rℓ,max · Lℓ · C3T α +
+
+> d
+
+X
+
+> ℓ=1
+
+hℓ · (L2 
+
+> ℓ
+
+− Lℓ + 2) · C3T α,
+
+where rℓ,max ≜ max j {rjl }, C1 and C3 are defined in Assumption 1 and Lemma 9. In particular, 
+
+πoff  
+
+> b
+
+(T, Soff , N ) − πon  
+
+> b
+
+(T, Son , N ) = O(T α).Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+34 
+
+6.2. Constant-Order Replenishment 
+
+In this subsection, we extend the results from Section 3.2 to the multi-resource online fulfillment setting. In the multi-resource setting, we define c ≜ Pdℓ=1 cℓ, which is the total replenishment quantity across all resources. Analogous to the single-resource case, we can also assume 0 ≤ c < T (1 − λ0) and T (1 − λ0) − c = T δ ′ 
+
+> c
+
++ o(T ),
+
+for some constant δ′ 
+
+> c
+
+> 0, and initialize the system with total inventory Pdℓ=1 I1,off 1,ℓ = c (the split across resources is arbitrary). The structural result in Lemma 3 carries over when aggregated across resources: for every cycle n, it holds that 
+
+> d
+
+X
+
+> ℓ=1
+
+In, off  
+
+> T+1 ,ℓ
+
+(c, H) ≤
+
+> d
+
+X
+
+> ℓ=1
+
+In, on  
+
+> T+1 ,ℓ
+
+(c, H).
+
+Thus, by (16), we may apply the bound of Lemma 5 to the total inventory process in this setting, yielding an upper bound on the online algorithm’s expected end-of-cycle total inventory. This, in turn, controls the additional holding cost incurred under the online policy. However, this advantage does not necessarily hold resource-by-resource: the online algorithm can end a cycle with less inventory than the offline benchmark for some ℓ. Nevertheless, because each cℓ
+
+is fixed under the constant-order policy, the expected fulfilled rewards per cycle remain bounded. It therefore suffices to bound the total offline end-of-cycle inventory (see Lemma 11), as this bound controls the additional fulfilled rewards and hence the total reward difference, culminating in Theorem 8. 
+
+Lemma 11. For any cycle n, and all sufficiently large T ,
+
+EH
+
+" dX
+
+> ℓ=1
+
+In, off  
+
+> T+1 ,ℓ
+
+(c, H)
+
+#
+
+≤ − 2(1 − λ0)
+
+δ′
+
+> c
+
+ln 
+
+
+
+1 − exp 
+
+
+
+− T δ ′2
+
+> c
+
+8(1 − λ0)
+
+ 
+
+.
+
+Recall that C1, C 2 and βθ are defined in Assumption 1, Lemma 1 and Lemma 5, respectively. We also define hmax ≜ max ℓ∈[d] hℓ and rmax ≜ max j∈[M ],ℓ ∈[d] rjℓ . These constants and βθ evaluated at the total order quantity c = Pdℓ=1 coff  
+
+> ℓ
+
+will be used in the following theorem. 
+
+Theorem 8. Under Assumption 1, 
+
+(i) Case α < 1. There exists T0 < ∞ such that for all T ≥ T0 there exists θ > 0 with βθ < 1 and 
+
+πoff  
+
+> c
+
+(T, coff , N ) − πon  
+
+> c
+
+(T, con , N )
+
+≤ C1T α + rmax ·
+
+
+
+− 2(1 − λ0)
+
+δ′
+
+> c
+
+· ln 
+
+
+
+1 − exp 
+
+
+
+− T δ ′2
+
+> c
+
+8(1 − λ0)
+
+ 
+
++ hmax · C2T α − (eθ )−1 ln(1 − βθ ) ,
+
+so the per-cycle gap is O(T α).
+
+(ii) Case α = 1 . There exists a finite constant K (independent of N ) such that 
+
+πoff 
+
+> c
+
+ T, coff , N −πon 
+
+> c
+
+ T, con , N  ≤ C1T +
+
+
+
+−rmax 
+
+2(1 − λ0)
+
+δ′
+
+> c
+
+ln 
+
+
+
+1 − exp 
+
+
+
+− T δ ′2
+
+> c
+
+8(1 − λ0)
+
+ 
+
++hmax KT, 
+
+so the per-cycle gap is O(T ).Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+35 
+
+## 7. Conclusion 
+
+This paper integrates online fulfillment with inventory replenishment and uses a regret framework to compare their relative impact on long-run performance. Three messages emerge. First, online fulfillment exhibits regret stability under replenishment: for large cycle length T , the per-cycle regret remains of the same order as in the corresponding single-cycle problem and does not accu-mulate over cycles; this insight also extends to multiple resources. Second, the framework enables a quantitative comparison between improving replenishment and improving fulfillment, and iden-tifies regimes, especially for short cycles, in which replenishment plays the more decisive role. In particular, careful replenishment can generate gains that persist even when paired with simple fulfillment algorithms: across broad parameter ranges, a base-stock policy with greedy fulfillment can outperform a constant-order policy paired with a relatively stronger online algorithm. Third, the analysis motivates look-ahead fulfillment methods that account for multi-cycle effects, and numerical results show clear improvements over myopic baselines. These findings complement the recent emphasis on online fulfillment by showing that replenish-ment design should not be treated as fixed or exogenous; rather, it can be a first-order decision variable with persistent impact on profit. One limitation is that extending the theoretical charac-terization of the offline gap πoff  
+
+> b
+
+− πoff  
+
+> c
+
+to multi-resource settings is technically challenging, although it remains straightforward to evaluate via simulation since both terms use the same myopic offline benchmark. Developing tractable analytical bounds for this offline gap in multi-resource systems is an interesting direction for future work. 
+
+## References 
+
+Acimovic J, Graves SC (2015) Making better fulfillment decisions on the fly in an online retail environment. 
+
+Manufacturing & Service Operations Management 17(1):34–51. Amil A, Makhdoumi A, Wei Y (2025) Multi-item order fulfillment revisited: Lp formulation and prophet inequality. Management Science 71(12):9917–9935. Aminian MR, Ma W, Xin L (2023) Real-time personalized order holding, available at SSRN: https://ssrn.com/abstract=4644495. Andrews JM, Farias VF, Khojandi AI, Yan CM (2019) Primal-dual algorithms for order fulfillment at urban outfitters, inc. INFORMS Journal on Applied Analytics 49(5):355–370. Arlotto A, Gurvich I (2019) Uniformly bounded regret in the multisecretary problem. Stochastic Systems 
+
+9(3):231–260. Arlotto A, Keskin IN, Wei Y (2026) Online demand fulfillment problem with initial inventory placement: A regret analysis. Operations Research Forthcoming. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+36 Arrow KJ, Harris T, Marschak J (1951) Optimal inventory policy. Econometrica: Journal of the Econometric Society 19(3):250–272. Bai Y, Rusmevichientong P, Topaloglu H (2025) Joint placement, delivery promise, and fulfillment in online retail. Management Science 71(11):9171–9192. Balseiro SR, Besbes O, Pizarro D (2024) Survey of dynamic resource-constrained reward collection problems: Unified model and analysis. Operations Research 72(5):2168–2189. Banerjee S, Freund D (2025) Good prophets know when the end is near. Management Science 71(6):4877– 4894. Bray RL (2025) Logarithmic regret in multisecretary and online linear programs with continuous valuations. 
+
+Operations Research 73(4):2188–2203. Bu J, Gong X, Chao X (2023) Asymptotic optimality of base-stock policies for perishable inventory systems. 
+
+Management Science 69(2):846–864. Bumpensanti P, Wang H (2020) A re-solving heuristic with uniformly bounded loss for network revenue management. Management Science 66(7):2993–3009. DeValve L, Wei Y, Wu D, Yuan R (2023) Understanding the value of fulfillment flexibility in an online retailing environment. Manufacturing & Service Operations Management 25(2):391–408. Feng Y, Caldentey R, Xin L, Zhong Y, Wang B, Hu H (2024) Designing sparse graphs for stochastic matching with an application to middle-mile transportation management. Management Science 70(12):8988– 9013. Gao Z, Ling Z, Gupta V, Xin L (2022) Real-time omnichannel fulfillment optimization, available at SSRN: https://ssrn.com/abstract=4314250. Goldberg DA, Katz-Rogozhnikov DA, Lu Y, Sharma M, Squillante MS (2016) Asymptotic optimality of constant-order policies for lost sales inventory models with large lead times. Mathematics of Operations Research 41(3):898–913. Goldberg DA, Reiman MI, Wang Q (2021) A survey of recent progress in the asymptotic analysis of inventory systems. Production and Operations Management 30(6):1718–1750. Govindarajan A, Sinha A, Uichanco J (2021) Joint inventory and fulfillment decisions for omnichannel retail networks. Naval Research Logistics 68(6):779–794. Huh WT, Janakiraman G, Muckstadt JA, Rusmevichientong P (2009) Asymptotic optimality of order-up-to policies in lost sales inventory systems. Management Science 55(3):404–420. Jasin S, Sinha A (2015) An lp-based correlated rounding scheme for multi-item ecommerce order fulfillment. 
+
+Operations Research 63(6):1336–1351. Jiang J, Ma W, Zhang J (2025) Degeneracy is ok: Logarithmic regret for network revenue management with indiscrete distributions. Operations Research 73(6):3405–3420. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+37 Karlin S, Scarf H (1958) Inventory models of the arrow-harris-marschak type with time lag. Arrow K, Karlin S, Scarf H, eds., Studies in the Mathematical Theory of Inventory and Production , 155–178 (Stanford, CA: Stanford University Press). Kerimov S, Ashlagi I, Gurvich I (2025) On the optimality of greedy policies in dynamic matching. Operations Research 73(1):560–582. Kingman J (1962) Some inequalities for the queue gi/g/1. Biometrika 49(3/4):315–324. Lei YM, Jasin S, Sinha A (2018) Joint dynamic pricing and order fulfillment for e-commerce retailers. 
+
+Manufacturing & Service Operations Management 20(2):269–284. Li G, Wang Z, Zhang J (2025) Infrequent resolving algorithm for online linear programming, https://arxiv.org/abs/2408.00465. Lim YF, Jiu S, Ang M (2020) Integrating anticipative replenishment allocation with reactive fulfillment for online retailing using robust optimization. Manufacturing & Service Operations Management 
+
+23(6):1616–1633. Ma W (2023) Order-optimal correlated rounding for fulfilling multi-item e-commerce orders. Manufacturing & Service Operations Management 25(4):1324–1337. Reiman MI, Wang Q (2008) An asymptotically optimal policy for a quantity-based network revenue man-agement problem. Mathematics of Operations Research 33(2):257–282. Shaked M, Shanthikumar JG (2007) Stochastic Orders (New York: Springer). Vera A, Banerjee S (2021) The bayesian prophet: A low-regret framework for online decision making. Man-agement Science 67(3):1368–1391. Wei L, Jasin S, Xin L (2021) On a deterministic approximation of inventory systems with sequential service-level constraints. Operations Research 69(4):1057–1076. Wei Y, Xu J, Yu SH (2023) Constant regret primal-dual policy for multi-way dynamic matching. Abstract Proceedings of the 2023 ACM SIGMETRICS International Conference on Measurement and Modeling of Computer Systems , 79–80. Xie Y, Ma W, Xin L (2024) The benefits of delay to online decision-making. Management Science Forth-coming. Xin L (2021) Understanding the performance of capped base-stock policies in lost-sales inventory models. 
+
+Operations Research 69(1):61–70. Xin L, Goldberg DA (2016) Optimality gap of constant-order policies decays exponentially in the lead time for lost sales models. Operations Research 64(6):1556–1565. Xu P, Allgor R, Graves S (2009) Benefits of reevaluating real-time order fulfillment decisions. Manufacturing & Service Operations Management 11(2):340–355. Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+38 Zhao Y, Wang X, Xin L (2025) Multi-item online order fulfillment in a two-layer network. Operations Research 
+
+73(5):2297–2305. Zhou Q, G¨ um¨ u¸ s M, Miao S (2025) E-commerce order fulfillment problem with limited time window. Opera-tions Research 73(6):2914–2932. e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec1 
+
+# Electronic Companion for “Online Order Fulfillment with Replenishment” 
+
+In this e-companion, we provide all the proofs of the results in the main body of the paper. 
+
+## EC.1. Proofs in Section 2 
+
+Proof of Lemma 1. Because the offline algorithm has access to future information within this cycle, it can always deplete all the inventory or fulfill all the realized demand if inventory is available (which the online algorithm may hold for the future demand). In other words, starting with the same initial inventory. (i.e., In, on 1 (H) = In, off 1 (H)), for any instance H, it holds that In, on   
+
+> T+1
+
+(H) − In, off   
+
+> T+1
+
+(H) ≥
+
+0. Assume by contradiction that there exists an initial inventory In, on 1 (H) = In, off 1 (H) = I and a demand instance H0 for which 
+
+EH,on 
+
+In, on   
+
+> T+1
+
+(H) − In, off   
+
+> T+1
+
+(H) ≥ CT β
+
+for some constant C > 0 and exponent β > α . Then the offline reward must exceed the online reward by at least REG ≥ r1 · EH,on 
+
+In, on   
+
+> T+1
+
+(H) − In, off   
+
+> T+1
+
+(H) ≥ r1CT β ,
+
+this contradicts the regret assumption that REG ≤ C1T α, since β > α . Thus, our assumption must be false, and it must hold that EH,on 
+
+In, on   
+
+> T+1
+
+(H) − In, off   
+
+> T+1
+
+(H) ≤ C2T α, for some constant C2 > 0. □
+
+## EC.2. Proofs in Section 3.1 
+
+Proof of Lemma 2. For convenience, we define the notation ∆Int (S, H) ≜ In, on  
+
+> t
+
+(S, H) −
+
+In, off  
+
+> t
+
+(S, H) and ∆ qn(S, H) ≜ qn, on (S, H) − qn, off (S, H). Additionally, let ϵ(I) denote the end-of-cycle inventory difference between the two policies after one fulfillment cycle, given that both start the cycle with the same initial inventory level I.We now prove the first part of Lemma 2 by induction. 
+
+Inductive Hypothesis: Suppose that for some n = k, the following conditions hold: for every demand path H,(a) ∆ Ik 
+
+> 1
+
+(S, H) ≥ 0 and EH,on [∆ Ik 
+
+> 1
+
+(S, H)] ≤ LC 2T α, which corresponds to the desired results in the first part of Lemma 2. (b) ∆ qk+l(S, H) ≤ 0 and EH,on [∆ qk+l(S, H)] ≥ − C2T α for all l = 1 , 2, . . . , L − 1. (c) ∆ Ik 
+
+> 1
+
+(S, H) + PL−1 
+
+> l=1
+
+∆qk+l(S, H) ≥ 0, and EH,on 
+
+h
+
+∆Ik 
+
+> 1
+
+(S, H) + PL−1 
+
+> l=1
+
+∆qk+l(S, H)
+
+i
+
+≤ C2T α.ec2 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+Base Case ( n = 1 ): Since both the online and offline algorithms start from the same initial inventory pipeline at the beginning of the first replenishment cycle , we immediately have ∆I11 (S, H) = 0 , and ∆q1+ l(S, H) = 0 for l = 1 , 2, . . . , L − 1,
+
+thus conditions (a), (b), and (c) trivially hold. 
+
+Inductive Step ( n = k + 1 ): First, by the order update equation (1) in base-stock replenishment policy, the definition of ∆ qn(S, H), and the inductive hypothesis, we have ∆qk+L(S, H) = − ∆Ik 
+
+> 1
+
+(S, H) + 
+
+> L−1
+
+X
+
+> l=1
+
+∆qk+l(S, H)
+
+!
+
+≤ 0, (EC.1) and taking expectations gives 
+
+EH,on 
+
+∆qk+L(S, H) = −EH,on 
+
+"
+
+∆Ik 
+
+> 1
+
+(S, H) + 
+
+> L−1
+
+X
+
+> l=1
+
+∆qk+l(S, H)
+
+#
+
+≥ − C2T α.
+
+Thus, the condition (b) holds at step n = k + 1. Next, we verify condition (a) at n = k + 1. By hypothesis (a), we have ∆ Ik 
+
+> 1
+
+(S, H) ≥ 0 and 
+
+EH,on [∆ Ik 
+
+> 1
+
+(S, H)] ≤ LC 2T α. We can implement the online algorithm by intentionally ignoring the additional inventory ∆ Ik 
+
+> 1
+
+(S, H) at the start of cycle k and then conducting fulfillment as if its initial inventory were exactly Ik, off 1 (S, H). By the definition of ϵ(I), it follows that ∆IkT +1 (S, H) = ∆ Ik 
+
+> 1
+
+(S, H) + ϵ(Ik, off 1 (S, H)) . (EC.2) Then the start-of-cycle inventory difference at cycle k + 1 satisfies ∆Ik+1 1 (S, H) = ∆ IkT +1 (S, H) + ∆ qk+1 (S, H)= ∆ Ik 
+
+> 1
+
+(S, H) + ϵ(Ik, off 1 (S, H)) + ∆ qk+1 (S, H)
+
+≥ − 
+
+> L−1
+
+X
+
+> l=2
+
+∆qk+l(S, H) + ϵ(Ik, off 1 (S, H)) ≥ 0,
+
+where the first equality follows directly from the inventory update rule, the first inequality results from rearranging terms based on hypothesis (c) at step n = k, and the final inequality is guaranteed by Lemma 1 and hypothesis (b) at step n = k. Taking expectations, linearity implies 
+
+EH,on 
+
+∆Ik+1 1 (S, H) =EH,on 
+
+∆IkT +1 (S, H) + ∆ qk+1 (S, H)
+
+=EH,on 
+
+∆Ik 
+
+> 1
+
+(S, H) + ϵ(Ik, off 1 (S, H)) + ∆ qk+1 (S, H)
+
+≤C2T α − EH,on 
+
+"L−1X
+
+> l=2
+
+∆qk+l(S, H)
+
+#
+
++ EH,on 
+
+ϵ(Ik, off 1 (S, H)) 
+
+≤C2T α − (L − 2) · (−C2T α) + C2T α = LC 2T α,e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec3 
+
+where the inequalities follow from assumptions (b), (c), and Lemma 1. Thus, condition (a) is satisfied at n = k + 1. Lastly, condition (c) at n = k + 1 follows from ∆Ik+1 1 (S, H) + 
+
+> L−1
+
+X
+
+> l=1
+
+∆qk+1+ l(S, H)=∆ Ik 
+
+> 1
+
+(S, H) + ϵ(Ik, off 1 (S, H)) + ∆ qk+1 (S, H) + 
+
+> L−1
+
+X
+
+> l=2
+
+∆qk+l(S, H) + ∆ qk+L(S, H)=ϵ(Ik, off 1 (S, H)) ,
+
+using (EC.1) and (EC.2). Condition (c) thus holds by Lemma 1, completing the inductive step. The results in the second part of Lemma 2 regarding the difference of end-of-cycle inventory directly follow from (EC.2) and Lemma 1 when ∆ In 
+
+> 1
+
+(S, H) ≥ 0 and EH,on [∆ In 
+
+> 1
+
+(S, H)] ≤ LC 2T α hold for all n.Note that when L = 1, the conditions (a), (b), and (c) collapse to the single condition (a), and the same arguments apply straightforwardly. Thus, the proof of Lemma 2 is completed. □
+
+Proof of Theorem 1. We first establish the bound for any fixed base-stock level S, i.e., the bound of πoff  
+
+> b
+
+(T, S, N ) − πon  
+
+> b
+
+(T, S, N ). To analyze the profit difference, we can decompose it into two components: the fulfilled rewards and the holding costs .
+
+Fulfilled Rewards : By Assumption 1, when starting with the same initial inventory, the regret of the online algorithm over a single replenishment cycle is upper bounded by C1T α. Although the starting inventories may differ in subsequent cycles, Lemma 2 ensures that the online algorithm’s start-of-cycle inventory is always at least as large as that of the offline algorithm. Therefore, the expected regret in fulfilled rewards per cycle remains bounded by C1T α throughout the horizon. 
+
+Holding Costs : From Lemma 2, the expected difference in end-of-cycle inventory between the online and the myopic offline algorithms in each cycle is bounded by ( L + 1) C2T α. As holding costs are linear in inventory, the corresponding expected difference in holding costs per cycle is bounded by h · (L + 1) C2T α.
+
+Summing the bounds on fulfilled rewards and holding costs across cycles as analyzed above, we obtain: for any fixed T, S and N ,
+
+πoff  
+
+> b
+
+(T, S, N ) − πon  
+
+> b
+
+(T, S, N )
+
+≤ 1
+
+N EH,on 
+
+" NX
+
+> n=1
+
+ C1T α + h In, on   
+
+> T+1
+
+(S, H) − In, off   
+
+> T+1
+
+(S, H) #
+
+≤ C1T α + h(L + 1) C2T α.ec4 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+Since Son is the optimal base-stock level for the online algorithm, we have πon  
+
+> b
+
+(T, S on , N ) ≥
+
+πon  
+
+> b
+
+(T, S off , N ). Combining the above two inequalities yields 
+
+πoff  
+
+> b
+
+(T, S off , N ) − πon  
+
+> b
+
+(T, S on , N ) ≤ πoff  
+
+> b
+
+(T, S off , N ) − πon  
+
+> b
+
+(T, S off , N ) ≤ C1T α + h(L + 1) C2T α.
+
+This completes the proof. □
+
+## EC.3. Proofs in Section 3.2 
+
+Proof of Lemma 3. Since both algorithms follow the same constant-order replenishment pol-icy  In+1 1 (c, H) = InT +1 (c, H) + c, it suffices to establish In, off   
+
+> T+1
+
+(c, H) ≤ In, on   
+
+> T+1
+
+(c, H) by proving that 
+
+In, off 1 (c, H) ≤ In, on 1 (c, H) for all n. We proceed by induction. 
+
+Base Case: For n = 1, since, by the definition of the initial state at cycle 1, both the online and offline algorithms start with the same initial inventory under a given constant-order policy c, we immediately have I1,off 1 (c, H) = I1,on 1 (c, H). 
+
+Inductive Hypothesis: Suppose that for some n = k, we have Ik, off 1 (c, H) ≤ Ik, on 1 (c, H).
+
+Inductive Step: For n = k + 1, we analyze two possible cases based on the realized demand Dk
+
+in cycle k:
+
+• Case 1: If Dk ≤ Ik, off 1 (c, H), the myopic offline algorithm fulfills all demand, implying 
+
+f k, off  Ik, off 1 (c, H) = Dk ≥ f k, on  Ik, on 1 (c, H) .
+
+The inequality follows from the fact that the online algorithm can fulfill at most all demand in cycle k, regardless of the initial inventory. Consequently, we obtain 
+
+Ik, off   
+
+> T+1
+
+(c, H) = Ik, off 1 (c, H) − f k, off  Ik, off 1 (c, H) ≤ Ik, on 1 (c, H) − f k, on  Ik, on 1 (c, H) = Ik, on  
+
+> T+1
+
+(c, H).
+
+• Case 2: If Dk > I k, off 1 (c, H), the myopic offline algorithm depletes all available inventory, i.e., 
+
+f k, off  Ik, off 1 (c, H) = Ik, off 1 (c, H). Since the online algorithm cannot fulfill more demand than its start-of-cycle inventory, we have Ik, on 1 (c, H) − f k, on  Ik, on 1 (c, H) ≥ 0. Thus, we obtain 
+
+Ik, off   
+
+> T+1
+
+(c, H) = Ik, off 1 (c, H) − f k, off  Ik, off 1 (c, H) = 0 ≤ Ik, on 1 (c, H) − f k, on  Ik, on 1 (c, H) = Ik, on  
+
+> T+1
+
+(c, H).
+
+By combining both cases, we conclude that Ik, off   
+
+> T+1
+
+(c, H) ≤ Ik, on  
+
+> T+1
+
+(c, H). By the replenishment policy, the initial inventory for cycle k + 1 satisfies 
+
+Ik+1 ,off 1 (c, H) = Ik, off   
+
+> T+1
+
+(c, H) + c ≤ Ik, on  
+
+> T+1
+
+(c, H) + c = Ik+1 ,on 1 (c, H),
+
+completing the induction. □e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec5 
+
+Proof of Lemma 5. First, note that c + EH,on [ϵn] ≤ E[Dn] holds for any n, since T (1 − λ0) >c + C2T α and EH,on [ϵn] ≤ C2T α by Lemma 1.Let ϵ0 = 0 and by Lemma 4, for any n ≥ 1, we have: 
+
+EH,on 
+
+h ˜In, off   
+
+> T+1
+
+(c, H)
+
+i
+
+=
+
+> n
+
+X
+
+> j=1
+
+1
+
+j EH,on 
+
+
+
+> j
+
+X
+
+> i=1
+
+(c + ϵi−1 − Di)
+
+!+ .
+
+Since In, on   
+
+> T+1
+
+= ˜In, off   
+
+> T+1
+
++ ϵn and EH,on [ϵn] ≤ C2T α by Lemma 1, it follows that 
+
+EH,on 
+
+In, on  
+
+> T+1
+
+ ≤
+
+> n
+
+X
+
+> j=1
+
+1
+
+j EH,on 
+
+
+
+> j
+
+X
+
+> i=1
+
+(c + ϵi−1 − Di)
+
+!+ + C2T α.
+
+Using ( x)+ ≤ (eθ )−1eθx for θ > 0, 
+
+EH,on 
+
+In, on  
+
+> T+1
+
+ ≤ 1
+
+eθ 
+
+> n
+
+X
+
+> j=1
+
+1
+
+j EH,on 
+
+"
+
+exp θ
+
+> j
+
+X
+
+> i=1
+
+(c + ϵi−1 − Di)
+
+!# 
+
++ C2T α.
+
+Let Fj−1 be the history up to the end of cycle j − 1, and define Sj ≜ Pji=1 (c + ϵi−1 − Di), with 
+
+S0 = 0. By the tower property, 
+
+EH,on [eθS j ] = EH,on 
+
+h
+
+eθS j−1 E
+
+h
+
+eθ(c+ϵj −Dj ) | F j−1
+
+ii 
+
+.
+
+By Cauchy-Schwarz and the fact that Dj is independent of Fj−1,
+
+E
+
+h
+
+eθ(c+ϵj −Dj ) | F j−1
+
+i
+
+≤ eθc 
+
+
+
+E[e2θϵ j
+
+| F j−1]
+
+1/2
+
+E[e−2θD j
+
+]
+
+1/2
+
+.
+
+The demand term is explicit since Dj ∼ Binomial( T, 1 − λ0): 
+
+E[e−2θD j
+
+] =  λ0 + (1 − λ0)e−2θ T .
+
+For the ϵj term, set mj ≜ E[ϵj | F j−1]. By the uniform version of Lemma 1 applied at any identical starting inventory Ij, on 1 , one has mj ≤ C2T α. Moreover, since 0 ≤ ϵj ≤ T , we have Var( ϵj | F j−1) ≤
+
+E[( ϵj )2 | F j−1] ≤ T m j ≤ C2T α+1 . A standard Bennett MGF bound for bounded random variables then gives, for any λ ≥ 0, 
+
+E exp  λ(ϵj − mj ) | F j−1
+
+ ≤ exp  C2T α−1h(λT ) , h(u) = (1 + u) ln(1 + u) − u. 
+
+Taking λ = 2 θ and using mj ≤ C2T α yields 
+
+E[e2θϵ j
+
+| F j−1] = e2θm j E
+
+h
+
+e2θ(ϵj −mj ) | F j−1
+
+i
+
+≤ exp  2θC 2T α + C2T α−1h(2 θT ) .
+
+Combining the pieces, 
+
+E
+
+h
+
+eθ(c+ϵj −Dj ) | F j−1
+
+i
+
+≤ exp 
+
+
+
+θc + θC 2T α + C2
+
+2 T α−1h(2 θT )
+
+  λ0 + (1 − λ0)e−2θ T / 2 = βθ .ec6 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+Therefore, EH,on [eθS j ] ≤ βθ EH,on [eθS j−1 ] ≤ · · · ≤ βjθ . Plugging back, 
+
+EH,on [In, on   
+
+> T+1
+
+] ≤ 1
+
+eθ 
+
+> n
+
+X
+
+> j=1
+
+βjθ
+
+j + C2T α.
+
+If βθ < 1, then P∞ 
+
+> j=1
+
+βjθ /j = − ln(1 − βθ ), hence 
+
+EH,on [In, on   
+
+> T+1
+
+] ≤ − 1
+
+eθ ln(1 − βθ ) + C2T α.
+
+Finally, it suffices to show that there exists θ > 0 with βθ < 1 and we construct such a θ explicitly. Using c = T (1 − λ0) − T δ c + o(T ) and the inequality ln( λ0 + (1 − λ0)e−2θ ) ≤ − 2(1 − λ0)θ + 2(1 − λ0)θ2
+
+for θ ∈ (0 , 1], 
+
+θc + T
+
+2 ln( λ0 + (1 − λ0)e−2θ ) ≤ − θT δ c + θo (T ) + T (1 − λ0)θ2.
+
+With θ ≤ δc/(4(1 − λ0)), the RHS is at most −(3 /4) θT δ c + θo (T ). The remaining terms in ln βθ
+
+are θC 2T α + C2 
+
+> 2
+
+T α−1h(2 θT ) = O(T α ln T ) for fixed θ, which is o(T ) since α < 1. Thus for all suf-ficiently large T , ln βθ ≤ − κT for some κ > 0, implying βθ < 1 and even βθ ≤ e−κT . Consequently, 
+
+−(eθ )−1 ln(1 − βθ ) = o(1), and the bound is O(T α). □
+
+Proof of Theorem 2. The proof follows the same decomposition as in Theorem 1. Fix any con-stant order c and split the per-cycle profit gap into fulfilled rewards and holding costs. 
+
+Fulfilled rewards. By Assumption 1 and Lemma 3, the expected regret in fulfilled rewards per cycle is at most C1T α.
+
+Holding costs, case α < 1. Since α < 1, the condition T (1 −λ0)−c = T δ c +o(T ) implies T (1 −λ0) >c + C2T α for all sufficiently large T , so the hypothesis of Lemma 5 holds. Thus there exists T0 < ∞
+
+such that for all T ≥ T0 there exists θ > 0 with βθ < 1 and 
+
+EH,on 
+
+In, on   
+
+> T+1
+
+(c, H) ≤ − (eθ )−1 ln (1 − βθ ) + C2T α.
+
+Using In, off   
+
+> T+1
+
+≤ In, on   
+
+> T+1
+
+(Lemma 3), the expected holding-cost difference per cycle is at most 
+
+h · C2T α − (eθ )−1 ln (1 − βθ ) .
+
+Summing the reward and holding-cost bounds and averaging over N cycles gives, for any fixed c
+
+and T ≥ T0,
+
+πoff  
+
+> c
+
+(T, c, N ) − πon  
+
+> c
+
+(T, c, N ) ≤ C1T α + h · C2T α − (eθ )−1 ln (1 − βθ ) .
+
+By optimality of con for the online algorithm, 
+
+πoff  
+
+> c
+
+(T, c off , N ) − πon  
+
+> c
+
+(T, c on , N ) ≤ πoff  
+
+> c
+
+(T, c off , N ) − πon  
+
+> c
+
+(T, c off , N ),e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec7 
+
+and substituting c = coff yields (5). 
+
+Holding costs, case α = 1 . When α = 1, for the optimal choices con and coff , the constant-order systems are stabilizing in the sense that there exists K < ∞ (independent of N ) with sup 
+
+> n≥1
+
+E In, on   
+
+> T+1
+
+(con , H) ≤ KT, sup 
+
+> n≥1
+
+E In, off   
+
+> T+1
+
+(coff , H) ≤ KT. 
+
+This is because that with strictly positive holding cost h and bounded per-unit rewards, any order choice that produces superlinear growth of the expected ending inventory would be dominated by a smaller order. Since In, off   
+
+> T+1
+
+≤ In, on   
+
+> T+1
+
+,
+
+E In, on   
+
+> T+1
+
+(con , H) − In, off   
+
+> T+1
+
+(coff , H) ≤ E In, on   
+
+> T+1
+
+(con , H) ≤ KT, 
+
+so the holding-cost difference per cycle is at most hKT . Adding the C1T reward-regret term yields (6). Combining the two cases completes the proof. □
+
+## EC.4. Proofs in Section 4.1 
+
+Before proceeding to the proofs in Section 4.1, we first recall three standard bridges between lost-sales and backorder models that will be used repeatedly in the proofs. For a fixed base-stock level 
+
+S, let I∞,L ,S  
+
+> 1
+
+and I∞,B,S  
+
+> 1
+
+denote the steady-state inventory levels in the lost-sales and backorder systems, respectively. 
+
+Lemma EC.1 (Lost-sales–backorder bridges) .
+
+(a) Cost sandwich (Huh et al. 2009, Lemma 5). Fix any base-stock level S,
+
+CB,S 
+
+> b
+
+
+
+h, pL+1 
+
+
+
+≤ CL ,S  
+
+> b
+
+(h, p ) ≤ CB,S  
+
+> b
+
+(h, p + Lh ) .
+
+(b) Stochastic order (Huh et al. 2009, Corollary 1), (Shaked and Shanthikumar 2007, Chap-ter 1). The random variable I∞,B,S  
+
+> 1
+
+is stochastically smaller than I∞,L ,S  
+
+> 1
+
+. Then, for any non-increasing function f , the following inequality holds: 
+
+E f  I∞,L ,S 
+
+> 1
+
+ ≤ E f  I∞,B,S 
+
+> 1
+
+ .
+
+(c) Optimal base-stock comparison (Huh et al. 2009, Theorem 4). For any h ≥ 0 and b ≥ 0,
+
+SL ∗(h, b ) ≥ SB∗ (2 h(L + 1) , b − h(L + 1)) .
+
+The above results allow us to bound the cost in the lost-sales model by analyzing a corresponding backorder system with an adjusted penalty parameter, so it suffices to obtain explicit envelopes for the lost-sales case by computing backorder costs at the appropriate newsvendor levels. ec8 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+Proof of Lemma 6. Upper bound. By the optimality of SL ∗ (h, p ) and Lemma EC.1(a), we have: 
+
+CL ,S L ∗(h,p ) 
+
+> b
+
+(h, p ) ≤ CL , ¯SB(h,p ) 
+
+> b
+
+(h, p ) ≤ CB, ¯SB(h,p ) 
+
+> b
+
+(h, p + Lh ).
+
+In a backorder system with base-stock S,
+
+CB,S  
+
+> b
+
+(h, p + Lh ) = hE
+
+ S −
+
+> L+1
+
+X
+
+> n=1
+
+Dn
+
+!+ + ( p + Lh ) E
+
+
+
+> L+1
+
+X
+
+> n=1
+
+Dn − S
+
+!+ .
+
+Expanding with Pk ≜ Pr 
+
+PL+1  
+
+> n=1
+
+Dn = k
+
+
+
+,
+
+E
+
+ S −
+
+> L+1
+
+X
+
+> n=1
+
+Dn
+
+!+ =
+
+> S
+
+X
+
+> k=0
+
+(S − k) Pk, E
+
+
+
+> L+1
+
+X
+
+> n=1
+
+Dn − S
+
+!+ =
+
+> (L+1) T
+
+X
+
+> k=S+1
+
+(k − S) Pk.
+
+Plugging S = ¯SB(h, p ) yields exactly ¯ a1 (T, h, p, L ), hence 
+
+CL ,S L ∗(h,p ) 
+
+> b
+
+(h, p ) ≤ ¯a1 (T, h, p, L ) .
+
+Lower bound. By Lemma EC.1(a) and the optimality of SB(h, p ), we have: for any S,
+
+CL ,S  
+
+> b
+
+(h, p ) ≥ CB,S 
+
+> b
+
+
+
+h, pL+1 
+
+
+
+≥ CB,S B(h,p )
+
+> b
+
+
+
+h, pL+1 
+
+
+
+.
+
+Using the same expansion as above, 
+
+CB,S B(h,p )
+
+> b
+
+
+
+h, pL+1 
+
+
+
+= h
+
+> SB(h,p )
+
+X
+
+> k=0
+
+ SB(h, p ) − k Pk + pL + 1 
+
+> (L+1) T
+
+X
+
+> k=SB(h,p )+1
+
+ k − SB(h, p ) Pk = a1 (T, h, p, L ) .
+
+Thus CL ,S  
+
+> b
+
+(h, p ) ≥ a1 (T, h, p, L ) for all S; in particular, taking S = SL ∗ (h, p ) yields the claim. Finally, by the standard newsvendor critical-fractile characterization in the backorder system, ¯SB(h, p ) and SB(h, p ) satisfy the stated fractiles. □
+
+Proof of Lemma 7. Under a constant order c, the stationary inventory level ( I∞,off   
+
+> T+1
+
+(c, H)) follows the Kingman Approximation for waiting time in a G/G/ 1 queue, where the waiting time is: 
+
+I∞,off   
+
+> T+1
+
+(c, H) = max  
+
+> j≥0
+
+jc −
+
+> j
+
+X
+
+> i=1
+
+Dn
+
+!
+
+,
+
+which gives the expected inventory cost as: 
+
+hEH[I∞,off   
+
+> T+1
+
+(c, H)] = h
+
+> ∞
+
+X
+
+> n=1
+
+1
+
+n EH
+
+ nc −
+
+> n
+
+X
+
+> i=1
+
+Dn
+
+!+ .e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec9 
+
+Combining the expected lost-sale penalty and expanding the expectation via Pn,k , we can get the total cost function as follows: 
+
+Cc 
+
+> c
+
+(h, p ) = h
+
+> ∞
+
+X
+
+> n=1
+> nc
+
+X
+
+> k=0
+
+
+
+c − kn
+
+
+
+Pn,k + pT (1 − λ0) − pc. 
+
+Taking the derivative with respect to c:
+
+ddc Cc 
+
+> c
+
+(h, p ) = h
+
+> ∞
+
+X
+
+> n=1
+
+Pr 
+
+> n
+
+X
+
+> i=1
+
+Dn ≤ nc 
+
+!
+
+− p. 
+
+Setting this equal to zero to find the optimal order quantity c∗(h, p ) satisfying: 
+
+> ∞
+
+X
+
+> n=1
+
+Pr 
+
+> n
+
+X
+
+> i=1
+
+Dn ≤ nc ∗(h, p )
+
+!
+
+= ph .
+
+Thus, the exact optimal cost is: 
+
+Cc∗(h,p ) 
+
+> c
+
+(h, p ) = −h
+
+> ∞
+
+X
+
+> n=1
+> nc ∗(h,p )
+
+X
+
+> k=0
+
+kn Pn,k + pT (1 − λ0).
+
+□
+
+Proof of Theorem 3. We start with the proof of the lower bound. Denote S0 as the optimal base-stock level in the original problem. Then, 
+
+πoff  
+
+> b
+
+=EH[rewards of H] − hEH
+
+I∞,off   
+
+> T+1
+
+(S0, H) − EH[reward of lost sales | S0]
+
+≥EH[rewards of H] − hEH
+
+I∞ 
+
+> T+1
+
+ SL ∗(h, r M ), H − EH[reward of lost sales | SL ∗(h, r M )] 
+
+≥EH[rewards of H] − hEH
+
+I∞ 
+
+> T+1
+
+ SL ∗(h, r M ), H − rM EH[number of lost sales | SL ∗(h, r M )] =EH[rewards of H] − CL ,S L ∗(h,r M ) 
+
+> b
+
+(h, r M ),
+
+where the first inequality follows from the optimality of S0, while the second follows by using rM
+
+to upper-bound the lost-sales reward. Similarly, let c0 be the optimal constant-order quantity in the original problem, and we can have: 
+
+πoff  
+
+> c
+
+=EH[rewards of H] − hEH
+
+I∞,off   
+
+> T+1
+
+(c0, H) − EH[reward of lost sales | c0]
+
+≤EH[rewards of H] − hEH
+
+I∞,off   
+
+> T+1
+
+(c0, H) − r1EH[number of lost sales | c0]
+
+≤EH[rewards of H] − hEH
+
+I∞  
+
+> T+1
+
+(c∗(h, r 1), H) − r1EH[number of lost sales | c∗(h, r 1)] =EH[rewards of H] − Cc∗(h,r 1) 
+
+> c
+
+(h, r 1),
+
+where the first inequality follows by lower bounding the lost-sales reward by r1, and the second follows from that c∗(h, r 1) minimizes Cc 
+
+> c
+
+(h, r 1). Combining the above results with Lemmas 6 and 7 completes the proof of the lower bound. ec10 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+Then, using similar arguments as above can also give: 
+
+πoff  
+
+> b
+
+≤EH[rewards of H] − hEH
+
+I∞,off   
+
+> T+1
+
+(S0, H) − r1EH[number of lost sales | S0]=EH[rewards of H] − CL ,S 0 
+
+> b
+
+(h, r 1)
+
+≤EH[rewards of H] − CL ,S L ∗(h,r 1) 
+
+> b
+
+(h, r 1),
+
+where the inequalities follow by using r1 to lower bound the lost-sales reward and the optimality of SL ∗(h, r 1), and 
+
+πoff  
+
+> c
+
+≥EH[rewards of H] − hEH
+
+I∞  
+
+> T+1
+
+(c∗(h, r M ), H) − EH[reward of lost sales | c∗(h, r M )] 
+
+≥EH[rewards of H] − hEH
+
+I∞  
+
+> T+1
+
+(c∗(h, r M ), H) − rM EH[number of lost sales | c∗(h, r M )] =EH[rewards of H] − Cc∗(h,r M ) 
+
+> c
+
+(h, r M ),
+
+where the first follows from the optimality of πoff  
+
+> c
+
+and the second follows by upper bounding the lost-sales reward by rM . The proof of the upper bound can be completed by the above two results and Lemmas 6 and 7. □
+
+Proof of Corollary 1. We prove the Θ( √T ) scaling for ¯ a1(T, h, p, L ) in detail and the companion result for a1(T, h, p, L ) follows by the same argument which is omitted for brevity. 
+
+Part I: ¯a1(T, h, p, L ) = Θ( √T ). Let K ∼ Bin (( L + 1) T, 1 − λ0) denote the total demand in a pipeline of length ( L + 1) T , and let 
+
+μT ≜ (L + 1) T (1 − λ0), σT ≜ p(L + 1) T λ 0(1 − λ0).
+
+Define the newsvendor fractile q ≜ p+Lh p+( L+1) h ∈ (0 , 1) and write FT (x) ≜ Pr (( K − μT )/σ T ≤ x) for the cdf of the standardized sum. For simplicity, we suppress ¯SB(h, p ) ≜ ¯SB in this proof. By definition of ¯ a1, we have ¯a1(T, h, p, L ) = hE ( ¯SB − K)+ + ( p + Lh )E (K − ¯SB)+ ,
+
+where Pr( K ≤ ¯SB) ≥ q and Pr( K ≤ ¯SB − 1) < q . The definition of ¯SB also gives ¯SB − μT
+
+σT
+
+= F −1 
+
+> T
+
+(q) + εT , |εT | ≤ 1
+
+σT
+
+,
+
+where εT accounts for the integer rounding of the quantile. By the Berry–Esseen theorem in Kol-mogorov metric for binomial distributions, there exists a constant CK > 0 independent of T such that sup 
+
+> x
+
+|FT (x) − Φ( x)| ≤ CK
+
+p(L + 1) T .e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec11 
+
+Then, there exists a T0 > 0 such that ε0 ≜ 12 min {q, 1 − q} ≥ CK√(L+1) T for all T ≥ T0 and thus 
+
+z− ≜ Φ−1(q − ε0) ≤ F −1 
+
+> T
+
+(q) ≤ Φ−1(q + ε0) ≜ z+, ∀T ≥ T0. (EC.3) Next, by the Berry–Esseen theorem in Wasserstein metric for binomial distributions, there exists a constant CW > 0 independent of T such that, for any 1-Lipschitz function g,
+
+Eg
+
+ K − μT
+
+σT
+
+
+
+− Eg(Z) ≤ CW
+
+p(L + 1) T ,
+
+where Z ∼ N (0 , 1). Applying this to functions g+(x) = ( x − a)+ and g−(x) = ( a − x)+ for any given 
+
+a, which both are 1-Lipschitz, yields 
+
+E (K − ¯SB)+ − σT E (Z − F −1 
+
+> T
+
+(q)) +
+
+= σT E
+
+" K − μT
+
+σT
+
+− ¯SB − μT
+
+σT
+
++#
+
+− E (Z − F −1 
+
+> T
+
+(q)) +
+
+≤ σT E
+
+" K − μT
+
+σT
+
+−  F −1 
+
+> T
+
+(q)+ εT
+
++#
+
+− E
+
+h Z −  F −1 
+
+> T
+
+(q)+ εT
+
+ +i| {z }  
+
+> ≤σTCW/
+
+√(L+1) T =
+
+√λ0(1 −λ0)CW
+
++ σT E
+
+h Z −  F −1 
+
+> T
+
+(q)+ εT
+
+ +i
+
+− E
+
+h Z − F −1 
+
+> T
+
+(q)+i| {z }  
+
+> ≤σT|εT|≤ 1
+
+≤ C0,
+
+(EC.4) and similarly 
+
+E ( ¯SB − K)+ − σT E
+
+h F −1 
+
+> T
+
+(q) − Z+i
+
+≤ C0, (EC.5) where C0 = pλ0(1 − λ0)CW + 1 also independent of T .Since E[( Z − x)+] is decreasing in x and E[( x − Z)+] is increasing in x, using (EC.3) implies: 
+
+E (Z − z+)+ ≤ E (Z − F −1 
+
+> T
+
+(q)) + ≤ E (Z − z−)+ ,
+
+E (z− − Z)+ ≤ E (F −1 
+
+> T
+
+(q) − Z)+ ≤ E (z+ − Z)+ .
+
+Therefore, combining with (EC.4) and (EC.5), we obtain: for all T ≥ T0,¯a1(T, h, p, L ) ≤ σT
+
+hE (z+ − Z)+ + ( p + Lh )E (Z − z−)+ + ( p + ( L + 1) h) C0 = Θ( √T ),
+
+¯a1(T, h, p, L ) ≥ σT
+
+hE (z− − Z)+ + ( p + Lh )E (Z − z+)+ − (p + ( L + 1) h) C0 = Θ( √T ),
+
+which completes the proof of ¯ a1(T, h, p, L ) = Θ( √T ). 
+
+Part II: a2(T, h, p ) = Θ( √T ). Recall that a2(T, h, p ) can be expressed as: 
+
+a2(T, h, p ) = h
+
+> ∞
+
+X
+
+> n=1
+
+1
+
+n E (nc ∗(h, p ) − Kn,T )+ + pT (1 − λ0) − pc ∗(h, p ),
+
+where Kn,T ∼ Bin ( nT, 1 − λ0) and c∗(h, p ) solves the first–order condition 
+
+> ∞
+
+X
+
+> n=1
+
+Pr ( Kn,T ≤ nc ∗(h, p )) = ph .ec12 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+Write 
+
+μn,T ≜ nT (1 − λ0), σn,T ≜ pnT λ 0(1 − λ0), δT ≜ T (1 − λ0) − c∗(h, p )
+
+pT λ 0(1 − λ0) .
+
+Note that δT > 0: assume by contradiction that δT ≤ 0 (equivalently c∗(h, p ) ≥ T (1 − λ0)), then Pr( Kn,T ≤ nc ∗) ≥ Pr( Kn,T ≤ μn,T ) ≥ 12 for all n, which makes the left-hand side of the FOC diverge, contradicting that P∞ 
+
+> n=1
+
+Pr ( Kn,T ≤ nc ∗(h, p )) = ph .We first claim there exist constants δ−, δ + that 0 < δ − ≤ δT ≤ δ+ < ∞ for all sufficiently large 
+
+T . By the Berry–Esseen theorem in Kolmogorov metric for binomials, there exists a constant CBE 
+
+(independent of n, T ) such that for all n ≥ 1, T ≥ 1 and all x ∈ R,
+
+Pr 
+
+ Kn,T − μn,T 
+
+σn,T 
+
+≤ x
+
+
+
+− Φ( x) ≤ CBE 
+
+pnT λ 0(1 − λ0) .
+
+Fix any M > 0. Evaluating at x = −M , there exists T1 (large enough that CBE √T1λ0(1 −λ0) ≤ 12 Φ( −M )) such that for all n ≥ 1, T ≥ T1,Pr ( Kn,T ≤ μn,T − M σ n,T ) ≥ Φ( −M ) − CBE 
+
+pnT λ 0(1 − λ0) ≥ 12 Φ( −M ) ≜ c0 > 0.
+
+We now split into two exhaustive cases: Case A: δT ≥ M . Then δT ≥ M immediately yields δT ≥ δ− for any choice δ− ≤ M .Case B: δT < M . Then the index set {n ≥ 1 : δT
+
+√n ≤ M } is nonempty. For any such n, nc ∗(h, p ) = 
+
+μn,T − δT
+
+√nσ n,T ≥ μn,T − M σ n,T , then summing the first–order condition over those n yields 
+
+ph ≥ X  
+
+> {n≥1: δT
+> √n≤M}
+
+Pr( Kn,T ≤ nc ∗(h, p )) ≥ X  
+
+> {n≥1: δT
+> √n≤M}
+
+Pr( Kn,T ≤ μn,T − M σ n,T ) ≥ c0
+
+ M 2
+
+δ2
+
+> T
+
+
+
+,
+
+so δT ≥ M
+
+q hc 0 
+
+> p+hc 0
+
+. Combining the two cases, with δ− ≜ M
+
+q hc 0 
+
+> p+hc 0
+
+> 0, we have δT ≥ δ− for all 
+
+T ≥ T1.Next, to achieve the upper bound of δT , fix δ > 0. By Chernoff’s bound for binomials, there exists c(δ, λ 0) > 0 such that, uniformly in n ≥ 1 and T ≥ 1, Pr  Kn,T ≤ μn,T − δ√nσ n,T 
+
+ ≤ e−c(δ,λ 0)n
+
+⇒ X
+
+> n≥1
+
+Pr  Kn,T ≤ μn,T − δ√nσ n,T 
+
+ ≤ X
+
+> n≥1
+
+e−c(δ,λ 0)n = 1
+
+ec(δ,λ 0) − 1 .
+
+Choose δ+ large enough so that the right–hand side is < p/h . If δT > δ + then 
+
+X
+
+> n≥1
+
+Pr ( Kn,T ≤ nc ∗(h, p )) ≤ X
+
+> n≥1
+
+Pr  Kn,T ≤ μn,T − δ+
+
+√nσ n,T 
+
+ < ph ,
+
+contradicting the first–order condition. Hence δT ≤ δ+.e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec13 
+
+Now we can derive the upper bound for a2(T, h, p ). Let ∆ n ≜ μn,T − nc ∗(h, p ), we can get: 1
+
+n E (nc ∗(h, p ) − Kn,T )+ = 1
+
+n
+
+Z ∞
+
+> 0
+
+Pr ( Kn,T ≤ nc ∗(h, p ) − u) du 
+
+= 1
+
+n
+
+Z ∞
+
+> 0
+
+Pr ( Kn,T ≤ μn,T − (∆ n + u)) du 
+
+≤ 1
+
+n
+
+Z ∞
+
+> 0
+
+exp 
+
+
+
+− (∆ n + u)2
+
+2μn,T 
+
+
+
+du (Chernoff’s bound) 
+
+≤ exp 
+
+
+
+− ∆2
+
+> n
+
+2μn,T 
+
+ 1
+
+n
+
+Z ∞
+
+> 0
+
+exp 
+
+
+
+− ∆nuμn,T 
+
+
+
+du 
+
+= 1
+
+nμn,T 
+
+∆n
+
+exp 
+
+
+
+− ∆2
+
+> n
+
+2μn,T 
+
+
+
+.
+
+Since μn,T  
+
+> ∆n
+
+=
+
+√T (1 −λ0)/λ 0 
+
+> δT
+
+, ∆2 
+
+> n
+> 2μn,T
+
+= λ0δ2 
+
+> T
+> 2
+
+n, and δT ≥ δ−, we obtain 1
+
+n E (nc ∗(h, p ) − Kn,T )+ ≤
+
+pT (1 − λ0)/λ 0
+
+δ−
+
+· e−(λ0δ2
+
+> −/2) n
+
+n .
+
+Summing over n ≥ 1 and multiplying by h,
+
+h X
+
+> n≥1
+
+1
+
+n E (nc ∗(h, p ) − Kn,T )+ ≤ h
+
+pT (1 − λ0)/λ 0
+
+δ−
+
+X
+
+> n≥1
+
+e−c2n
+
+n = C(A)√T , 
+
+with c2 ≜ λ0δ2
+
+> −
+
+/2 > 0 and finite C(A) ≜ hδ −1
+
+> −
+
+q 1−λ0
+
+> λ0
+
+P 
+
+> n≥1
+
+e−cn /n . The linear piece satisfies 
+
+pT (1 − λ0) − pc ∗(h, p ) = pδ T
+
+pT λ 0(1 − λ0) ≤ pδ +
+
+pT λ 0(1 − λ0).
+
+Hence, for all T ≥ T1,
+
+a2(T, h, p ) ≤
+
+
+
+C(A) + pδ +
+
+pλ0(1 − λ0)
+
+ √T = Θ( √T ).
+
+Lastly, to derive the lower bound of a2(T, h, p ), we keep only the n = 1 term and the linear term: 
+
+a2(T, h, p ) ≥ hE (c∗(h, p ) − K1,T )+ + pδ T
+
+pT λ 0(1 − λ0) ≥ pδ −
+
+pT λ 0(1 − λ0).
+
+Thus, for all T ≥ T1,
+
+a2(T, h, p ) ≥ pδ −
+
+pλ0(1 − λ0)√T = Θ( √T ).
+
+Combining the upper and lower bounds, we obtain a2(T, h, p ) = Θ( √T ), which completes the proof. 
+
+□ec14 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+## EC.5. Proofs in Section 4.2 
+
+Proof of Lemma 8. For fixed T and S, existence of a stationary distribution for the pipeline Markov chain follows from Lemma 4 in Huh et al. (2009). Shifting one step maps ( In 
+
+> 1
+
+, q n+1 , . . . , q n+L)to ( In+1 1 , q n+2 , . . . , q n+L+1 ) without changing the stationary law. Therefore, the marginal distribu-tions of the pipeline orders are identical in stationarity: qn+1 d
+
+= · · · d
+
+= qn+L.Consider the state immediately after the order is placed at the end of a cycle, and let ( Y0, . . . , Y L)denote the nonnegative pipeline components indexed by remaining lead time, where Y0 is the on-hand inventory at the next cycle start. Under the base-stock policy, the post-order inventory position equals the base-stock level S, so PLℓ=0 Yℓ = S. 
+
+By stationarity and the one-step shift of remaining lead times, the marginals of Y0, . . . , Y L are identical. Combining this symmetry with PLℓ=0 Yℓ = S. yields 
+
+E[Y0] = · · · = E[YL] = SL + 1 . (EC.6) Since Y0 is exactly the next cycle start inventory, in stationarity Y0
+
+> d
+
+= I∞,S  
+
+> 1
+
+, and hence E[I∞,S  
+
+> 1
+
+] = 
+
+S/ (L + 1). Next, condition on the post-order pipeline state except for the within-cycle arrival sequence, and view the mapping from the T arrival slots in the next cycle to the next cycle start inventory. Changing a single arrival slot can change the number of units consumed in that cycle by at most one, hence it can change the next cycle start inventory by at most one. Therefore, the bounded-differences (Efron–Stein) inequality gives Var  I∞,S 
+
+> 1
+
+ ≤ T λ 0(1 − λ0) ≤ T
+
+4 .
+
+Finally, 
+
+E
+
+
+
+I∞,S  
+
+> 1
+
+− SL + 1 
+
+
+
+= E I∞,S  
+
+> 1
+
+− E[I∞,S  
+
+> 1
+
+]  ≤
+
+q
+
+Var  I∞,S 
+
+> 1
+
+ ≤ 12
+
+√T , 
+
+so (9) holds with K2 = 12 .By Markov’s inequality and (9), for any ε > 0, Pr 
+
+
+
+I∞,S  
+
+> 1
+
+− SL + 1 > εT 
+
+
+
+≤
+
+E
+
+h
+
+I∞,S  
+
+> 1
+
+− SL+1 
+
+i
+
+εT ≤ K2
+
+ε · 1
+
+√T → 0,
+
+which implies T −1(I∞,S  
+
+> 1
+
+− S/ (L + 1)) → 0 in probability. □
+
+Proof of Theorem 4. By the definition of πoff  
+
+> b
+
+, π greedy  
+
+> b
+
+and the optimality of Sgreedy , we have 
+
+πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+≤ πoff  
+
+> b
+
+(T, S off , ∞) − πgreedy  
+
+> b
+
+(T, S off , ∞). (EC.7) e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec15 
+
+Under a base-stock policy with fixed S = Soff , the inventory trajectory depends only on the number of units consumed in each cycle, which equals min {In 
+
+> 1
+
+, D n}. Hence, conditional on the same start-of-cycle inventory In 
+
+> 1
+
+and arrival sequence Hn, the offline and greedy fulfillment consume the same number of units and end the cycle with the same inventory ( In 
+
+> 1
+
+− Dn)+. In particular, the holding-cost and replenishment terms coincide pathwise, so the per-cycle profit difference equals the per-cycle reward difference: 
+
+V n, off (T, I n 
+
+> 1
+
+) − V n, greedy (T, I n 
+
+> 1
+
+) = Rn, off (In 
+
+> 1
+
+, Hn) − Rn, greedy (In 
+
+> 1
+
+, Hn).
+
+Taking long-run averages under stationarity, the RHS of (EC.7) is thus bounded by the stationary expected per-cycle reward gap under the common base stock S.Now fix a cycle and condition on In 
+
+> 1
+
+= I and Dn = I + k with k ≥ 0. On such a sample path, the offline algorithm can exceed greedy only by using some of the last k arrivals (which greedy cannot serve due to stockout) to replace units that greedy would have allocated earlier to type-1 arrivals. Each replacement increases reward by at most rM − r1. Let Hk denote the number of arrivals among the last k non-empty arrivals whose types lie in {2, . . . , M }. Then, pathwise, 
+
+Rn, off (I, Hn) − Rn, greedy (I, Hn) ≤ (rM − r1) Hk.
+
+Conditional on Dn = I + k, the I + k non-empty arrivals are i.i.d. with Pr( jnt = j | jnt̸ = 0) = 
+
+λj /(1 − λ0), so by exchangeability, 
+
+E[Hk | Dn = I + k] = k · 1 − λ0 − λ1
+
+1 − λ0
+
+⇒ ERn, off (I, Hn) − Rn, greedy (I, Hn) Dn = I + k ≤ (rM − r1) 1 − λ0 − λ1
+
+1 − λ0
+
+k, 
+
+and then averaging over Dn yields, for any fixed I,
+
+ERn, off (I, Hn) − Rn, greedy (I, Hn) ≤ (rM − r1) 1 − λ0 − λ1
+
+1 − λ0
+
+E(Dn − I)+ .
+
+Under the common base-stock level S = Soff , let I d
+
+= I∞,S off  
+
+> 1
+
+denote the stationary start-of-cycle inventory, and note that Dn ∼ Binomial( T, 1 − λ0) is independent of I. Using ( x + y)+ ≤ x+ + y+
+
+with x = Dn − T (1 − λ0) and y = T (1 − λ0) − I,
+
+E[( Dn − I)+] ≤ E[( Dn − T (1 − λ0)) +] + E[( T (1 − λ0) − I)+].
+
+The demand fluctuation term satisfies 
+
+E[( Dn − T (1 − λ0)) +] ≤ E|Dn − T (1 − λ0)| ≤ pVar( Dn) = pT (1 − λ0)λ0.ec16 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+For the inventory term, write Soff /(L + 1) for the mean pipeline component and note that T (1 −
+
+λ0) − Soff /(L + 1) = ∆ off  
+
+> T
+
+/(L + 1). Then (T (1 − λ0) − I)+ =
+
+ ∆off 
+
+> T
+
+L + 1 + Soff 
+
+L + 1 − I
+
++
+
+≤ ∆off 
+
+> T
+
+L + 1 + I − Soff 
+
+L + 1 .
+
+Taking expectations and applying Lemma 8 (with S = Soff ) gives 
+
+E[( T (1 − λ0) − I)+] ≤ ∆off 
+
+> T
+
+L + 1 + K2
+
+√T . 
+
+Combining the last displays, we obtain 
+
+E[( Dn − I)+] ≤ ∆off 
+
+> T
+
+L + 1 +
+
+
+
+K2 + p(1 − λ0)λ0
+
+√T . 
+
+Substituting into the reward-gap bound and then into (EC.7) yields the desired upper bound. Finally, since ∆ off  
+
+> T
+
+= Θ( T β ), the bound is O(T β + √T ). □
+
+Proof of Theorem 5. By optimality of Soff for πoff  
+
+> b
+
+(T, S, ∞), 
+
+πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+= πoff  
+
+> b
+
+(T, S off , ∞) − πgreedy  
+
+> b
+
+(T, S greedy , ∞) ≥ πoff  
+
+> b
+
+(T, S greedy , ∞) − πgreedy  
+
+> b
+
+(T, S greedy , ∞).
+
+Fix S = Sgreedy and let I d
+
+= I∞,S  
+
+> 1
+
+. Under a common base stock, both fulfillment algorithms have the same inventory trajectory, hence the long-run profit difference equals the stationary one-cycle reward difference: 
+
+πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+≥ EI EH
+
+Rn, off (I, Hn) − Rn, greedy (I, Hn) . (EC.8) We first introduce the following bound for the deterministic relaxation of offline reward. 
+
+Lemma EC.2 (Proposition 6 in Arlotto and Gurvich (2019)) . There exists a constant 
+
+M1 = PMj=1 
+
+pλj (1 − λj ) such that for any I ≥ 0,
+
+0 ≤ Rn, off (I, E[Hn]) − ERn, off (I, Hn) ≤ M1
+
+√T . 
+
+Fix any I ≥ 0. Under greedy, conditional on Dn, the served non-empty demands are i.i.d. with type probabilities λj /(1 − λ0), so 
+
+EH
+
+Rn, greedy (I, Hn) =
+
+> M
+
+X
+
+> j=1
+
+rj
+
+λj
+
+1 − λ0
+
+!
+
+E[min {I, D n}]
+
+≤
+
+> M
+
+X
+
+> j=1
+
+rj
+
+λj
+
+1 − λ0
+
+!
+
+min {I, E[Dn]} = Rn, greedy (I, E[Hn]) ,e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec17 
+
+where we used concavity of x 7 → min {I, x } and E[Dn] = T (1 − λ0). Therefore, combining Lemma EC.2 yields 
+
+EH
+
+Rn, off (I, Hn) − Rn, greedy (I, Hn) ≥ D(I) − M1
+
+√T , (EC.9) where D(I) ≜ Rn, off (I, E[Hn]) − Rn, greedy (I, E[Hn]). Taking EI [·] in (EC.9) and substituting into (EC.8) gives 
+
+πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+≥ EI [D(I)] − M1
+
+√T . (EC.10) Under mean arrivals, for k ∈ { 2, . . . , M } and T PMj=k λj ≤ I < T PMj=k−1 λj , a direct evaluation of the deterministic rewards yields 
+
+D(I) ≥
+
+
+
+T − I
+
+1 − λ0
+
+
+
+Ak, Ak ≜
+
+> M
+
+X
+
+> j=k
+
+rj λj − rk−1
+
+> M
+
+X
+
+> j=k
+
+λj ,
+
+hence for all I ∈ [T λ M , T (1 − λ0)], 
+
+D(I) ≥ A
+
+
+
+T − I
+
+1 − λ0
+
+
+
+= A
+
+1 − λ0
+
+ T (1 − λ0) − I, A ≜ min  
+
+> 2≤k≤M
+
+Ak. (EC.11) On the event 
+
+ET ≜
+
+(
+
+T λ M < I ≤ T (1 − λ0) − ∆greedy 
+
+> T
+
+4( L + 1) 
+
+)
+
+,
+
+we have I ∈ [T λ M , T (1 − λ0)] and T (1 − λ0) − I ≥ ∆greedy  
+
+> T
+
+/(4( L + 1)). Thus, by (EC.11), 
+
+D(I)1ET ≥ A
+
+1 − λ0
+
+· ∆greedy 
+
+> T
+
+4( L + 1) 1ET .
+
+Taking EI [·] and using (EC.10) gives the first desired claim (10). Let S = Sgreedy , so S/ (L + 1) = T (1 − λ0) − ∆greedy  
+
+> T
+
+/(L + 1), and define 
+
+FT ≜
+
+(
+
+I − SL + 1 ≤ ∆greedy 
+
+> T
+
+2( L + 1) 
+
+)
+
+.
+
+On FT , T (1 − λ0) − I ≥ ∆greedy  
+
+> T
+
+/(2( L + 1)). The interior condition S > (L + 1) T λ M implies there exists T1 < ∞ such that for all T ≥ T1, FT ⊆ { T λ M < I < T (1 − λ0)}; hence by (EC.11), for all 
+
+T ≥ T1,
+
+D(I)1FT ≥ A
+
+1 − λ0
+
+· ∆greedy 
+
+> T
+
+2( L + 1) 1FT .
+
+By Markov’s inequality and Lemma 8, Pr( F cT ) ≤
+
+EI
+
+h
+
+I − SL+1 
+
+i
+
+∆greedy  
+
+> T
+
+/(2( L + 1)) ≤ 2( L + 1) K2
+
+√T
+
+∆greedy 
+
+> T
+
+.
+
+Therefore, for T ≥ T1,
+
+EI [D(I)] ≥ A
+
+1 − λ0
+
+· ∆greedy 
+
+> T
+
+2( L + 1) Pr( FT ) ≥ A
+
+2(1 − λ0)( L + 1) ∆greedy  
+
+> T
+
+− AK 2
+
+1 − λ0
+
+√T . 
+
+Substituting into (EC.10) proves the second claim (11). □ec18 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+Proof of Corollary 2. Under (8), we have ∆ greedy  
+
+> T
+
+= Θ( T β ) and ∆ off  
+
+> T
+
+= Θ( T β ). The upper bound in Theorem 4 gives 
+
+πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+≤ (rM − r1) 1 − λ0 − λ1
+
+1 − λ0
+
+ ∆off 
+
+> T
+
+L + 1 +
+
+
+
+K2 + p(1 − λ0)λ0
+
+√T
+
+
+
+= O(T β + √T ).
+
+If β > 1/2, then √T = o(T β ), so the RHS is O(T β ). For the lower bound, by Theorem 5 (the second inequality (11)), there exists T1 < ∞ such that for all T ≥ T1,
+
+πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+≥ A
+
+2(1 − λ0)( L + 1) ∆greedy  
+
+> T
+
+−
+
+ AK 2
+
+1 − λ0
+
++ M1
+
+ √T . 
+
+Since ∆ greedy  
+
+> T
+
+= Θ( T β ) and β > 1/2, we again have √T = o(T β ), so the negative √T term is lower order. Hence there exists T2 < ∞ and a constant c > 0 such that for all T ≥ max {T1, T 2},
+
+πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+≥ c ∆greedy  
+
+> T
+
+= Ω( T β ).
+
+Combining O(T β ) and Ω( T β ) yields πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+= Θ( T β ) when β > 1/2. □
+
+## EC.6. Proofs in Sections 4.3 and 4.4 
+
+Proof of Theorem 6. From Lemma 3, under the same constant-order replenishment policy, the inventory levels of the two fulfillment algorithms satisfy 
+
+In, off   
+
+> T+1
+
+(c, H) ≤ In, on   
+
+> T+1
+
+(c, H), ∀n. 
+
+Thus, the online algorithm incurs at least as much holding cost as the myopic offline algorithm in each cycle. Regarding fulfillment rewards, Lemma 1 establishes that, starting from the same initial inven-tory, the expected difference in end-of-cycle inventory between the online and the myopic offline algorithms during each cycle is bounded above by C2T α. This surplus inventory under the online algorithm corresponds to items that would have been used by the myopic offline algorithm to fulfill demands with at least r1-rewarded items. In contrast, the online algorithm may eventually use this surplus to fulfill demands with rewards no greater than rM , and must additionally incur at least one cycle of holding cost h.Hence, the per-cycle profit advantage of the online policy relative to the offline one is bounded above by ( rM − r1 − h) times the expected surplus units. Then, allowing each algorithm to optimize its own constant order does not weaken the bound, i.e., 
+
+πon  
+
+> c
+
+− πoff  
+
+> c
+
+= η2 ≤ (rM − r1 − h)C2T α,
+
+completing the proof. □e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec19 
+
+Proof of Corollary 3. Decompose the profit difference as 
+
+πgreedy  
+
+> b
+
+− πon  
+
+> c
+
+=  πgreedy  
+
+> b
+
+− πoff 
+
+> b
+
+ +  πoff  
+
+> b
+
+− πoff 
+
+> c
+
+ +  πoff  
+
+> c
+
+− πon 
+
+> c
+
+.
+
+The term πoff  
+
+> b
+
+− πoff  
+
+> c
+
+is bounded from above and below by Theorem 3. The difference between offline and greedy fulfillment under base-stock, πoff  
+
+> b
+
+− πgreedy  
+
+> b
+
+, is bounded above by Theorem 4 and below by Theorem 5. Finally, the difference between the offline and online fulfillment under the constant-order, πoff  
+
+> c
+
+− πon  
+
+> c
+
+, is bounded above by Theorem 2 and bounded below by rearranging Theorem 6. Substituting these bounds into the decomposition and rearranging yields (12) and (13). □
+
+## EC.7. Proofs in Section 6 
+
+Proof of Lemma 9. To avoid redundancy, we focus on proving the lower bound; the correspond-ing upper bound can be established through analogous arguments. Assume by contradiction that there exists a sequence of problem instances such that, for every myopic offline algorithm (which may not be unique), there exists at least one resource ℓ ∈ [d] for which the following inequality holds: 
+
+EH,on 
+
+In, off  
+
+> T+1 ,ℓ
+
+(H) − In, on  
+
+> T+1 ,ℓ
+
+(H) ≥ CT β
+
+for some constant C > 0 and β > α . This implies that the offline algorithm deliberately avoids using at least CT β units of inventory from resource ℓ, even though they are used in the online algorithm. In other words, reallocating any of these units from resource ℓ to fulfill demand—replacing units actually used in the offline solution—would strictly decrease the total reward. Let ∆ rmin denote the smallest positive reward difference between any two fulfillments across resources and customer types: ∆rmin ≜ min {rj1ℓ1 − rj2ℓ2 > 0 : j1, j 2 ∈ [M ], ℓ 1, ℓ 2 ∈ [d]} .
+
+Then, by construction, using any of the CT β surplus units of resource ℓ (as used in the online algorithm) instead of the units chosen by the offline algorithm would reduce the total reward by at least ∆ rmin per unit. Thus, the expected regret must satisfy REG ≥ ∆rmin · EH,on 
+
+In, off  
+
+> T+1 ,ℓ
+
+(H) − In, on  
+
+> T+1 ,ℓ
+
+(H) ≥ ∆rmin · CT β ,
+
+this contradicts the regret assumption that REG ≤ C1T α, for some constant C1 > 0 and α < β .Hence, no such sequence of problem instances can exist, completing the proof by contradiction. 
+
+□ec20 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+Proof of Lemma 10. For convenience, we define the notation ∆Int,ℓ (S, H) ≜ In, on  
+
+> t,ℓ
+
+(S, H) −
+
+In, off  
+
+> t,ℓ
+
+(S, H) and ∆ qnℓ (S, H) ≜ qn, on  
+
+> ℓ
+
+(S, H) − qn, off  
+
+> ℓ
+
+(S, H) for each ℓ ∈ [d]. Let ϵℓ(I) denote the end-of-cycle inventory difference of resource ℓ between the two algorithms after one fulfillment cycle, given that both start the cycle with the same initial inventory level vector I = ( Iℓ)ℓ∈[d] across all resources. Additionally, let f n, on  
+
+> ℓ
+
+(I) and f n, off  
+
+> ℓ
+
+(I) denote the number of demands of all types fulfilled by resource ℓ in cycle n, starting from initial inventory vector I, under the online and the myopic offline algorithms, respectively. We now prove the first part of Lemma 10 by induction. 
+
+Inductive Hypothesis: Suppose that for some n = k, the following conditions hold: (a) −Lℓ · C3T α ≤ EH,on [∆ Ik
+
+> 1,ℓ
+
+(S, H)] ≤ (L2 
+
+> ℓ
+
+− Lℓ + 1) · C3T α ∀ℓ ∈ [d], which corresponds to the desired results in the first part of Lemma 2. (b) −Lℓ · C3T α ≤ EH,on [∆ qk+lℓ (S, H)] ≤ C3T α ∀l = 1 , 2, . . . , L ℓ − 1, ∀ℓ ∈ [d]. (c) −C3T α ≤ EH,on 
+
+h
+
+∆Ik
+
+> 1,ℓ
+
+(S, H) + PLℓ−1 
+
+> l=1
+
+∆qk+lℓ (S, H)
+
+i
+
+≤ Lℓ · C3T α ∀ℓ ∈ [d]. 
+
+Base Case ( n = 1 ): Since both the online and offline algorithms start from the same initial inventory pipeline of each resource at the beginning of the first replenishment cycle , we immediately have ∆I11,ℓ (S, H) = 0 , and ∆q1+ lℓ (S, H) = 0 for l = 1 , 2, . . . , L ℓ − 1, ∀ℓ ∈ [d],
+
+where conditions (a), (b), and (c) trivially hold. 
+
+Inductive Step ( n = k + 1 ): First, by the order update equation (15) in base-stock replenish-ment policy, the definition of ∆ qnℓ (S, H), and the inductive hypothesis (c), we have: for ∀ℓ ∈ [d]
+
+−Lℓ · C3T α ≤ EH,on 
+
+h
+
+∆qk+Lℓ 
+
+> ℓ
+
+(S, H)
+
+i
+
+= −EH,on 
+
+"
+
+∆Ik
+
+> 1,ℓ
+
+(S, H) + 
+
+> Lℓ−1
+
+X
+
+> l=1
+
+∆qk+lℓ (S, H)
+
+#
+
+≤ C3T α,
+
+Thus, the condition (b) holds at step n = k + 1. Next, we verify conditions (a) and (c) at n = k + 1. Consider the scenario where the online algorithm conducts fulfillment as if its initial inventory were exactly Ik, off 1 (S, H) = ( Ik, off 1,ℓ (S, H)) ℓ∈[d].That is, the number of demands fulfilled using resource ℓ in this online setting is given by min f n, on  
+
+> ℓ
+
+(Ik, off 1 (S, H)) , I k, on 1,ℓ (S, H) . Based on this formulation, we analyze EH,on [∆ Ik
+
+> 1,ℓ
+
+(S, H)] by considering the following two cases. 
+
+Case 1 f n, on  
+
+> ℓ
+
+(Ik, off 1 (S, H)) ≤ Ik, on 1,ℓ (S, H). By the definition of ϵℓ(I), it follows that ∆IkT +1 ,ℓ (S, H) = ∆ Ik
+
+> 1,ℓ
+
+(S, H) + f k, off  
+
+> ℓ
+
+(Ik, off 1 (S, H)) − f k, on  
+
+> ℓ
+
+(Ik, off 1 (S, H)) = ∆ Ik
+
+> 1,ℓ
+
+(S, H) + ϵℓ(Ik, off 1 (S, H)) .
+
+(EC.12) e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec21 
+
+Then, the expected start-of-cycle inventory difference of each resource at cycle k + 1 satisfies 
+
+EH,on [∆ Ik+1 1,ℓ (S, H)] = EH,on [∆ IkT +1 ,ℓ (S, H) + ∆ qk+1  
+
+> ℓ
+
+(S, H)] = EH,on [∆ Ik+1 1,ℓ (S, H) + ϵℓ(Ik, off 1 (S, H)) + ∆ qk+1  
+
+> ℓ
+
+(S, H)] 
+
+≥ − C3T α − EH,on 
+
+"Lℓ−1
+
+X
+
+> l=2
+
+∆qk+lℓ (S, H)
+
+#
+
++ EH,on 
+
+ϵℓ(Ik, off 1 (S, H)) 
+
+≥ − C3T α − (Lℓ − 2) · C3T α − C3T α = −Lℓ · C3T α,
+
+(EC.13) where the first equality follows directly from the inventory update rule, the first inequality results from rearranging terms based on hypothesis (c) at step n = k, and the final inequality is guaranteed by Lemma 9 and hypothesis (b) at step n = k. Similarly, the upper bound of EH,on [∆ Ik+1 1,ℓ (S, H)] can be given by: 
+
+EH,on [∆ Ik
+
+> 1,ℓ
+
+(S, H)] = EH,on [∆ Ik
+
+> 1,ℓ
+
+(S, H) + ϵℓ(Ik, off 1 (S, H)) + ∆ qk+1  
+
+> ℓ
+
+(S, H)] 
+
+≤ Lℓ · C3T α − EH,on [
+
+> Lℓ−1
+
+X
+
+> l=2
+
+∆qk+lℓ (S, H)] + EH,on [ϵℓ(Ik, off 1 (S, H))] 
+
+≤ Lℓ · C3T α + ( Lℓ − 2) · Lℓ · C3T α + C3T α = ( L2 
+
+> ℓ
+
+− Lℓ + 1) · C3T α,
+
+where the inequalities follow from assumptions (b), (c), and Lemma 9. Thus, condition (a) is satisfied at n = k + 1 in this case. Lastly, condition (c) at n = k + 1 follows from ∆Ik+1 1,ℓ (S, H) + 
+
+> Lℓ−1
+
+X
+
+> l=1
+
+∆qk+1+ lℓ (S, H)=∆ Ik
+
+> 1,ℓ
+
+(S, H) + ϵℓ(Ik, off 1 (S, H)) + ∆ qk+1  
+
+> ℓ
+
+(S, H) + 
+
+> Lℓ−1
+
+X
+
+> l=2
+
+∆qk+lℓ (S, H) + ∆ qk+lℓ (S, H)=ϵℓ(Ik, off 1 (S, H)) ,
+
+using (EC.12) and (15). Condition (c) thus holds by Lemma 9 in this case. 
+
+Case 2 f n, on  
+
+> ℓ
+
+(Ik, off 1 (S, H)) > I k, on 1,ℓ (S, H)The end-of-cycle inventory difference of resource ℓ can be bounded by: ∆IkT +1 ,ℓ (S, H) = ∆ Ik
+
+> 1,ℓ
+
+(S, H) + f k, off  
+
+> ℓ
+
+(Ik, off 1 (S, H)) − Ik, on 1,ℓ (S, H)
+
+≥ ∆Ik 
+
+> 1,ℓ
+
++ f k, off  
+
+> ℓ
+
+(Ik, off 1 (S, H)) − f k, on  
+
+> ℓ
+
+(Ik, off 1 (S, H)) = ∆ Ik
+
+> 1,ℓ
+
+(S, H) + ϵℓ(Ik, off 1 (S, H)) .
+
+(EC.14) Then, the expected start-of-cycle inventory difference of each resource at cycle k + 1 satisfies 
+
+EH,on [∆ Ik+1 1,ℓ (S, H)] ≥ EH,on [∆ Ik
+
+> 1,ℓ
+
+(S, H) + ϵℓ(Ik, off 1 (S, H)) + ∆ qk+1  
+
+> ℓ
+
+(S, H)] ≥ − Lℓ · C3T α,ec22 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+where the first inequality follows from (EC.14), and the second is derived following the same argument in (EC.13). Similarly, the upper bound of EH,on [∆ Ik+1 1,ℓ (S, H)] can be given by: ∆IkT +1 ,ℓ (S, H) = Ik, on  
+
+> T+1 ,ℓ
+
+(S, H) − Ik, off  
+
+> T+1 ,ℓ
+
+(S, H) = −Ik, off  
+
+> T+1 ,ℓ
+
+(S, H) ≤ 0
+
+⇒ EH,on [∆ Ik+1 1,ℓ (S, H)] ≤ EH,on [∆ qk+1  
+
+> ℓ
+
+(S, H)] ≤ C3T α,
+
+where the last inequality follows from assumption (b). Thus, condition (a) is also satisfied at 
+
+n = k + 1 in this case. Lastly, we establish both the lower and upper bounds required by condition (c) at n = k + 1. For the lower bound, we have: 
+
+EH,on 
+
+"
+
+∆Ik+1 1,ℓ (S, H) + 
+
+> Lℓ−1
+
+X
+
+> l=1
+
+∆qk+1+ lℓ (S, H)
+
+#
+
+≥EH,on 
+
+"
+
+∆Ik
+
+> 1,ℓ
+
+(S, H) + ϵℓ(Ik, off 1 (S, H)) + ∆ qk+1  
+
+> ℓ
+
+(S, H) + 
+
+> Lℓ−1
+
+X
+
+> l=2
+
+∆qk+lℓ (S, H) + ∆ qk+lℓ (S, H)
+
+#
+
+=EH,on 
+
+ϵℓ(Ik, off 1 (S, H))  ≥ C3T α,
+
+where the first inequality follows from (EC.14), the equality from the base-stock update rule in (15), and the final inequality from Lemma 9. For the upper bound: 
+
+EH,on 
+
+"
+
+∆Ik+1 1,ℓ (S, H) + 
+
+> Lℓ−1
+
+X
+
+> l=1
+
+∆qk+1+ lℓ (S, H)
+
+#
+
+≤EH,on 
+
+"
+
+∆qk+1  
+
+> ℓ
+
+(S, H) + 
+
+> Lℓ−1
+
+X
+
+> l=2
+
+∆qk+lℓ (S, H) + ∆ qk+lℓ (S, H)
+
+#
+
+=EH,on 
+
+−∆Ik
+
+> 1,ℓ
+
+(S, H) ≤ Lℓ · C3T α,
+
+where the inequality uses (EC.14), the equality follows again from (15), and the final bound uses the inductive hypothesis (a). Therefore, conditions (a) and (c) also hold at n = k + 1, considering the above two cases, which completes the inductive step. The results in the second part of Lemma 2 regarding the difference of end-of-cycle inventory directly follow from (EC.12) and (EC.14) and Lemma 9, when −Lℓ · C3T α ≤
+
+EH,on 
+
+In, on 1,ℓ (S, H) − In, off 1,ℓ (S, H) ≤ (L2 
+
+> ℓ
+
+− Lℓ + 1) · C3T α holds for all n, ℓ .Note that when L = 1, the conditions (a), (b), and (c) collapse to the single condition (a), and the same arguments apply straightforwardly. Thus, the proof of Lemma 10 is completed. □
+
+Proof of Theorem 7. The proof follows the same structure as in Theorem 1, by decomposing the total expected profit difference into fulfilled rewards and holding costs for any fixed base-stock levels S and then establishing the bound for their respective optimal base-stock levels. Define 
+
+rℓ,max ≜ max j {rjl } for each resource ℓ ∈ [d]. For the difference in fulfilled rewards per cycle with the same S, it can be bounded by two terms: (i) the regret under the same initial inventory pipeline (bounded in expectation by C1T αe-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec23 
+
+by Assumption 1), and (ii) the additional reward earned by the myopic offline algorithm due to having more start-of-cycle inventory of some resources. The latter is bounded by Pdℓ=1 rℓ,max ·
+
+In, on 1,ℓ (S, H) − In, off 1,ℓ (S, H)−
+
+.For the difference in holding costs per cycle, it is determined by the excess end-of-cycle inventory in the online algorithm, bounded by Pdℓ=1 hℓ · In, on  
+
+> T+1 ,ℓ
+
+(S, H) − In, off  
+
+> T+1 ,ℓ
+
+(S, H)+
+
+.Summing bounds as analyzed above over N cycles and taking expectations, the expected profit difference with their respective optimal base-stock levels Soff and Son can be bounded by: 
+
+πoff  
+
+> b
+
+(T, Soff , N ) − πon  
+
+> b
+
+(T, Son , N )
+
+≤ πoff  
+
+> b
+
+(T, Soff , N ) − πon  
+
+> b
+
+(T, Soff , N )
+
+≤ 1
+
+N EH,on 
+
+" NX
+
+> n=1
+
+C1T α +
+
+> d
+
+X
+
+> ℓ=1
+
+rℓ,max · In, on 1,ℓ (S, H) − In, off 1,ℓ (S, H)−
+
++
+
+> d
+
+X
+
+> ℓ=1
+
+hℓ · In, on  
+
+> T+1 ,ℓ
+
+(S, H) − In, off  
+
+> T+1 ,ℓ
+
+(S, H)+
+
+!# 
+
+= C1T α +
+
+> d
+
+X
+
+> ℓ=1
+
+rℓ,max · EH,on 
+
+In, on 1,ℓ (S, H) − In, off 1,ℓ (S, H)−
+
++
+
+> d
+
+X
+
+> ℓ=1
+
+hℓ · EH,on 
+
+In, on  
+
+> T+1 ,ℓ
+
+(S, H) − In, off  
+
+> T+1 ,ℓ
+
+(S, H)+
+
+≤ C1T α +
+
+> d
+
+X
+
+> ℓ=1
+
+rℓ,max · Lℓ · C3T α +
+
+> d
+
+X
+
+> ℓ=1
+
+hℓ · (L2 
+
+> ℓ
+
+− Lℓ + 2) · C3T α,
+
+where the first inequality follows from the optimality of Son , and the final follows from Lemma 10, which bounds the inventory differences for each resource across cycles. This completes the proof. 
+
+□
+
+Proof of Lemma 11. Fix a cycle n. By Lemma 4 applied to the total inventory process, 
+
+EH
+
+" dX
+
+> ℓ=1
+
+In, off  
+
+> T+1 ,ℓ
+
+(c, H)
+
+#
+
+=
+
+> n
+
+X
+
+> j=1
+
+1
+
+j EH
+
+ jc −
+
+> j
+
+X
+
+> i=1
+
+Di
+
+!+ .
+
+Let ∆ T ≜ T (1 − λ0) − c. By the assumption ∆ T = T δ ′ 
+
+> c
+
++ o(T ) with δ′ 
+
+> c
+
+> 0, there exists T0 < ∞ such that for all T ≥ T0,∆T ≥ 12 T δ ′
+
+> c
+
+. (EC.15) For each j ≥ 1, since Pji=1 Di ∼ Binomial( jT, 1 − λ0), 
+
+EH
+
+ jc −
+
+> j
+
+X
+
+> i=1
+
+Di
+
+!+ =
+
+Z ∞
+
+> 0
+
+P jc −
+
+> j
+
+X
+
+> i=1
+
+Di > x 
+
+!
+
+dx 
+
+=
+
+Z ∞
+
+> 0
+
+P
+
+> j
+
+X
+
+> i=1
+
+Di − jE[Dn] < −j∆T − x
+
+!
+
+dx 
+
+≤
+
+Z ∞
+
+> 0
+
+exp 
+
+
+
+− (j∆T + x)2
+
+2jT (1 − λ0)
+
+
+
+dx (Chernoff bound) 
+
+≤
+
+Z ∞
+
+> 0
+
+exp 
+
+
+
+− (jT δ ′
+
+> c
+
+/2 + x)2
+
+2jT (1 − λ0)
+
+
+
+dx, by (EC.15). ec24 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+With the change of variables 
+
+z ≜ jT δ ′
+
+> c
+
+/2 + x
+
+p2jT (1 − λ0) , a ≜ jT δ ′
+
+> c
+
+/2
+
+p2jT (1 − λ0) ,
+
+the last integral equals p2jT (1 − λ0) R ∞ 
+
+> a
+
+e−z2
+
+dz . Using R ∞ 
+
+> a
+
+e−z2
+
+dz ≤ 12a e−a2
+
+, we obtain 
+
+EH
+
+ jc −
+
+> j
+
+X
+
+> i=1
+
+Di
+
+!+ ≤ 2(1 − λ0)
+
+δ′
+
+> c
+
+exp 
+
+
+
+− jT δ ′2
+
+> c
+
+8(1 − λ0)
+
+
+
+.
+
+Therefore, for all T ≥ T0,
+
+EH
+
+" dX
+
+> ℓ=1
+
+In, off  
+
+> T+1 ,ℓ
+
+(c, H)
+
+#
+
+≤
+
+> n
+
+X
+
+> j=1
+
+1
+
+j · 2(1 − λ0)
+
+δ′
+
+> c
+
+exp 
+
+
+
+− jT δ ′2
+
+> c
+
+8(1 − λ0)
+
+
+
+≤ 2(1 − λ0)
+
+δ′
+
+> c
+> ∞
+
+X
+
+> j=1
+
+1
+
+j
+
+
+
+exp 
+
+
+
+− T δ ′2
+
+> c
+
+8(1 − λ0)
+
+ j
+
+= − 2(1 − λ0)
+
+δ′
+
+> c
+
+ln 
+
+
+
+1 − exp 
+
+
+
+− T δ ′2
+
+> c
+
+8(1 − λ0)
+
+ 
+
+,
+
+which is the desired bound. □
+
+Proof of Theorem 8. The proof also proceeds first by decomposing the total profit difference into fulfilled rewards and holding costs for any fixed constant-order quantities c.For the expected difference in fulfilled rewards per cycle, note that the replenishment quantity is fixed and identical for each resource under the constant-order policy. Therefore, the total additional fulfilled rewards earned by the offline algorithm can be bounded by two terms: (i) the regret in fulfilled rewards under the same replenishment profile (bounded in expectation by C1T α by Assumption 1), and (ii) the additional rewards obtained due to surplus inventory in the offline algorithm, which is upper bounded by the product of the maximum possible reward per unit and the expected total end-of-cycle inventory under the offline algorithm. Specifically, this term is bounded by rmax · EH
+
+hPdℓ=1 In, off  
+
+> T+1 ,ℓ
+
+(c, H)
+
+i
+
+.For the expected difference in holding costs per cycle, it is determined by the excess end-of-cycle inventory in the online algorithm, bounded by hmax · EH,on 
+
+hPdℓ=1 In, on  
+
+> T+1 ,ℓ
+
+(S, H)
+
+i
+
+.Summing over N cycles, the expected profit difference with their respective optimal order quan-tities coff and con is bounded by: 
+
+πoff  
+
+> c
+
+(T, coff , N ) − πon  
+
+> c
+
+(T, con , N )
+
+≤ πoff  
+
+> c
+
+(T, coff , N ) − πon  
+
+> c
+
+(T, coff , N )
+
+≤ 1
+
+N EH,on 
+
+" NX
+
+> n=1
+
+C1T α + rmax ·
+
+" dX
+
+> ℓ=1
+
+In, off  
+
+> T+1 ,ℓ
+
+(c, H)
+
+#
+
++ hmax ·
+
+" dX
+
+> ℓ=1
+
+In, on  
+
+> T+1 ,ℓ
+
+(c, H)
+
+#!# e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment ec25 
+
+= C1T α + rmax · EH
+
+" dX
+
+> ℓ=1
+
+In, off  
+
+> T+1 ,ℓ
+
+(c, H)
+
+#
+
++ hmax · EH,on 
+
+" dX
+
+> ℓ=1
+
+In, on  
+
+> T+1 ,ℓ
+
+(c, H)
+
+#
+
+≤ C1T α − rmax · 1 − λ0
+
+δ′
+
+> c
+
+· ln 
+
+
+
+1 − exp 
+
+
+
+− T δ ′2
+
+> c
+
+2(1 − λ0)
+
+ 
+
++ hmax · C2T α − (eθ )−1 ln(1 − βθ ) ,
+
+where the first inequality follows from the optimality of con , while the last follows from Lemmas 5 and 11. The proof is completed. □
+
+Proof of Theorem 8. The proof proceeds by decomposing the total profit difference into fulfilled rewards and holding costs for any fixed constant-order quantities c. Recall c ≜ Pdℓ=1 cℓ.
+
+Fulfilled rewards. By Assumption 1, under the same replenishment profile the expected regret per cycle in fulfilled rewards is at most C1T α. In addition, under the constant-order policy the myopic offline algorithm may start a cycle with more units of some resources than the online algorithm (due to differing end-of-cycle inventories in the previous cycle); each such extra unit can increase fulfilled reward by at most rmax . Thus, summing over resources and taking expectations yields the coarse bound (extra offline reward) ≤ rmax · E
+
+" dX
+
+> ℓ=1
+
+In−1,off   
+
+> T+1 ,ℓ
+
+(c, H)
+
+#
+
+.
+
+By Lemma 11, under the assumption 0 ≤ Pdℓ=1 cℓ < T (1 − λ0) and T (1 − λ0) − Pdℓ=1 cℓ = T δ ′ 
+
+> c
+
++ o(T )with δ′ 
+
+> c
+
+> 0, for all sufficiently large T ,
+
+E
+
+" dX
+
+> ℓ=1
+
+In−1,off   
+
+> T+1 ,ℓ
+
+(c, H)
+
+#
+
+≤ − 2(1 − λ0)
+
+δ′
+
+> c
+
+· ln 
+
+
+
+1 − exp 
+
+
+
+− T δ ′2
+
+> c
+
+8(1 − λ0)
+
+ 
+
+.
+
+Holding costs. For constant-order replenishment, the myopic offline algorithm always fulfills at least as much total demand as the online algorithm starting from the same state; hence, the total end-of-cycle inventory under offline is no larger than under online, so the holding-cost difference per cycle is bounded by 
+
+hmax · E
+
+" dX
+
+> ℓ=1
+
+In, on  
+
+> T+1 ,ℓ
+
+(c, H)
+
+#
+
+.
+
+For α < 1, the assumption T (1 − λ0) − c = T δ ′ 
+
+> c
+
++ o(T ) implies T (1 − λ0) > c + C2T α for all sufficiently large T , so we can apply Lemma 5 to the total constant order quantity c: there exists θ > 0 with 
+
+βθ < 1 and 
+
+E
+
+" dX
+
+> ℓ=1
+
+In, on  
+
+> T+1 ,ℓ
+
+(c, H)
+
+#
+
+≤ − (eθ )−1 ln(1 − βθ ) + C2T α.
+
+Collecting the pieces, for any fixed c and N , there exists T0 < ∞ such that for all T ≥ T0 there exists θ > 0 with βθ < 1 and 
+
+πoff  
+
+> c
+
+(T, c, N ) − πon  
+
+> c
+
+(T, c, N )
+
+≤C1T α + rmax ·
+
+
+
+− 2(1 − λ0)
+
+δ′
+
+> c
+
+· ln 
+
+
+
+1 − exp 
+
+
+
+− T δ ′2
+
+> c
+
+8(1 − λ0)
+
+ 
+
++ hmax · −(eθ )−1 ln(1 − βθ ) + C2T α .ec26 e-companion to Ling, Jiang and Xin: Online Order Fulfillment with Replenishment 
+
+Using the optimality of con for the online algorithm, 
+
+πoff  
+
+> c
+
+(T, coff , N ) − πon  
+
+> c
+
+(T, con , N ) ≤ πoff  
+
+> c
+
+(T, coff , N ) − πon  
+
+> c
+
+(T, coff , N ),
+
+and the displayed bounds above with c = coff yield the desired claim for α < 1. Note that with α < 1, the existence of θ > 0 (and T0) follows from the condition T (1 − λ0) >
+
+P 
+
+> ℓ
+
+cℓ + C2T α for all large T and the standard argument in Lemma 5, hence the per-cycle gap is 
+
+O(T α). For α = 1, or when T (1 − λ0) ≤ P 
+
+> ℓ
+
+cℓ + C2T , invoke the stability-from-optimality argument in the constant-order setting: with strictly positive holding costs {hℓ} and bounded rewards, there exists K < ∞ such that sup 
+
+> n≥1
+
+E
+
+" dX
+
+> ℓ=1
+
+In, on  
+
+> T+1 ,ℓ
+
+(con , H)
+
+#
+
+≤ KT, 
+
+which implies the holding-cost term is at most hmax KT and gives the stated O(T ) bound. This completes the proof. □
