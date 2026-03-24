@@ -1,0 +1,210 @@
+Title: ReTac-ACT: A State-Gated Vision-Tactile Fusion Transformer for Precision Assembly
+
+URL Source: https://arxiv.org/pdf/2603.09565v2
+
+Published Time: Thu, 19 Mar 2026 01:13:49 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# ReTac-ACT: A State-Gated Vision-Tactile Fusion Transformer for Precision Assembly 
+
+Minchi Ruan 1,2,†, LiangQing Zhou 1,2,†, Hongtong Li 1, Zongtao Wang 2, ZhaoMing Lu 1, Jianwei Zhang 3, Bin Fang 1,2,∗
+
+> 1
+
+Beijing University of Posts and Telecommunications, Beijing, China 
+
+> 2
+
+SunHDex Intelligent Technology (Beijing) Co., Ltd., Beijing, China 
+
+> 3
+
+University of Hamburg, Hamburg, Germany 
+
+> †
+
+These authors contributed equally. 
+
+> ∗
+
+Corresponding author 
+
+Fig. 1. We present ReTac-ACT, a state-gated vision-tactile policy that extends Action Chunking with Transformers (ACT) to natively process tactile feedback. ReTac-ACT sets a new state of the art for high-precision peg-in-hole tasks on the NIST ATB M1 benchmark provided by ManipulationNet, achieving 90% success at 3 mm clearance and maintaining 80% at industrial-grade 0.1 mm clearance where pure vision fails due to occlusion. It features a proprioception-conditioned gating mechanism to dynamically fuse visual and tactile modalities and is trained with auxiliary tactile reconstruction objectives. The ReTac-ACT code will be made open-source to support the research community. 
+
+Abstract — Precision assembly requires sub-millimeter cor-rections in contact-rich “last-millimeter” regions where visual feedback fails due to occlusion from the end-effector and work-piece. We present ReTac-ACT (Reconstruction-enhanced Tactile ACT), a vision-tactile imitation learning policy that addresses this challenge through three synergistic mechanisms: (i) bidirec-tional cross-attention enabling reciprocal visuo-tactile feature enhancement before fusion, (ii) a proprioception-conditioned gating network that dynamically elevates tactile reliance when visual occlusion occurs, and (iii) a tactile reconstruction ob-jective enforcing learning of manipulation-relevant contact information rather than generic visual textures. Evaluated on the standardized NIST Assembly Task Board M1 benchmark, ReTac-ACT achieves 90% peg-in-hole success, substantially outperforming vision-only and generalist baseline methods, and maintains 80% success at industrial-grade 0.1 mm clearance. Ablation studies validate that each architectural component is indispensable. The ReTac-ACT codebase and a vision-tactile demonstration dataset covering various clearance levels with both visual and tactile features will be released to support reproducible research. 
+
+I. I NTRODUCTION 
+
+In human manufacturing, the synergistic integration of vision and touch constitutes a core capability for performing precision operations. Consider high-precision peg-in-hole assembly as an illustrative example: visual perception is re-sponsible for the semantic recognition and coarse alignment 
+
+> arXiv:2603.09565v2 [cs.RO] 18 Mar 2026
+
+of components, whereas tactile feedback provides critical real-time force information during the contact phase, guiding dynamic millimeter-level adjustments. This multimodal per-ception paradigm significantly enhances operational robust-ness, particularly in contact-intensive scenarios where visual information is limited, occlusions are severe, or geometric features are indistinct. In such contexts, tactile signals fre-quently serve as the decisive determinant of task success. In recent years, vision-based methods have demonstrated excellent performance in various robotic manipulation tasks. Representative works, such as Diffusion Policy [1], ACT [2], and pi05 [3], have achieved high success rates in general-purpose manipulation tasks. However, vision-only Imitation Learning (IL) methods [1]–[5] continue to face significant challenges in precision operations, including millimeter-level peg-in-hole assembly. The fundamental limitation of these methods lies in their over-reliance on visual perception, which neglects crucial tactile feedback during the contact phase. This dependency renders the system highly suscepti-ble to failure under conditions of visual occlusion and ge-ometric ambiguity. Fortunately, with the rapid development of high-precision tactile sensor technology [6]–[10], rich and reliable contact information can now be integrated effectively into robot control loops, establishing the hardware foundation for genuine visuo-tactile fusion. To address these challenges, we propose ReTac-ACT, a novel vision-tactile policy designed to enable Action Chunk-ing with Transformers (ACT) to process and utilize tactile feedback natively. While the original ACT framework excels at vision-based trajectory tracking, it lacks the mechanisms required to incorporate the high-dimensional tactile signals essential for contact-rich tasks. ReTac-ACT bridges this gap by introducing a state-gated dynamic fusion module that adaptively weights visual and tactile modalities based on the proprioceptive state of the robot. This design enables the policy to transition seamlessly from a vision-dominant mode during the free-space approach to a tactile-dominant mode during precision insertion, thereby robustly handling visual occlusion and complex contact dynamics. The evaluation of precision assembly policies has histori-cally been hindered by the use of custom, non-standardized setups where component dimensions, machining tolerances, and clearance levels are rarely disclosed. To ensure strict reproducibility and meaningful performance comparisons, we rigorously evaluate our method on the open-source NIST Assembly Task Board (ATB) M1 benchmark provided by ManipulationNet [11]. In this benchmark, the exact machin-ing tolerances of the pegs and the clearance levels of the task board are explicitly standardized and publicly available. Our main contributions are summarized as follows:  
+
+> •
+
+We propose ReTac-ACT, a state-gated vision-tactile Ac-tion Chunking Transformer that extends the ACT archi-tecture to be natively compatible with tactile inputs. The framework features separate encoders for each modality and a gating network conditioned on proprioception that dynamically fuses visual and tactile feature streams, ensuring robust policy execution across different task phases.  
+
+> •
+
+We introduce a tactile representation learning scheme utilizing an auxiliary reconstruction objective during training. This objective compels the tactile encoder to capture explicit high-frequency contact geometry instead of collapsing into trivial features, thereby sig-nificantly enhancing the sensitivity of the policy to sub-millimeter contact deviations.  
+
+> •
+
+We release a vision-tactile peg-in-hole assembly dataset comprising over 5,000 expert demonstration trajectories, covering 5 geometric shapes and 4 assembly tolerance levels based on the NIST ATB M1 task board, together with the complete implementation codebase for ReTac-ACT. II. R ELATED WORK 
+
+Vision-Tactile Precision Assembly: Tactile perception is crucial for robots to perform precision assembly tasks. In scenarios with visual occlusion or a lack of sufficient visual features, tactile feedback can provide key physical contact signals, thereby ensuring the smooth execution of precision operations. Early explorations [12], [13] mainly relied on RGB cameras and force/torque (F/T) sensors to infer contact states and make decisions. However, the low-dimensional information provided by F/T sensors is insuffi-cient to meet the demands of complex and dexterous manipu-lation. As a result, tactile sensors capable of providing high-dimensional features have been widely adopted in robotic manipulation. In actual industrial production environments, traditional capacitive or pressure-sensitive tactile sensors are highly susceptible to electromagnetic or physical interfer-ence, leading to signal distortion. To address this issue in our study, when the robot arm’s field of view (FOV) near the contact point is occluded—rendering purely vision-based pose estimation unreliable—we utilize optical tactile sensors such as GelSight [6], [14] to detect multi-directional contact deformations. Achieving robust assembly insertion necessitates the full utilization of such high-resolution and rich contact cues. 
+
+Vision-Tactile Learning and Fusion: In recent years, learning-based methods have demonstrated strong perfor-mance in integrating vision, proprioception, and tactile per-ception, particularly in contact-rich manipulation tasks. In recent studies, Calandra et al. [15] utilized deep neural networks, and Li et al. [16] used the self-attention mech-anism in Transformers to extract and process visual and tactile information. With the significant advancements of Vision-Language Models (VLMs) in the multimodal domain, methods employing VLMs to fuse visual and tactile features (e.g., TLA [17], [18] and VTLA [19]–[22]) are increasingly prevalent. Most of these approaches adopt early fusion with parallel multimodal inputs. However, since tactile data is often weaker than visual data in terms of scale and infor-mation density, parallel input architectures can easily lead to “modality imbalance.” In this state, the model is easily dominated by visual signals, thereby diminishing the contri-bution of tactile information during fine manipulation. Ex-Fig. 2. Overview of the ReTac-ACT architecture. (a) Multi-Modal Encoders : Visual inputs (3 RGB cameras) and tactile inputs (4 contact images: one sensor per fingertip, two fingers per gripper, bimanual) are processed by separate backbones into feature tokens. (b) Cross-Modal Dynamic Fusion :A proprioception-based gating network dynamically weighs modalities, enhanced by bidirectional cross-attention. (c) Action Generator : A CVAE-based transformer decoder predicts temporal action chunks ˆat:t+k−1, where each action includes 14-DoF bimanual joint targets and 2 gripper commands. 
+
+isting studies have attempted to enhance the representational capacity of tactile features by introducing mechanisms such as masking and reconstruction [23]–[26]. Nevertheless, pre-cision assembly typically encompasses two distinct stages: “approach/grasping” and “insertion/assembly.” During free-space motion or the post-grasping hold stage, tactile signals remain largely static. At this juncture, blindly amplifying the proportion of tactile features is not only counterproductive but also leads to redundant computational overhead during training and inference. To overcome these challenges, this paper not only adopts a tactile reconstruction mechanism to enhance tactile representation but also introduces a state-gated dynamic fusion mechanism. This mechanism enables the policy to adaptively switch between “vision-dominated free-space motion” and “tactile-dominated contact manip-ulation,” which significantly enhances the interpretability and robustness of the policy while improving the overall assembly success rate. 
+
+Robotic Imitation Learning: Imitation Learning (IL) [27] provides an effective paradigm for robots to efficiently acquire complex manipulation skills from expert demon-stration data. Recent research has significantly advanced IL across policy architectures, computing platforms, and data processing paradigms. For instance, Action Chunking with Transformers (ACT) proposed by Zhao et al. [2] constructs a powerful behavioral cloning policy. By predicting chunks of actions, this algorithm exhibits exceptional sequence model-ing capabilities and achieves temporally extended action gen-eration. Building upon this foundation, subsequent research has yielded improved architectures such as Bi-LAT [28] for dual-arm collaboration and methods that integrate Diffusion Policy [29], as well as RTC [30]. However, these methods heavily rely on visual inputs and struggle to reliably execute fine manipulation tasks under complex working conditions, such as severe visual occlusion. To bridge this gap, this paper introduces high-dimensional tactile inputs into the ACT framework and further extends it with a state-gated bidirec-tional vision-tactile fusion mechanism, effectively tackling high-precision assembly challenges in complex, occluded environments. III. M ETHOD 
+
+A. Overview 1) Notation: Let xt denote the robot proprioceptive state at time t, Ivt the visual observations, and Itt the tactile obser-vations. We encode these into visual tokens V ∈ RNv ×D and tactile tokens T ∈ RNt×D , where D is the feature dimension. The policy outputs an action chunk {at, . . . , a t+k−1} of length k. We use ˜V , ˜T for cross-attention-enhanced features, and V ⋆, T ⋆ for the final fused representations. 
+
+2) Architecture Overview: As illustrated in Fig. 2, ReTac-ACT comprises three modules: (1) modality-specific en-coders for visual and tactile inputs, (2) a state-gated cross-modal fusion module conditioned on robot proprioception, and (3) a CVAE-based transformer decoder for action chunk prediction. We adopt the ACT framework [2] for action generation: a Conditional VAE (CVAE) encodes the ground-truth action chunk into a latent variable z during training. A 4-layer Transformer Encoder processes the fused tokens 
+
+[V ⋆; T ⋆] concatenated with the proprioceptive embedding. A 1-layer Transformer Decoder then predicts the action chunk 
+
+{at, . . . , a t+k−1} conditioned on the encoder output and latent z. During inference, z is sampled from the prior mean. 
+
+B. Multi-Modal Encoders 
+
+We separately encode visual and tactile modalities before fusion to allow specialization in each sensory domain. 
+
+1) Visual Encoder: For each RGB camera, we extract multi-scale features via a ResNet-18 backbone (pretrained on ImageNet), producing feature maps F v ∈ RCv ×Hv ×Wv .Fig. 3. Tactile representation learning via auxiliary reconstruction. During training, an image reconstruction objective regularizes the tactile encoder. By employing a decoder to reconstruct the raw tactile inputs from the learned latent tokens, the model is explicitly forced to capture fine-grained contact geometry, preventing feature collapse. 
+
+We spatially flatten and linearly project each map to obtain per-camera visual tokens Vi ∈ RNv ×D . The three camera streams are concatenated to form the full visual token set 
+
+V ∈ R3Nv ×D .
+
+2) Tactile Encoder: Directly employing standard visual backbones for tactile images is suboptimal. Models pre-trained on natural images (e.g., ImageNet) prioritize semantic features and struggle to capture the high-frequency contact deformations essential for insertion due to the significant domain gap. To address this, we employ a dedicated 5-layer CNN encoder with progressively increasing channels 
+
+{32,64,128,256,512 }, kernel size 4, and stride 2. The result-ing feature map is flattened and projected to T ∈ RNt×D
+
+(Nt=196 tokens). As depicted in Fig. 3, this encoder is regu-larized during training via an auxiliary tactile reconstruction objective. By employing a decoder to reconstruct the raw tactile inputs from the learned latent tokens, we explicitly force the network to preserve fine-grained contact geometry and prevent feature collapse, which is vital for high-precision insertion. 
+
+C. Cross-Modal Dynamic Fusion Module 
+
+Precision assembly inherently involves drastic shifts in modality reliability: vision dominates during the free-space approach, whereas tactile feedback becomes critical dur-ing occluded insertion. To seamlessly handle these phase transitions without requiring explicit heuristic switches, we propose a Cross-Modal Dynamic Fusion Module comprising two key stages. First, a bidirectional cross-attention mech-anism enables reciprocal feature enhancement between vi-sual and tactile tokens. Second, a proprioception-conditioned gating mechanism dynamically adjusts the fusion weights, ensuring the policy adaptively relies on the most informative modality. 
+
+Bidirectional Cross-Modal Attention: Before fusion, we enable mutual enhancement between modalities via cross-attention. Given visual tokens V and tactile tokens T , we compute: 
+
+˜T = LN  T + MHA T→V(Q=T, K =V, V =V ),
+
+˜V = LN  V + MHA V→T(Q=V, K =T, V =T ), (1) where ˜T represents visual-context-enriched tactile features, and ˜V represents tactile-refined visual features. 
+
+Gating Mechanism: We compute a scalar modality gate 
+
+αt ∈ (0 , 1) from the proprioceptive state xt via a learned 3-layer MLP g(·):
+
+αt = σ g(xt)/τ g
+
+, (2) where σ is the sigmoid function and τg > 0 is a learnable temperature parameter (initialized to 1.0, clamped at mini-mum 0.1) that controls the sharpness of modality switching. When αt ≈ 0, the policy favors vision (free-space approach); when αt ≈ 1, it emphasizes tactile cues (contact phase). 
+
+Reciprocal Fusion: We fuse the cross-attention-enhanced features in a reciprocal manner: 
+
+V ⋆ = (1 − αt) V + αt ˜V , T ⋆ = αt T + (1 − αt) ˜T . (3) This design creates an information bottleneck: increasing reliance on one modality proportionally down-weights the other, preventing the policy from trivially concatenating all signals and forcing meaningful modality-switching behavior. The final fused representation [V ⋆; T ⋆] is then passed to the transformer encoder. 
+
+D. Loss Function 
+
+Beyond action prediction loss Lℓ1 and VAE KL-divergence LKL , we introduce auxiliary objectives to enforce structured representation learning. 
+
+Tactile Reconstruction: Standard visual backbones tend to treat tactile images as low-level textures, losing the contact geometry critical for precision assembly. To enforce learning of manipulation-relevant tactile representations, we employ an auxiliary reconstruction objective during training. A transposed-convolution decoder (mirroring the encoder architecture) reconstructs the input tactile image ˆItt from the encoded tactile tokens. The reconstruction loss is: 
+
+Lrec = ∥ ˆItt − Itt ∥22. (4) This self-supervised signal forces the encoder to preserve fine-grained contact deformation patterns essential for sub-millimeter insertion corrections, preventing feature collapse particularly during free-space motion where tactile signals remain static. 
+
+Contrastive Alignment: To ensure semantic alignment between visual and tactile feature spaces despite their do-main gap, we employ an InfoNCE-style contrastive loss. We project the globally pooled visual and tactile tokens into a shared latent space and maximize similarity between synchronized vision-tactile pairs while minimizing it for mismatched pairs: 
+
+Lcon = − log exp(sim( evi , e ti)/τ con )
+
+PBj=1 exp(sim( evi , e tj )/τ con ) , (5) Fig. 4. Hardware setup for the bimanual vision-tactile precision-assembly system. 
+
+where evi , e ti denote the projected visual and tactile embed-dings for the i-th sample, B is the batch size, and τcon is a temperature hyperparameter. 
+
+Joint Optimization: The total objective combines all losses: 
+
+L = Lℓ1 + λKL LKL + λrec Lrec + λcon Lcon . (6) We set weights λKL =10 , λrec =0 .5, λcon =0 .1. The model is trained end-to-end using AdamW with learning rate 10 −5 for the backbone and 10 −4 for the tactile encoder, weight decay 
+
+10 −4, action chunk size k=100 , model dimension D=512 ,8 attention heads, and latent dimension 32. IV. E XPERIMENTS 
+
+A. Experimental Setup 1) Task and Hardware: We evaluate on the NIST ATB M1 precision assembly benchmark, which requires inserting cylindrical pegs into corresponding holes at three clear-ance levels: Level 1 (3 mm), Level 2 (1 mm), and Level 3 (0.1 mm). All pegs are 304 stainless steel with CNC tolerance below 10 μm. The hardware setup is shown in Fig. 4. It comprises a bimanual robot with two Realman RM75-6F-V arms (7-DOF each, 14-DOF total), each equipped with a parallel gripper. Proprioception ( xt) includes joint positions, Cartesian poses, and gripper states. Visual observations ( Ivt )are captured by multi-view RGB cameras: two wrist-mounted plus one third-person view at 480 ×640 . Tactile observations (Itt ) are provided by four Xense optical tactile sensors (two per gripper), each capturing high-resolution contact images at 480 ×640 .
+
+2) Data Collection: To build a comprehensive resource for the community, we collected a large-scale vision-tactile dataset comprising over 5,000 expert demonstration trajec-tories across 5 geometric shapes and 4 clearance levels. The data was collected via teleoperation using VR controllers. Each trajectory records synchronized multimodal data at a sampling frequency of 30 Hz, including three-view visual images (stored as videos), bimanual joint angles, end-effector Cartesian poses (position and quaternion orientation relative to the robot base frame), high-resolution tactile images from the Xense optical tactile sensors, and the corresponding action commands. All data modalities are strictly time-synchronized and standardized into the LeRobot dataset V3.0 format. To ensure dataset diversity and robustness, we randomized the initial poses of the robot and the peg for each episode, and data was collected by multiple human operators to prevent the policy from overfitting to a single operator’s behavioral habits. While we provide this extensive dataset for future large-scale pre-training research, our proposed ReTac-ACT is highly sample-efficient. For the experiments reported in this paper, training a successful policy for a specific clear-ance level required only 50 to 100 demonstration trajectories. 
+
+3) Evaluation Protocol: We report three metrics capturing the full manipulation pipeline: (1) Missed : percentage of trials where grasp fails entirely; (2) Grasp : percentage of trials with successful grasp; (3) Peg-in-hole : final insertion success rate. 
+
+4) Baselines: We compare against two widely adopted BC methods and one state-of-the-art open-source generalist VLA policy: (i) ACT [2]: predicts action chunks via a CVAE-based transformer with temporal ensembling, target-ing fine-grained manipulation. As the direct architectural predecessor of ReTac-ACT, this comparison isolates the contribution of our vision-tactile extensions. (ii) Diffusion Policy (DP) [1]: models visuomotor policy as a conditional denoising diffusion process, generating actions by iteratively denoising Gaussian noise conditioned on visual observations. It naturally handles multimodal action distributions and is widely adopted for its training stability. (iii) pi05 [3]: the flow-matching variant of π0, a generalist VLA model built on a pre-trained VLM backbone and trained on large-scale multi-robot data. This baseline tests whether broad generalist pre-training can substitute for dedicated tactile sensing on our specialized high-precision task.                   
+
+> TABLE I QUANTITATIVE RESULTS FOR PEG -IN -HOLE ASSEMBLY AT LEVEL 1(3 MM CLEARANCE ). T HE BEST RESULTS ARE HIGHLIGHTED IN BOLD .Method Missed Grasp Peg-in-hole ACT [2] 40% 60% 40% DP [1] 70% 30% 20% pi05 [3] 55% 45% 20%
+> ReTac-ACT (ours) 0% 100% 90%
+
+B. Comparison with Baseline Methods 
+
+Tests are conducted with cylindrical pegs placed at two different initial positions, 10 trials per position (20 trials total). We compare ReTac-ACT against behavior cloning (ACT, Diffusion Policy) and vision-language-action (pi05) baselines. ReTac-ACT achieves 90% peg-in-hole success, outperforming all baselines by a significant margin (Table I). 
+
+1) Grasping Phase: Baseline methods exhibit high grasp failure rates: ACT misses 40%, DP misses 70%, and pi05 misses 55%. In contrast, ReTac-ACT achieves 0% miss rate and 100% grasp success. This improvement stems from our bidirectional cross-attention mechanism, which enables tactile features to enhance visual localization of the target object even before contact, while visual context reciprocally guides tactile-informed grasp refinement. 
+
+2) Insertion Phase: ReTac-ACT achieves 90% insertion success versus 40% for ACT, a 2.25-fold improvement. DP and pi05 achieve only 20%. The state-gated dynamic fusion mechanism plays a critical role here: upon contact, the proprioception-conditioned gate shifts reliance from vision to tactile, enabling sub-millimeter corrections that vision alone cannot provide due to occlusion. 
+
+3) VLA Generalist Limitation: Despite being a state-of-the-art pre-trained model, pi05 achieves only 20% success even with extended training. This confirms that generalist VLA models, lacking tactile pre-training, struggle on high-precision contact-rich tasks, highlighting the necessity of specialized vision-tactile fusion.                    
+
+> TABLE II ABLATION STUDY ON KEY COMPONENTS OF RETAC -ACT. T HE BEST RESULTS ARE HIGHLIGHTED IN BOLD .Variant Missed Grasp Peg-in-hole w/o Reciprocal Fusion 0% 100% 5% w/o Cross-Attention 0% 100% 5% w/o TacRecon 5% 95% 15% w/o StateGate 0% 100% 35%
+> ReTac-ACT (full) 0% 100% 90%
+
+C. Ablation Study 
+
+To validate the necessity of each architectural component, we conduct a systematic ablation study following the same evaluation protocol as Table I. Our full ReTac-ACT model achieves superior performance across all phases: 0% miss rate, 100% grasp success, and 90% insertion success. To isolate individual contributions, we evaluate four ablated variants by selectively removing one module at a time: (1) without Reciprocal Fusion, (2) without bidirectional Cross-Attention, (3) without TacRecon, and (4) without StateGate. Each ablation maintains the remaining architecture intact to ensure fair comparison. Table II demonstrates that every component is indispens-able: removing any single module results in substantial per-formance degradation. This systematic degradation pattern confirms that our architecture achieves high performance not through redundant design but through synergistic integration of complementary mechanisms. We now analyze the specific role of each component: 
+
+a) Cross-Attention and Reciprocal Fusion Are Critical for Contact-Rich Manipulation: Removing either bidirec-tional cross-attention or reciprocal fusion drastically reduces insertion success from 90% to 5%. This severe degradation demonstrates that effective vision-tactile integration requires explicit bidirectional information exchange beyond simple feature concatenation. The cross-attention mechanism en-ables tactile features to enhance visual localization while visual context guides tactile interpretation, crucial when occlusion dominates during contact-rich insertion. 
+
+b) Tactile Reconstruction Provides Manipulation-Relevant Representations: Removing the tactile reconstruction module (TacRecon) degrades performance across all phases: miss rate increases to 5%, grasp success drops to 95%, and insertion success falls to 15%. The reconstruction objective (Lrec ) enforces that the tactile encoder captures contact geometry and deformation patterns rather than generic visual textures, providing features essential for sub-millimeter corrections. The 15% insertion success—better than the 5% without cross-attention— confirms that even degraded tactile representations provide some benefit when properly fused, but fall far short of reconstruction-learned features. 
+
+c) State-Gated Fusion Enables Adaptive Modality Reweighting: The state-gated dynamic fusion mechanism (StateGate) improves insertion success from 35% to 90% while maintaining 100% grasp performance. As formulated in Eq. (3), the proprioception-conditioned gating network computes αt to control fusion weights between visual and tactile tokens, enabling the policy to adaptively emphasize the more informative modality at each task phase. The 35% performance with static fusion (where αt is fixed through-out execution) demonstrates that multimodal information is available but underutilized: the policy cannot sufficiently shift toward tactile dominance during the insertion phase when visual feedback degrades due to occlusion. In con-trast, the learned gating mechanism automatically increases tactile weighting upon contact, allowing the policy to exploit contact geometry for sub-millimeter corrections that vision alone cannot provide. Notably, this 55 percentage point gain depends on the synergy with the previous two mechanisms: TacRecon provides discriminative tactile representations that convey manipulation-relevant geometry, and cross-attention enables bidirectional information exchange between modal-ities. Without high-quality tactile features or effective cross-modal interaction, adaptive gating has insufficient signal to leverage. 3mm 1mm 0.1mm 
+
+0
+
+50 
+
+100 90 85 80   
+
+> 40 35
+> 15
+> 20
+> 00
+
+Clearance Level Insertion Success (%)       
+
+> ReTac-ACT ACT Diffusion Policy
+> Fig. 5. Robustness to tighter clearances. As clearance tightens from 3 mm to 0.1 mm, ReTac-ACT degrades only 11% (90% →80%) while ACT degrades 62.5% (40% →15%) and Diffusion Policy (DP) fails (20% →0%). Dashed lines highlight the degradation trends. Fig. 6. Visual Attention Heatmap Comparison and Parameter Evolution. (a) Attention heatmaps of ACT, showing attention scattered on background regions across three task stages. (b) Attention heatmaps of DP. (c) Attention heatmaps of our ReTac-ACT. (d) Evolution of αtduring the task.
+
+D. Robustness to Tighter Tolerances 
+
+Industrial assembly often requires sub-millimeter preci-sion. To evaluate generalization to tighter tolerances, we compare ReTac-ACT against baselines across three clearance levels (Fig. 5). 
+
+1) Absolute Performance: At the tightest clearance (0.1 mm), ReTac-ACT achieves 80% insertion success while ACT drops to only 15% and DP fails completely (0%). This 0.1 mm clearance approaches the tolerance range of ISO IT6–IT7 grades, suggesting potential applicability to precision assembly scenarios. 
+
+2) Degradation Rate: As clearance tightens from 3 mm to 0.1 mm, DP degrades from 20% to 0%, ACT degrades from 40% to 15% (a 62.5% relative drop), and ReTac-ACT degrades from 90% to 80% (only an 11% relative drop). This stark contrast in performance degradation highlights the indispensability of tactile sensing in precision assembly. As clearance tightens, pure-vision policies face exponentially growing challenges during the final insertion phase, which demands exceedingly stringent positional accuracy. Given the severe visual occlusion and the microscopic nature of the clearance at this critical stage, relying solely on visual information to guide and confirm the final assembly becomes practically impossible. Conversely, tactile sensing provides real-time contact feedback, enabling the policy to execute guided sub-millimeter corrections based on physical con-tact information rather than struggling with occluded and resolution-limited visual cues. 
+
+3) Grasp Reliability: ReTac-ACT maintains 0% miss rate across all clearances, whereas ACT and DP consistently miss 40% and 70% of grasps respectively, regardless of clearance. This provides further evidence that our vision-tactile fusion benefits both grasping and insertion phases. 
+
+E. Qualitative Analysis: Attention Visualization 
+
+To understand how ReTac-ACT achieves superior perfor-mance, we visualize attention heatmaps during policy rollout (Fig. 6). 
+
+1) State-Dependent Focus: While ACT exhibits scat-tered attention across background regions, ReTac-ACT con-sistently focuses on task-relevant objects (peg and hole). This focused attention arises from our bidirectional cross-attention: tactile features query visual tokens to identify contact-relevant regions, while visual features reciprocally inform tactile interpretation. 
+
+2) Instant Modality Switching: A striking phenomenon occurs at the moment of contact ( t=Tcontact ): the attention heatmap instantly concentrates and locks onto the contacted assembly components. This phenomenon directly reflects the gains brought by integrating the tactile modality via vision-tactile cross-attention. From free-space motion to the grasp-ing position, the system receives no tactile contact informa-tion. However, the moment the object is contacted and tactile signals emerge, the tactile-to-visual cross-attention guides visual focus to spatially relevant regions, effectively sup-pressing background noise precisely when contact informa-tion becomes the critical information source. Simultaneously, observing the changes in the fusion weight parameter during the task, it is evident that as tactile information becomes available and the task state transitions from vision-guided to tactile-dominant, the proportion of the tactile fusion weight increases. V. C ONCLUSION 
+
+We presented ReTac-ACT, a vision-tactile imitation learn-ing policy that addresses a fundamental challenge in pre-cision assembly: the failure of vision-guided policies in contact-rich “last-millimeter” regions, where sub-millimeter corrections are critical but visual feedback is compromised by occlusion. Our approach achieves superior precision as-sembly performance by integrating visual and tactile modali-ties through three synergistic innovations: bidirectional cross-attention for vision and tactile features enhancement, state-gated dynamic fusion for adaptive modality weighting, and tactile reconstruction for learning tactile representations. Experiments on the real-world peg-in-hole assembly tasks demonstrate that ReTac-ACT achieves 90% peg-in-hole suc-cess (outperforming ACT by a factor of 2.25, and DP/pi05 by a factor of 4.5) and maintains 80% success at 0.1 mm clearance where ACT drops to 15%. Comprehensive ablation studies validate that each architectural component is indis-pensable. Limitations and Future Work: Our current evaluation fo-cuses on cylindrical pegs; extending to all five NIST ATB shapes remains future work. Specifically, we plan to evaluate on non-axially-symmetric shapes (e.g., square, hexagonal pegs) where tactile geometry plays an even more critical role in orientation alignment. We also plan to investigate real-to-sim and sim-to-real transfer of tactile representations and integration with large-scale VLA pre-training to combine generalist knowledge with specialized tactile reasoning. ACKNOWLEDGMENTS 
+
+This work was supported by the Brain Science and Brain-like Intelligence Technology—National Science and Technology Major Project (Grant No. 2025ZD0215600), in part by the National Natural Science Foundation of China under Grant No. 62573063 and No. 62536001, and the Open Foundation of the State Key Laboratory of Precision Space-time Information Sensing Technology (No. STSL2025-B-07-01(C)). REFERENCES [1] C. Chi et al. , “Diffusion policy: Visuomotor policy learning via action diffusion,” arXiv preprint arXiv:2303.04137 , 2024. [2] T. Z. Zhao, V. Kumar, S. Levine, and C. Finn, “Learning fine-grained bimanual manipulation with low-cost hardware,” arXiv preprint arXiv:2304.13705 , 2023. [3] P. Intelligence et al. , “ π0.5: A vision-language-action model with open-world generalization,” arXiv preprint arXiv:2504.16054 , 2025. [4] K. Black et al. , “ π0: A vision-language-action flow model for general robot control,” arXiv preprint arXiv:2410.24164 , 2026. [5] M. Shukor et al. , “Smolvla: A vision-language-action model for affordable and efficient robotics,” arXiv preprint arXiv:2506.01844 ,2025. [6] W. Yuan, S. Dong, and E. Adelson, “Gelsight: High-resolution robot tactile sensors for estimating geometry and force,” Sensors , vol. 17, no. 12, p. 2762, 2017. [7] R. S. Johansson and J. R. Flanagan, “Coding and use of tactile signals from the fingertips in object manipulation tasks,” Nature Reviews Neuroscience , vol. 10, no. 5, pp. 345–359, 2009. [8] R. D. Howe, “Tactile sensing and control of robotic manipulation,” 
+
+Advanced Robotics , vol. 8, no. 3, pp. 245–261, 1993. [9] A. Bicchi, M. Bergamasco, P. Dario, and A. Fiorillo, “Integrated tactile sensing for gripper fingers,” in Proceedings of the International Conference on Robot Vision and Sensory Control , 1988. [10] J. M. Romano, K. Hsiao, G. Niemeyer, S. Chitta, and K. J. Kuchen-becker, “Human-inspired robotic grasp control with tactile sensing,” 
+
+IEEE Transactions on Robotics , vol. 27, no. 6, pp. 1067–1079, 2011. [11] K. Hang, K. Kimble et al. , “ManipulationNet: Benchmarking robotic manipulation in the real world at scale with any robot at any time and anywhere,” [Online]. Available: https://manipulation-net.org, Mar. 2026, accessed: Mar. 2026. [12] S. Levine, N. Wagener, and P. Abbeel, “Learning contact-rich manip-ulation skills with guided policy search,” in 2015 IEEE International Conference on Robotics and Automation (ICRA) . IEEE, 2015, pp. 156–163. [13] M. A. Lee et al. , “Making sense of vision and touch: Self-supervised learning of multimodal representations for contact-rich tasks,” arXiv preprint arXiv:1810.10191 , 2019. [14] Z. Si and W. Yuan, “Taxim: An example-based simulation model for gelsight tactile sensors,” arXiv preprint arXiv:2109.04027 , 2021. [15] R. Calandra et al. , “The feeling of success: Does touch sensing help predict grasp outcomes?” arXiv preprint arXiv:1710.05512 , 2025. [16] H. Li et al. , “See, hear, and feel: Smart sensory fusion for robotic manipulation,” arXiv preprint arXiv:2212.03858 , 2022. [17] S. Yang et al. , “Bitla: A bimanual tactile-language-action model for contact-rich robotic manipulation,” in Proceedings of the 1st International Workshop on Multi-Sensorial Media and Applications .ACM, 2025, pp. 12–17. [18] P. Hao et al. , “Tla: Tactile-language-action model for contact-rich manipulation,” Robot Learning , pp. 1–1, 2026. [19] S. Yu, L. Kelvin, A. Xiao, J. Duan, and H. Soh, “Octopi: Object property reasoning with large tactile-language models,” in Robotics: Science and Systems XX . Robotics: Science and Systems Foundation, 2024. [20] J. Huang, S. Wang, F. Lin, Y. Hu, C. Wen, and Y. Gao, “Tactile-vla: Unlocking vision-language-action model’s physical knowledge for tactile generalization,” arXiv preprint arXiv:2507.09160 , 2025. [21] J. Bi, K. Y. Ma, C. Hao, M. Z. Shou, and H. Soh, “Vla-touch: Enhanc-ing vision-language-action models with dual-level tactile feedback,” 
+
+arXiv preprint arXiv:2507.17294 , 2025. [22] C. Zhang, P. Hao, X. Cao, X. Hao, S. Cui, and S. Wang, “Vtla: Vision-tactile-language-action model with preference learning for insertion manipulation,” arXiv preprint arXiv:2505.09577 , 2025. [23] W. Song et al. , “Reconvla: Reconstructive vision-language-action model as effective robot perceiver,” arXiv preprint arXiv:2508.10333 ,2025. [24] X. Zhu, B. Huang, and Y. Li, “Touch in the wild: Learning fine-grained manipulation with a portable visuo-tactile gripper,” arXiv preprint arXiv:2507.15062 , 2025. [25] A. George, S. Gano, P. Katragadda, and A. B. Farimani, “Vital pretraining: Visuo-tactile pretraining for tactile and non-tactile ma-nipulation policies,” arXiv preprint arXiv:2403.11898 , 2024. [26] F. Liu, C. Li, Y. Qin, J. Xu, P. Abbeel, and R. Chen, “Vitamin: Learn-ing contact-rich tasks through robot-free visuo-tactile manipulation interface,” arXiv preprint arXiv:2504.06156 , 2025. [27] S. Levine, C. Finn, T. Darrell, and P. Abbeel, “End-to-end training of deep visuomotor policies,” arXiv preprint arXiv:1504.00702 , 2016. [28] T. Kobayashi, M. Kobayashi, T. Buamanee, and Y. Uranishi, “Bi-lat: Bilateral control-based imitation learning via natural language and action chunking with transformers,” arXiv preprint arXiv:2504.01301 ,2025. [29] Q. Li et al. , “Cogact: A foundational vision-language-action model for synergizing cognition and action in robotic manipulation,” arXiv preprint arXiv:2411.19650 , 2024. [30] K. Black, M. Y. Galliker, and S. Levine, “Real-time execution of action chunking flow policies,” arXiv preprint arXiv:2506.07339 , 2025.

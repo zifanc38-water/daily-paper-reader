@@ -1,0 +1,644 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-03-24T01:58:47.730781+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 8,
+    "deep_cap": 6,
+    "deep_selected": 6,
+    "quick_candidates": 25,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2602.19625v1",
+      "title": "Laplace Transforms of Stopping Times for Subordinator with Applications to Inventory Control",
+      "abstract": "Intermittent demand fluctuations pose significant challenges in disaster logistics and medical supply systems. In this study, we formulate cumulative demand as a generalized Lévy process composed of a drift term, Poisson jumps, and compound Poisson jumps, and analyze a continuous-time inventory model. The proposed framework provides a unified formulation that encompasses both drifted Poisson processes and drifted compound Poisson processes.   From a mathematical perspective, we treat the reorder time as a first-passage problem of a subordinator and derive its Laplace transform via the Laplace exponent. In particular, for the drifted Poisson case, we obtain an explicit representation of the inverse Laplace exponent using the Lambert W function, which yields an analytic expression for the Laplace transform of the first-passage time. Furthermore, when the jump sizes follow exponential and Gamma distributions, we derive explicit formulas for the mean and variance of the reorder times, thereby clarifying the moment structure of first-passage times for generalized Lévy demand processes.   From an operations research perspective, we explicitly characterize the expected total cost over a finite time horizon based on the distribution of cumulative demand. This study presents an analytical framework that integrates first-passage theory of Lévy processes with continuous-time inventory control.",
+      "authors": [
+        "Ryoya Koide"
+      ],
+      "primary_category": "math.PR",
+      "categories": [
+        "math.PR",
+        "math.OC"
+      ],
+      "published": "2026-02-23T09:14:04+00:00",
+      "link": "https://arxiv.org/pdf/2602.19625v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "inventory control under intermittent demand fluctuations",
+      "llm_evidence_cn": "间歇性需求波动下的库存控制",
+      "llm_evidence": "间歇性需求波动下的库存控制",
+      "canonical_evidence": "间歇性需求波动下的库存控制",
+      "llm_tldr_en": "Analyzes continuous-time inventory models using Lévy processes to handle intermittent demand fluctuations.",
+      "llm_tldr_cn": "利用Lévy过程分析连续时间库存模型，以应对间歇性需求波动。",
+      "llm_tldr": "利用Lévy过程分析连续时间库存模型，以应对间歇性需求波动。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory control in assemble to order systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.19625v2",
+      "title": "Laplace Transforms of Stopping Times for Subordinator with Applications to Inventory Control",
+      "abstract": "Intermittent demand fluctuations pose significant challenges in disaster logistics and medical supply systems. In this study, we formulate cumulative demand as a generalized Lévy process composed of a drift term, Poisson jumps, and compound Poisson jumps, and analyze a continuous-time inventory model. The proposed framework provides a unified formulation that encompasses both drifted Poisson processes and drifted compound Poisson processes.   From a mathematical perspective, we treat the reorder time as a first-passage problem of a subordinator and derive its Laplace transform via the Laplace exponent. In particular, for the drifted Poisson case, we obtain an explicit representation of the inverse Laplace exponent using the Lambert W function, which yields an analytic expression for the Laplace transform of the first-passage time. Furthermore, when the jump sizes follow exponential and Gamma distributions, we derive explicit formulas for the mean and variance of the reorder times, thereby clarifying the moment structure of first-passage times for generalized Lévy demand processes.   From an operations research perspective, we explicitly characterize the expected total cost over a finite time horizon based on the distribution of cumulative demand. This study presents an analytical framework that integrates first-passage theory of Lévy processes with continuous-time inventory control.",
+      "authors": [
+        "Ryoya Koide"
+      ],
+      "primary_category": "math.PR",
+      "categories": [
+        "math.PR",
+        "math.OC"
+      ],
+      "published": "2026-02-23T09:14:04+00:00",
+      "link": "https://arxiv.org/pdf/2602.19625v2",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Inventory control under intermittent demand fluctuations using Levy processes",
+      "llm_evidence_cn": "利用Lévy过程处理间歇性需求波动下的库存控制",
+      "llm_evidence": "利用Lévy过程处理间歇性需求波动下的库存控制",
+      "canonical_evidence": "利用Lévy过程处理间歇性需求波动下的库存控制",
+      "llm_tldr_en": "Develops a mathematical framework for inventory control under complex demand uncertainty.",
+      "llm_tldr_cn": "开发了一个在复杂需求不确定性下进行库存控制的数学框架。",
+      "llm_tldr": "开发了一个在复杂需求不确定性下进行库存控制的数学框架。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory control in assemble to order systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.24180v1",
+      "title": "Learning Flexible Job Shop Scheduling under Limited Buffers and Material Kitting Constraints",
+      "abstract": "The Flexible Job Shop Scheduling Problem (FJSP) originates from real production lines, while some practical constraints are often ignored or idealized in current FJSP studies, among which the limited buffer problem has a particular impact on production efficiency. To this end, we study an extended problem that is closer to practical scenarios--the Flexible Job Shop Scheduling Problem with Limited Buffers and Material Kitting. In recent years, deep reinforcement learning (DRL) has demonstrated considerable potential in scheduling tasks. However, its capacity for state modeling remains limited when handling complex dependencies and long-term constraints. To address this, we leverage a heterogeneous graph network within the DRL framework to model the global state. By constructing efficient message passing among machines, operations, and buffers, the network focuses on avoiding decisions that may cause frequent pallet changes during long-sequence scheduling, thereby helping improve buffer utilization and overall decision quality. Experimental results on both synthetic and real production line datasets show that the proposed method outperforms traditional heuristics and advanced DRL methods in terms of makespan and pallet changes, and also achieves a good balance between solution quality and computational cost. Furthermore, a supplementary video is provided to showcase a simulation system that effectively visualizes the progression of the production line.",
+      "authors": [
+        "Shishun Zhang",
+        "Juzhan Xu",
+        "Yidan Fan",
+        "Chenyang Zhu",
+        "Ruizhen Hu",
+        "Yongjun Wang",
+        "Kai Xu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-02-27T17:03:34+00:00",
+      "link": "https://arxiv.org/pdf/2602.24180v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Flexible Job Shop Scheduling with material kitting constraints",
+      "llm_evidence_cn": "带有物料配套约束的柔性作业车间调度",
+      "llm_evidence": "带有物料配套约束的柔性作业车间调度",
+      "canonical_evidence": "带有物料配套约束的柔性作业车间调度",
+      "llm_tldr_en": "Applies DRL to solve flexible job shop scheduling with practical material kitting and buffer constraints.",
+      "llm_tldr_cn": "应用深度强化学习解决具有实际物料配套和缓冲区约束的柔性车间调度问题。",
+      "llm_tldr": "应用深度强化学习解决具有实际物料配套和缓冲区约束的柔性车间调度问题。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "optimization models for assemble to order production",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.04065v1",
+      "title": "Online Order Fulfillment with Replenishment",
+      "abstract": "In modern e-commerce and service operations, firms must jointly manage inventory replenishment and real-time order fulfillment to maximize profit under demand uncertainty. While each component has been studied extensively in isolation, their interaction remains underexplored. This paper investigates a fundamental operational question: which lever plays a more decisive role in overall system performance, replenishment or fulfillment?   We model the system as a one-location online order fulfillment problem with lost sales and stochastic customer arrivals, each offering heterogeneous rewards. Replenishment follows either a base-stock or constant-order policy, while real-time fulfillment decisions are made using online algorithms. Our core performance metric is the expected average profit per replenishment cycle, evaluated across all combinations of these policies and algorithms. Our main theoretical result shows that when the replenishment cycle is long, the cumulative regret of online fulfillment remains of the same order as in a corresponding single-cycle problem, even under repeated replenishment, revealing a form of regret stability. This phenomenon also extends to a multi-location setting. We further develop a regret-based framework that quantitatively compares the value of improving replenishment versus improving fulfillment, and we characterize regimes in which optimizing replenishment yields a larger revenue impact than refining the online fulfillment algorithm (and vice versa). Motivated by examples where myopic algorithms underperform, we introduce a novel look-ahead online algorithm that anticipates future replenishment and demand. Numerical experiments verify that this algorithm outperforms myopic baselines. Overall, our results provide both theoretical and managerial insights into situations where inventory replenishment policies are more influential and vice versa.",
+      "authors": [
+        "Zi Ling",
+        "Jiashuo Jiang",
+        "Linwei Xin"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC"
+      ],
+      "published": "2026-03-04T13:41:31+00:00",
+      "link": "https://arxiv.org/pdf/2603.04065v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "joint inventory replenishment and order fulfillment",
+      "llm_evidence_cn": "库存补货与订单履约的协同管理",
+      "llm_evidence": "库存补货与订单履约的协同管理",
+      "canonical_evidence": "库存补货与订单履约的协同管理",
+      "llm_tldr_en": "Analyzes the interaction between inventory replenishment and real-time order fulfillment under demand uncertainty.",
+      "llm_tldr_cn": "分析了需求不确定性下库存补货与实时订单履约之间的相互作用。",
+      "llm_tldr": "分析了需求不确定性下库存补货与实时订单履约之间的相互作用。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory control in assemble to order systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.11461v1",
+      "title": "CoViLLM: An Adaptive Human-Robot Collaborative Assembly Framework Using Large Language Models for Manufacturing",
+      "abstract": "With increasing demand for mass customization, traditional manufacturing robots that rely on rule-based operations lack the flexibility to accommodate customized or new product variants. Human-Robot Collaboration (HRC) has demonstrated potential to improve system adaptability by leveraging human versatility and decision-making capabilities. However, existing HRC frame- works typically depend on predefined perception-manipulation pipelines, limiting their ability to autonomously generate task plans for new product assembly. In this work, we propose CoViLLM, an adaptive human-robot collaborative assembly frame- work that supports the assembly of customized and previously unseen products. CoViLLM combines depth-camera-based localization for object position estimation, human operator classification for identifying new components, and an Large Language Model (LLM) for assembly task planning based on natural language instructions. The framework is validated on the NIST Assembly Task Board for known, customized, and new product cases. Experimental results show that the proposed framework enables flexible collaborative assembly by extending HRC beyond predefined product and task settings.",
+      "authors": [
+        "Jiabao Zhao",
+        "Jonghan Lim",
+        "Hongliang Li",
+        "Ilya Kovalenko"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-03-12T02:37:48+00:00",
+      "link": "https://arxiv.org/pdf/2603.11461v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Adaptive assembly framework for customized products in manufacturing",
+      "llm_evidence_cn": "制造业定制产品的自适应装配框架",
+      "llm_evidence": "制造业定制产品的自适应装配框架",
+      "canonical_evidence": "制造业定制产品的自适应装配框架",
+      "llm_tldr_en": "Proposes a LLM-based framework for human-robot collaborative assembly of customized product variants.",
+      "llm_tldr_cn": "提出了一种基于大语言模型的框架，用于定制化产品变体的协作装配。",
+      "llm_tldr": "提出了一种基于大语言模型的框架，用于定制化产品变体的协作装配。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "assemble-to-order manufacturing systems",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.16815v1",
+      "title": "Beyond Accuracy: Evaluating Forecasting Models by Multi-Echelon Inventory Cost",
+      "abstract": "This study develops a digitalized forecasting-inventory optimization pipeline integrating traditional forecasting models, machine learning regressors, and deep sequence models within a unified inventory simulation framework. Using the M5 Walmart dataset, we evaluate seven forecasting approaches and assess their operational impact under single- and two-echelon newsvendor systems. Results indicate that Temporal CNN and LSTM models significantly reduce inventory costs and improve fill rates compared to statistical baselines. Sensitivity and multi-echelon analyses demonstrate robustness and scalability, offering a data-driven decision-support tool for modern supply chains.",
+      "authors": [
+        "Swata Marik",
+        "Swayamjit Saha",
+        "Garga Chatterjee"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-17T17:19:34+00:00",
+      "link": "https://arxiv.org/pdf/2603.16815v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "inventory policies and forecasting in multi-echelon systems",
+      "llm_evidence_cn": "多级系统中的库存策略与预测",
+      "llm_evidence": "多级系统中的库存策略与预测",
+      "canonical_evidence": "多级系统中的库存策略与预测",
+      "llm_tldr_en": "Evaluates forecasting models based on multi-echelon inventory costs to improve supply chain efficiency.",
+      "llm_tldr_cn": "基于多级库存成本评估预测模型，以提高供应链运营效率。",
+      "llm_tldr": "基于多级库存成本评估预测模型，以提高供应链运营效率。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory policies for assemble to order manufacturing",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2603.18720v1",
+      "title": "Resource-Constrained Joint Replenishment via Power-of-$m^{1/k}$ Policies",
+      "abstract": "The continuous-time joint replenishment problem has long served as a foundational inventory management model. Even though its unconstrained setting has seen recent algorithmic advances, the incorporation of resource constraints into this domain precludes the application of newly discovered synchronization techniques. Such constraints arise in a broad spectrum of practical environments where resource consumption is bounded as an aggregate rate over time. However, for nearly four decades, the prevailing approximation guarantee for resource-constrained joint replenishment has remained $\\frac{ 1 }{ \\ln 2 } \\approx 1.4427$, achieved via classical power-of-$2$ policies.   In this paper, we circumvent these structural policy restrictions by devising generalized rounding frameworks, demonstrating that a well-known convex relaxation is much tighter than previously established. In particular, we expand our analytical scope to encompass fractional base expansion factors, randomized shifting, and staggered interleaved grids. Through this multifaceted methodology, we present a sequence of gradually improving performance guarantees. First, by proposing a best-of-two framework that exploits structural asymmetries between deterministic power-of-$m^{1/k}$ policies, we surpass the classical barrier to obtain a $1.3776$-approximation. Second, by injecting a random shift into the logarithmic grid domain and formulating a factor-revealing linear program to optimize a dual-policy approach, we attain a $1.2512$-approximation. Finally, by superimposing a secondary offset grid to subdivide rounding intervals and suppress holding cost inflation, we utilize interleaved policies to arrive at our ultimate approximation ratio of $\\frac{5}{6\\ln 2} \\approx 1.2023$, which is proven to be best-possible for the class of interleaved power-of-$m^{1/k}$ policies.",
+      "authors": [
+        "Danny Segev"
+      ],
+      "primary_category": "cs.DS",
+      "categories": [
+        "cs.DS",
+        "math.OC"
+      ],
+      "published": "2026-03-19T10:16:44+00:00",
+      "link": "https://arxiv.org/pdf/2603.18720v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Inventory policies and joint replenishment",
+      "llm_evidence_cn": "库存策略与联合补货",
+      "llm_evidence": "库存策略与联合补货",
+      "canonical_evidence": "库存策略与联合补货",
+      "llm_tldr_en": "Develops new approximation policies for resource-constrained joint replenishment in inventory management.",
+      "llm_tldr_cn": "为库存管理中受资源限制的联合补货问题开发了新的近似策略。",
+      "llm_tldr": "为库存管理中受资源限制的联合补货问题开发了新的近似策略。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory policies for assemble to order manufacturing",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2602.19439v2",
+      "title": "OptiRepair: Closed-Loop Diagnosis and Repair of Supply Chain Optimization Models with LLM Agents",
+      "abstract": "Supply chain optimization models frequently become infeasible because of modeling errors. Diagnosis and repair require scarce OR expertise: analysts must interpret solver diagnostics, trace root causes across echelons, and fix formulations without sacrificing operational soundness. Whether AI agents can perform this task remains untested. We decompose this task into two phases: a domain-agnostic feasibility phase that iteratively repairs any LP using IIS-guided diagnosis, and a domain-specific validation phase that enforces five rationality checks grounded in inventory theory. We test 22 API models from seven families on 976 multi-echelon supply chain problems and train two 8B-parameter models with self-taught reasoning and solver-verified rewards. The trained models reach 81.7% Rational Recovery Rate (RRR) -- the fraction of problems resolved to both feasibility and operational rationality -- versus 42.2% for the best API model and 21.3% on average. The gap concentrates in Phase 1 repair, where API models average 27.6% recovery rate versus 97.2% for trained models. Two gaps separate current AI from reliable model repair: solver interaction, as API models restore only 27.6% of infeasible formulations; and operational rationale, as roughly one in four feasible repairs violate supply chain theory. Each gap requires a different intervention -- targeted training closes the solver interaction gap, while explicit specification as solver-verifiable checks closes the rationality gap. For organizations adopting AI in operational planning, formalizing what 'rational' means in their context is the higher-return investment.",
+      "authors": [
+        "Ruicheng Ao",
+        "David Simchi-Levi",
+        "Xinshang Wang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG",
+        "math.OC"
+      ],
+      "published": "2026-02-23T02:19:05+00:00",
+      "link": "https://arxiv.org/pdf/2602.19439v2",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "repair of supply chain optimization models and inventory theory",
+      "llm_evidence_cn": "供应链优化模型的修复与库存理论",
+      "llm_evidence": "供应链优化模型的修复与库存理论",
+      "canonical_evidence": "供应链优化模型的修复与库存理论",
+      "llm_tldr_en": "Uses LLM agents to diagnose and repair multi-echelon supply chain optimization models.",
+      "llm_tldr_cn": "利用大模型智能体诊断并修复多级供应链优化模型中的错误。",
+      "llm_tldr": "利用大模型智能体诊断并修复多级供应链优化模型中的错误。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "optimization models for assemble to order production",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2602.21546v1",
+      "title": "Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling",
+      "abstract": "The Flexible Job Shop Problem (FJSP) is a well-studied combinatorial optimization problem with extensive applications for manufacturing and production scheduling. It involves assigning jobs to various machines to optimize criteria, such as minimizing total completion time. Current learning-based methods in this domain often rely on localized feature extraction models, limiting their capacity to capture overarching dependencies spanning operations and machines. This paper introduces an innovative architecture that harnesses Mamba, a state-space model with linear computational complexity, to facilitate comprehensive sequence modeling tailored for FJSP. In contrast to prevalent graph-attention-based frameworks that are computationally intensive for FJSP, we show our model is more efficient. Specifically, the proposed model possesses an encoder and a decoder. The encoder incorporates a dual Mamba block to extract operation and machine features separately. Additionally, we introduce an efficient cross-attention decoder to learn interactive embeddings of operations and machines. Our experimental results demonstrate that our method achieves faster solving speed and surpasses the performance of state-of-the-art learning-based methods for FJSP across various benchmarks.",
+      "authors": [
+        "Zhi Cao",
+        "Cong Zhang",
+        "Yaoxin Wu",
+        "Yaqing Hou",
+        "Hongwei Ge"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-02-25T04:04:25+00:00",
+      "link": "https://arxiv.org/pdf/2602.21546v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Optimization for flexible job shop scheduling in manufacturing",
+      "llm_evidence_cn": "制造业柔性作业车间调度的优化",
+      "llm_evidence": "制造业柔性作业车间调度的优化",
+      "canonical_evidence": "制造业柔性作业车间调度的优化",
+      "llm_tldr_en": "Applies Mamba state-space models to solve complex flexible job shop scheduling problems in manufacturing.",
+      "llm_tldr_cn": "应用Mamba状态空间模型解决制造业中复杂的柔性作业车间调度问题。",
+      "llm_tldr": "应用Mamba状态空间模型解决制造业中复杂的柔性作业车间调度问题。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "optimization models for assemble to order production",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.19621v1",
+      "title": "DeepStock: Reinforcement Learning with Policy Regularizations for Inventory Management",
+      "abstract": "Deep Reinforcement Learning (DRL) provides a general-purpose methodology for training inventory policies that can leverage big data and compute. However, off-the-shelf implementations of DRL have seen mixed success, often plagued by high sensitivity to the hyperparameters used during training. In this paper, we show that by imposing policy regularizations, grounded in classical inventory concepts such as \"Base Stock\", we can significantly accelerate hyperparameter tuning and improve the final performance of several DRL methods. We report details from a 100% deployment of DRL with policy regularizations on Alibaba's e-commerce platform, Tmall. We also include extensive synthetic experiments, which show that policy regularizations reshape the narrative on what is the best DRL method for inventory management.",
+      "authors": [
+        "Yaqi Xie",
+        "Xinru Hao",
+        "Jiaxi Liu",
+        "Will Ma",
+        "Linwei Xin",
+        "Lei Cao",
+        "Yidong Zhang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-20T03:58:18+00:00",
+      "link": "https://arxiv.org/pdf/2603.19621v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "inventory policies grounded in base stock concepts",
+      "llm_evidence_cn": "基于基本库存概念的库存策略",
+      "llm_evidence": "基于基本库存概念的库存策略",
+      "canonical_evidence": "基于基本库存概念的库存策略",
+      "llm_tldr_en": "Improves DRL-based inventory management using classical base-stock policy regularizations.",
+      "llm_tldr_cn": "利用经典的基本库存策略正则化改进了基于深度强化学习的库存管理。",
+      "llm_tldr": "利用经典的基本库存策略正则化改进了基于深度强化学习的库存管理。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory control in assemble to order systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2602.22685v1",
+      "title": "Switch-Hurdle: A MoE Encoder with AR Hurdle Decoder for Intermittent Demand Forecasting",
+      "abstract": "Intermittent demand, a pattern characterized by long sequences of zero sales punctuated by sporadic, non-zero values, poses a persistent challenge in retail and supply chain forecasting. Both traditional methods, such as ARIMA, exponential smoothing, or Croston variants, as well as modern neural architectures such as DeepAR and Transformer-based models often underperform on such data, as they treat demand as a single continuous process or become computationally expensive when scaled across many sparse series. To address these limitations, we introduce Switch-Hurdle: a new framework that integrates a Mixture-of-Experts (MoE) encoder with a Hurdle-based probabilistic decoder. The encoder uses a sparse Top-1 expert routing during the forward pass yet approximately dense in the backward pass via a straight-through estimator (STE). The decoder follows a cross-attention autoregressive design with a shared hurdle head that explicitly separates the forecasting task into two components: a binary classification component estimating the probability of a sale, and a conditional regression component, predicting the quantity given a sale. This structured separation enables the model to capture both occurrence and magnitude processes inherent to intermittent demand. Empirical results on the M5 benchmark and a large proprietary retail dataset show that Switch-Hurdle achieves state-of-the-art prediction performance while maintaining scalability.",
+      "authors": [
+        "Fabian Muşat",
+        "Simona Căbuz"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-02-26T07:03:19+00:00",
+      "link": "https://arxiv.org/pdf/2602.22685v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "intermittent demand forecasting for supply chain",
+      "llm_evidence_cn": "供应链中的间歇性需求预测",
+      "llm_evidence": "供应链中的间歇性需求预测",
+      "canonical_evidence": "供应链中的间歇性需求预测",
+      "llm_tldr_en": "Introduces a framework for forecasting intermittent demand, crucial for managing uncertainty in ATO systems.",
+      "llm_tldr_cn": "提出了一种间歇性需求预测框架，对于管理按订单装配（ATO）系统中的不确定性至关重要。",
+      "llm_tldr": "提出了一种间歇性需求预测框架，对于管理按订单装配（ATO）系统中的不确定性至关重要。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "managing demand uncertainty in ATO systems",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2602.22110v1",
+      "title": "Robust Permutation Flowshops Under Budgeted Uncertainty",
+      "abstract": "We consider the robust permutation flowshop problem under the budgeted uncertainty model, where at most a given number of job processing times may deviate on each machine. We show that solutions for this problem can be determined by solving polynomially many instances of the corresponding nominal problem. As a direct consequence, our result implies that this robust flowshop problem can be solved in polynomial time for two machines, and can be approximated in polynomial time for any fixed number of machines. The reduction that is our main result follows from an analysis similar to Bertsimas and Sim (2003) except that dualization is applied to the terms of a min-max objective rather than to a linear objective function. Our result may be surprising considering that heuristic and exact integer programming based methods have been developed in the literature for solving the two-machine flowshop problem. We conclude by showing a logarithmic factor improvement in the overall running time implied by a naive reduction to nominal problems in the case of two machines and three machines.",
+      "authors": [
+        "Noam Goldberg",
+        "Danny Hermelin",
+        "Dvir Shabtay"
+      ],
+      "primary_category": "cs.DS",
+      "categories": [
+        "cs.DS",
+        "cs.DM",
+        "math.OC"
+      ],
+      "published": "2026-02-25T16:57:43+00:00",
+      "link": "https://arxiv.org/pdf/2602.22110v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "robust permutation flowshop under uncertainty",
+      "llm_evidence_cn": "不确定性下的鲁棒排列流水车间",
+      "llm_evidence": "不确定性下的鲁棒排列流水车间",
+      "canonical_evidence": "不确定性下的鲁棒排列流水车间",
+      "llm_tldr_en": "Analyzes robust permutation flowshop problems, offering optimization methods applicable to manufacturing scheduling.",
+      "llm_tldr_cn": "分析了鲁棒排列流水车间问题，提供了适用于制造调度的优化方法。",
+      "llm_tldr": "分析了鲁棒排列流水车间问题，提供了适用于制造调度的优化方法。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "optimization models for assemble to order production",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.01733v1",
+      "title": "LOTUS: A Warm-Start Framework for Powering Dual Decomposition in Large-Scale Two-Stage Stochastic Programs",
+      "abstract": "Solving large two-stage stochastic mixed-integer programs is computationally challenging. We propose LOTUS, a subset-based warm-start framework that enhances Dual Decomposition under fixed time budgets. By initializing the dual search with informed multipliers, LOTUS accelerates primal convergence and partially alleviates the impact of weak LP relaxations. Through an extensive computational study on production planning instances, we show that, within two hours, LOTUS yields significantly better primal solutions in 45.83% of cases, while being outperformed by Dual Decomposition in only 4.17%.",
+      "authors": [
+        "Emma Cornielje",
+        "Berend Markhorst",
+        "Alessandro Zocca",
+        "Rob van der Mei"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC"
+      ],
+      "published": "2026-03-02T10:59:34+00:00",
+      "link": "https://arxiv.org/pdf/2603.01733v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "stochastic programs for production planning",
+      "llm_evidence_cn": "生产计划的随机规划",
+      "llm_evidence": "生产计划的随机规划",
+      "canonical_evidence": "生产计划的随机规划",
+      "llm_tldr_en": "Proposes a warm-start framework to accelerate solving large-scale stochastic programs in production planning.",
+      "llm_tldr_cn": "提出了一种预热启动框架，以加速解决生产计划中的大规模随机规划问题。",
+      "llm_tldr": "提出了一种预热启动框架，以加速解决生产计划中的大规模随机规划问题。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "optimization models for assemble to order production",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2602.22465v2",
+      "title": "ConstraintBench: Benchmarking LLM Constraint Reasoning on Direct Optimization",
+      "abstract": "Large language models are increasingly applied to operational decision-making where the underlying structure is constrained optimization. Existing benchmarks evaluate whether LLMs can formulate optimization problems as solver code, but leave open a complementary question. Can LLMs directly produce correct solutions to fully specified constrained optimization problems without access to a solver? We introduce ConstraintBench, a benchmark for evaluating LLMs on direct constrained optimization across 10 operations research domains, with all ground-truth solutions verified by the Gurobi solver. Each task presents a natural-language scenario with entities, constraints, and an optimization objective; the model must return a structured solution that a deterministic verifier checks against every constraint and the solver-proven optimum. We evaluate six frontier models on 200 tasks and find that feasibility, not optimality, is the primary bottleneck. The best model achieves only 65.0% feasibility, yet feasible solutions average 89 to 96% of the Gurobi-optimal objective. No model exceeds 30.5% on joint feasibility and optimality within 0.1% of the solver reference. Per-domain analysis shows large variation in difficulty, with average feasibility spanning from 85.0% in the facility location domain to 0.8% in the crew assignment domain. Further, systematic failure modes include duration constraint misunderstanding, entity hallucination, and a feasibility-optimality decoupling in facility location and vehicle routing where models achieve high feasibility but 0% optimality. ConstraintBench and all evaluation infrastructure will be publicly released.",
+      "authors": [
+        "Joseph Tso",
+        "Preston Schmittou",
+        "Quan Huynh",
+        "Jibran Hutchins"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-02-25T22:54:26+00:00",
+      "link": "https://arxiv.org/pdf/2602.22465v2",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Benchmarking LLM constraint reasoning on direct optimization in operations research",
+      "llm_evidence_cn": "运筹学直接优化中LLM约束推理的基准测试",
+      "llm_evidence": "运筹学直接优化中LLM约束推理的基准测试",
+      "canonical_evidence": "运筹学直接优化中LLM约束推理的基准测试",
+      "llm_tldr_en": "Evaluates LLMs on solving constrained optimization problems across various operations research domains.",
+      "llm_tldr_cn": "评估大语言模型在多个运筹学领域解决受约束优化问题的能力。",
+      "llm_tldr": "评估大语言模型在多个运筹学领域解决受约束优化问题的能力。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "optimization models for assemble to order production",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.02396v1",
+      "title": "COOL-MC: Verifying and Explaining RL Policies for Platelet Inventory Management",
+      "abstract": "Platelets expire within five days. Blood banks face uncertain daily demand and must balance ordering decisions between costly wastage from overstocking and life-threatening shortages from understocking. Reinforcement learning (RL) can learn effective ordering policies for this Markov decision process (MDP), but the resulting neural policies remain black boxes, hindering trust and adoption in safety-critical domains. We apply COOL-MC, a tool that combines RL with probabilistic model checking and explainable RL, to verify and explain a trained policy for the MDP on platelet inventory management inspired by Haijema et al. By constructing a policy-induced discrete-time Markov chain (which includes only the reachable states under the trained policy to reduce memory usage), we verify PCTL properties and provide feature-level explanations. Results show that the trained policy achieves a 2.9% stockout probability and a 1.1% inventory-full (potential wastage) probability within a 200-step horizon, primarily attends to the age distribution of inventory rather than other features such as day of week or pending orders. Action reachability analysis reveals that the policy employs a diverse replenishment strategy, with most order quantities reached quickly, while several are never selected. Counterfactual analysis shows that replacing medium-large orders with smaller ones leaves both safety probabilities nearly unchanged, indicating that these orders are placed in well-buffered inventory states. This first formal verification and explanation of an RL platelet inventory management policy demonstrates COOL-MC's value for transparent, auditable decision-making in safety-critical healthcare supply chain domains.",
+      "authors": [
+        "Dennis Gross"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-03-02T21:17:23+00:00",
+      "link": "https://arxiv.org/pdf/2603.02396v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "inventory management under uncertain demand",
+      "llm_evidence_cn": "不确定需求下的库存管理",
+      "llm_evidence": "不确定需求下的库存管理",
+      "canonical_evidence": "不确定需求下的库存管理",
+      "llm_tldr_en": "Applies reinforcement learning and formal verification to optimize and explain inventory policies for perishable goods.",
+      "llm_tldr_cn": "应用强化学习和形式验证来优化和解释易腐品的库存策略。",
+      "llm_tldr": "应用强化学习和形式验证来优化和解释易腐品的库存策略。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "inventory control in assemble to order systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.09565v2",
+      "title": "ReTac-ACT: A State-Gated Vision-Tactile Fusion Transformer for Precision Assembly",
+      "abstract": "Precision assembly requires sub-millimeter corrections in contact-rich \"last-millimeter\" regions where visual feedback fails due to occlusion from the end-effector and workpiece. We present ReTac-ACT (Reconstruction-enhanced Tactile ACT), a vision-tactile imitation learning policy that addresses this challenge through three synergistic mechanisms: (i) bidirectional cross-attention enabling reciprocal visuo-tactile feature enhancement before fusion, (ii) a proprioception-conditioned gating network that dynamically elevates tactile reliance when visual occlusion occurs, and (iii) a tactile reconstruction objective enforcing learning of manipulation-relevant contact information rather than generic visual textures. Evaluated on the standardized NIST Assembly Task Board M1 benchmark, ReTac-ACT achieves 90% peg-in-hole success, substantially outperforming vision-only and generalist baseline methods, and maintains 80% success at industrial-grade 0.1mm clearance. Ablation studies validate that each architectural component is indispensable. The ReTac-ACT codebase and a vision-tactile demonstration dataset covering various clearance levels with both visual and tactile features will be released to support reproducible research.",
+      "authors": [
+        "Minchi Ruan",
+        "LiangQing Zhou",
+        "Hongtong Li",
+        "Zongtao Wang",
+        "ZhaoMing Lu",
+        "Jianwei Zhang",
+        "Bin Fang"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-03-10T12:09:22+00:00",
+      "link": "https://arxiv.org/pdf/2603.09565v2",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "precision assembly using vision-tactile fusion",
+      "llm_evidence_cn": "基于视触觉融合的精密装配",
+      "llm_evidence": "基于视触觉融合的精密装配",
+      "canonical_evidence": "基于视触觉融合的精密装配",
+      "llm_tldr_en": "Develops a vision-tactile fusion transformer for sub-millimeter precision in robotic assembly tasks.",
+      "llm_tldr_cn": "开发了一种视触觉融合Transformer，用于机器人装配任务中的亚毫米级精度控制。",
+      "llm_tldr": "开发了一种视触觉融合Transformer，用于机器人装配任务中的亚毫米级精度控制。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "assemble-to-order manufacturing systems",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.12649v1",
+      "title": "Autonomous Integration and Improvement of Robotic Assembly using Skill Graph Representations",
+      "abstract": "Robotic assembly systems traditionally require substantial manual engineering effort to integrate new tasks, adapt to new environments, and improve performance over time. This paper presents a framework for autonomous integration and continuous improvement of robotic assembly systems based on Skill Graph representations. A Skill Graph organizes robot capabilities as verb-based skills, explicitly linking semantic descriptions (verbs and nouns) with executable policies, pre-conditions, post-conditions, and evaluators. We show how Skill Graphs enable rapid system integration by supporting semantic-level planning over skills, while simultaneously grounding execution through well-defined interfaces to robot controllers and perception modules. After initial deployment, the same Skill Graph structure supports systematic data collection and closed-loop performance improvement, enabling iterative refinement of skills and their composition. We demonstrate how this approach unifies system configuration, execution, evaluation, and learning within a single representation, providing a scalable pathway toward adaptive and reusable robotic assembly systems. The code is at https://github.com/intelligent-control-lab/AIDF.",
+      "authors": [
+        "Peiqi Yu",
+        "Philip Huang",
+        "Chaitanya Chawla",
+        "Guanya Shi",
+        "Jiaoyang Li",
+        "Changliu Liu"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-03-13T04:41:10+00:00",
+      "link": "https://arxiv.org/pdf/2603.12649v1",
+      "tags": [
+        "keyword:ATO",
+        "query:ATO"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Autonomous integration and improvement of robotic assembly systems",
+      "llm_evidence_cn": "机器人装配系统的自主集成与改进",
+      "llm_evidence": "机器人装配系统的自主集成与改进",
+      "canonical_evidence": "机器人装配系统的自主集成与改进",
+      "llm_tldr_en": "A Skill Graph framework for autonomous integration and continuous improvement of robotic assembly tasks.",
+      "llm_tldr_cn": "一种用于机器人装配任务自主集成和持续改进的技能图谱框架。",
+      "llm_tldr": "一种用于机器人装配任务自主集成和持续改进的技能图谱框架。",
+      "llm_tags": [
+        "query:ato"
+      ],
+      "matched_query_tag": "query:ato",
+      "matched_query_text": "assemble-to-order manufacturing systems",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

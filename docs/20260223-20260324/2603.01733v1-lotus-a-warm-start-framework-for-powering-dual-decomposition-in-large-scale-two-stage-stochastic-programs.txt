@@ -1,0 +1,670 @@
+Title: LOTUS: A Warm-Start Framework for Powering Dual Decomposition in Large-Scale Two-Stage Stochastic Programs
+
+URL Source: https://arxiv.org/pdf/2603.01733v1
+
+Published Time: Tue, 03 Mar 2026 03:22:30 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# LOTUS: A Warm-Start Framework for Powering Dual Decomposition in Large-Scale Two-Stage Stochastic Programs 
+
+Emma Cornielje a,b , Berend Markhorst a,b, ∗, Alessandro Zocca b, Rob van der Mei a,b 
+
+> aStochastics Group, CWI, Amsterdam, The Netherlands
+> bDepartment of Mathematics, Vrije Universiteit Amsterdam, Amsterdam, The Netherlands
+
+Abstract 
+
+Solving large two-stage stochastic mixed-integer programs is computationally challenging. We propose LOTUS, a subset-based warm-start framework that enhances Dual Decomposition under fixed time budgets. By initializing the dual search with informed multipliers, LOTUS accelerates primal convergence and partially alleviates the impact of weak LP relaxations. Through an extensive computational study on production planning instances, we show that, within two hours, LOTUS yields significantly better primal solutions in 45.83% of cases, while being outperformed by Dual Decomposition in only 4.17%. 
+
+Keywords: Stochastic programming, Warm start, Dual Decomposition, Scenario reduction 
+
+1. Introduction 
+
+Stochastic Programming (SP) has become a standard framework for decision making under uncertainty in do-mains ranging from energy to supply-chain management [29 ]. However, accurate representation of uncertainty often necessitates large scenario trees, which makes large-scale two-stage Stochastic Mixed-Integer Programs (SMIPs) com-putationally intractable due to the curse of dimensionality and non-convexity [ 28 ]. While Benders’ decomposition ef-fectively handles continuous recourse, SMIPs often require scenario decomposition methods like Dual Decomposition (DD) [19] or Progressive Hedging [7]. Despite their usefulness, these methods struggle with convergence at scale. Recent literature suggests that warm-start procedures, which generate initial solutions from re-duced problem subsets, can mitigate these computational hurdles [22]. In this work, we propose LOTUS (Lagrangian Opti-mization for Two-stage stochastic programming Using Sub-sets). LOTUS integrates a warm-start strategy into the DD framework to enhance the discovery of high-quality primal solutions under tight computational budgets. Specifically, we employ Subgradient Descent [ 4] on a representative subset of scenarios to generate informed dual multipliers, which serve as an effective starting point for the full-scale decomposition. To rigorously benchmark LOTUS and accelerate future research, we introduce a new set of large-scale production planning instances designed to challenge state-of-the-art SMIP solvers.        
+
+> ∗Corresponding author
+> Email addresses: e.j.cornielje@student.vu.nl (Emma Cornielje), berend.markhorst@cwi.nl (Berend Markhorst),
+> a.zocca@vu.nl (Alessandro Zocca), mei@cwi.nl (Rob van der Mei)
+
+The remainder of this paper is structured as follows: Section 2 reviews related work, Section 3 details the LO-TUS framework, and Section 4 presents computational results demonstrating the framework’s attainment of su-perior primal objective values compared to standard DD within practical time limits. 
+
+2. Literature 
+
+Two-stage stochastic mixed-integer programs are no-toriously difficult to solve due to the loss of convexity in the recourse function and the curse of dimensionality as-sociated with the scenario set. While the deterministic equivalent program (DEP) can be solved directly for small instances, large-scale applications require decomposition techniques. These are broadly categorized into stage-wise and scenario-wise decomposition. 
+
+2.1. Decomposition Frameworks 
+
+Stage-wise decomposition, and primarily the L-shaped method [ 3, 26 ], performs well for continuous recourse. How-ever, when integer variables appear in the second stage, the recourse function becomes non-convex and discontinuous. The Integer L-shaped method [ 20 ] addresses this using spe-cialized cuts (e.g., optimality cuts), but often suffers from slow convergence due to the weakness of these cuts and the computational cost of solving mixed-integer subproblems [21]. Scenario-wise decomposition relaxes the non-anticipativity constraints (NACs), thereby splitting the problem into inde-pendent scenario subproblems. This structure is well-suited for parallel computation. Two prominent methods in this class are Progressive Hedging (PH) and Dual Decompo-sition (DD). PH [ 27 ] applies an augmented Lagrangian 
+
+> arXiv:2603.01733v1 [math.OC] 2 Mar 2026
+
+approach with a quadratic penalty. While PH is a powerful heuristic for SMIPs, it loses convergence guarantees for integer recourse and does not inherently provide valid dual bounds [12]. Conversely, DD [ 5] relaxes the NACs using Lagrangian relaxation without the quadratic penalty. The resulting Lagrangian dual problem provides a valid lower bound (for minimization problems), typically solved via subgradient methods [ 4] or bundle methods [ 31 ]. However, for SMIPs, strong duality is not guaranteed; the optimal value of the Lagrangian dual generally provides a lower bound on the primal optimum, often resulting in a duality gap due to the non-convexity of the integer feasible region. To bridge this gap and recover a primal solution, DD is often embedded within a Branch-and-Bound framework (Lagrangian B&B) [1]. Despite its theoretical soundness, standard DD is often hindered by the slow convergence of the dual multipliers. 
+
+2.2. Accelerating Convergence: Warm-Starts and Reduc-tion 
+
+To address the computational burden of exact methods, recent literature has focused on warm-start strategies [ 8 , 22 ]. The idea is to use a simplified version of the problem, either by relaxation or by considering a subset of scenarios, to generate advanced initial information for the full-scale problem. Several frameworks have successfully employed this logic. For interior point methods, [ 8] demonstrated that solutions from reduced scenario trees provide high-quality starting points. In the context of Branch-and-Cut (B&C), the TULIP framework [ 22 ] utilizes a two-step approach: solving a problem induced by a subset of scenarios to gen-erate valid inequalities, which then warm-starts the full problem. LOTUS leverages the multi-step framework, but it can be applied to a wider range of two-stage optimiza-tion problems. Additionally, [ 14 ] proposed warm-starting DD with PH, utilizing the rapid heuristic progress of PH to initialize the Lagrange multipliers for the exact DD algorithm. Our proposed framework, LOTUS, leverages scenario re-duction to generate a warm start. Scenario reduction aims to approximate the original probability measure with a discrete measure of smaller support. By approximating the full uncertainty set with a representative subset, LOTUS fo-cuses the search on the core trade-offs of the problem. This filters out the minor scenario variations that typically cause the Master Problem to oscillate, allowing the algorithm to bypass the slow initial search and immediately identify high-quality first-stage decisions for high-quality primal re-covery. Scenario reduction methods are classified as either 
+
+distribution-based or problem-based . Distribution-based methods, such as fast forward selection [ 16 ], probability distance minimization [ 10 ], or moment matching [ 2], select scenarios to minimize statistical distance (e.g., Wasserstein metric) without considering the optimization structure of the problem at hand. While computationally fast, they may discard low-probability scenarios that have a high impact on the objective function. In contrast, problem-driven approaches, see [ 6] for an overview, consider the structure of the underlying opti-mization problem in their reductions. This idea is used in various algorithms, for example [ 17 , 11 , 23 ]. LOTUS uses a reduction technique that is both distribution-based and problem-driven to warm-start the DD process, thereby improving the attainment of high-quality primal solutions within practical time limits. 
+
+3. Methodology 
+
+In this section, we introduce the LOTUS framework. First of all, in Subsection 3.1, each step of the LOTUS algorithm is explained. In Subsection 3.2 we explain the assumptions and motivations for the LOTUS framework. Before we explain our methodology, we briefly describe the Deterministic Equivalent Problem (DEP) formulation of a two-stage SMIP. 
+
+min 
+
+> x, {y(s)}s∈S
+
+cT x + X
+
+> s∈S
+
+p(s)qT
+
+> (s)
+
+y(s) (1a) s.t. Ax ≥ b, (1b) 
+
+T(s)x + W(s)y(s) ≥ h(s), ∀s ∈ S , (1c) 
+
+x ∈ Zn1 
+
+> +
+
+× Rn2 
+
+> +
+
+, (1d) 
+
+y(s) ∈ Zk1 
+
+> +
+
+× Rk2 
+
+> +
+
+, ∀s ∈ S . (1e) Here S denotes the set of scenarios, where each scenario s ∈S occurs with probability p(s), with P 
+
+> s∈S
+
+p(s) = 1 . The first-stage decision variables vector is x, with cost vector 
+
+c. The first-stage constraints are defined by the matrix A
+
+and right-hand side b. For each scenario s, y(s) denotes the second-stage recourse variables with cost vector q(s). The second-stage constraints are defined by the recourse matrix 
+
+W(s), the technology matrix T(s), and the right-hand side 
+
+h(s). Note that these three need not be stochastic. The decision domains defined in (1d) and (1e) represent the mixed-integer requirements, where the total numbers of variables are n = n1 + n2 and k = k1 + k2, respectively. 
+
+3.1. Method 
+
+A schematic overview of the LOTUS framework is given in Figure 1. In this overview, the red box corresponds to the original problem, the orange box to the Lagrangian-relaxed formulation of the full problem, and the green box to the Lagrangian-relaxed formulation of the reduced problem. Furthermore, the dashed arrows indicate the steps taken in the framework. Each step applied in LOTUS is discussed in more detail in the following sections. 
+
+3.1.1. Step 1: Dual Decomposition 
+
+We apply Dual Decomposition to the DEP formulation. To decouple the scenarios, we introduce local copies of the 2Figure 1: Schematic representation of LOTUS. The dashed arrows correspond to steps in this method. The red, orange, and green boxes denote the original, the full relaxed and the reduced relaxed problem, respectively. 
+
+first-stage variables, x(s), for each scenario s ∈ S . We enforce explicit non-anticipativity constraints: 
+
+x(s) = x, ∀s ∈ S .
+
+By relaxing these NACs with Lagrangian multipliers λ(s),we obtain the Lagrangian: 
+
+L(x, x (s), y (s), λ ) = cT x+X
+
+> s∈S
+
+
+
+p(s)qT
+
+> (s)
+
+y(s) + λT
+
+> (s)
+
+(x(s) − x)
+
+
+
+.
+
+Rearranging the terms and minimizing the Lagrangian over 
+
+x, x(s), and, y(s), we obtain the Lagrangian function which decomposes into a Master Problem (M) over the global variable x, and |S| independent Scenario Subproblems over 
+
+(x(s), y (s)):(M): min  
+
+> x∈X
+
+c − X
+
+> s∈S
+
+λ(s)
+
+!T
+
+x, (2a) (S) s : min 
+
+> x(s),y (s)
+
+
+
+p(s)qT
+
+> (s)
+
+y(s) + λT
+
+> (s)
+
+x(s)
+
+
+
+. (2b) The Master Problem (2a) minimizes the net first-stage cost over a compact set X (representing the first-stage feasibility domain, e.g., Ax ≥ b), preventing unboundedness. The subproblems (2b) are solved subject to their respective scenario constraints for each s ∈ S .For compactness in the subsequent algorithmic steps, we define the Lagrangian Function ZS′ 
+
+> D
+
+(λ) for any subset of scenarios S′ ⊂ S as the minimum of the Lagrangian restricted to that subset: 
+
+ZS′ 
+
+> D
+
+(λ) = min  
+
+> x∈X ,{x(s),y (s)}s∈S ′
+
+LS′ (x, x (s), y (s), λ ). (3) Consequently, the full Lagrangian dual problem seeks the tightest lower bound by solving: 
+
+max 
+
+> λ∈R|S|
+
+ZS 
+
+> D
+
+(λ).
+
+3.1.2. Step 2: Scenario Reduction (Warm Start) 
+
+Scenario reduction is the central innovation of the LO-TUS framework. Solving the full Lagrangian dual problem is computationally prohibitive for a large collection S of scenarios. To accelerate convergence, LOTUS generates a 
+
+warm start for the Lagrangian multipliers vector λ by solv-ing the dual problem over a much smaller, representative subset of scenarios S′ ⊂ S , where |S ′| ≪ |S| .The quality of this warm start depends on how ac-curately S′ approximates the full uncertainty set. We investigate a combination of two metrics for selecting S′:
+
+Distribution-based metric. Let ξs denote the vector of stochastic parameters for scenario s. This standard ap-proach characterizes each scenario solely by its data vector 
+
+ξs. The distance between scenarios is defined as the Eu-clidean distance ∥ξs−ξs′ ∥2. While computationally efficient, this metric assumes that proximity in the data space im-plies proximity in the solution space , which may not hold for mixed-integer problems where small data perturbations can significantly alter the optimal basis. 
+
+Problem-based metric. To address the limitations of purely data-driven metrics, we introduce a problem-based metric that captures the problem’s cost structure. In MIPs, small changes in data can trigger large discontinuities in the objective value (e.g., exceeding a capacity threshold that incurs a fixed cost). Therefore, we map each scenario s to a scalar feature vLP s , representing the optimal objective value of its linear programming relaxation. This is obtained by solving the scenario subproblem individually (ignoring non-anticipativity constraints) with all integer requirements relaxed. The distance between scenarios, e.g., s and s′
+
+,is then defined based on the difference in these structural proxy values, |vLP s − vLP s′ |.
+
+Combining the metrics. We combine the data vector ξs and the feature vLP s into one feature vector Fs. To ensure statis-tical balance between distribution-based and problem-based features, we standardize both using Z-score normalization before concatenation. To ensure the problem-based metric and distribution-based metric carry equal weight in the selection algorithm, we apply a weight ω to the normalized cost feature equal to the number of furniture types ( |F |). This balancing ensures that the selection algorithm consid-ers the underlying cost impact of scenarios with the same total priority, given the multi-dimensional demand data. 
+
+Selection algorithm. We then employ a Fast Forward Selec-tion algorithm to iteratively build the subset S′ by selecting the scenario that minimizes the probabilistic distance (e.g., Kantorovich distance) between the original distribution and the reduced distribution. Once S′ is fixed, the original set S is re-partitioned: every discarded scenario k ∈ S \ S ′
+
+is mapped to its closest representative s ∈ S ′ (according to the Euclidean distance metric ∥F s − F s′ ∥2), and their prob-abilities are aggregated to preserve the total probability mass. 33.1.3. Step 3: Solve the Reduced Lagrangian Dual 
+
+In this step, we solve the Lagrangian dual problem restricted to the representative subset of scenarios S′ ⊂ S :
+
+max 
+
+> λ∈R|S|
+
+ZS′ 
+
+> D
+
+(λ).
+
+Using the notation defined in Step 1, this seeks the tightest lower bound for the reduced problem. Since ZS′ 
+
+> D
+
+(λ) is concave and non-differentiable, we employ the Subgradient Ascent algorithm [4]. For further details, see Appendix A. 
+
+3.1.4. Step 4: Warm Start Initialization 
+
+The optimized multipliers λ∗ obtained from the reduced problem in Step 3 are mapped to the full scenario set S
+
+to initialize the full-scale dual problem. Let ρ : S → S ′
+
+be the mapping function from the scenario reduction step, where ρ(i) denotes the representative scenario in S′ for any original scenario i ∈ S . The initial multipliers λ0 for the full problem are set as: λ0(i) = λ∗ 
+
+> (ρ(i))
+
+for every i ∈ S .This warm-start configuration provides the initial point for the Subgradient Ascent algorithm applied to the full Lagrangian dual problem. 
+
+3.1.5. Step 5: Solve the Full Lagrangian Dual 
+
+We now solve the full-scale Lagrangian dual problem over the complete scenario set S:
+
+max  
+
+> λ
+
+ZS 
+
+> D
+
+(λ).
+
+Initialization (warm start). Unlike in Step 3, we use the information obtained from the reduced problem. We ini-tialize the multipliers using the warm start vector λWS con-structed in Step 4, i.e., λ0 = λWS . This advanced starting point in the dual space is expected to be significantly closer to the optimal multipliers than the zero vector, thereby im-proving primal convergence by identifying superior feasible solutions earlier in the optimization process. 
+
+Algorithm. The remaining algorithmic procedure (Subgra-dient Ascent, Polyak step size, and termination criteria) is identical to that described in Step 3, ensuring a consistent approach to solving the full dual problem. Let λ∗ denote the optimal (or best found) multipliers returned by the algorithm upon termination. 
+
+3.1.6. Step 6: Primal Recovery and Evaluation 
+
+While the Lagrangian dual function ZS 
+
+> D
+
+(λ∗) provides a rigorous lower bound on the optimal value, the resulting scenario-specific solutions {x∗
+
+> (s)
+
+(λ∗)}s∈S typically violate non-anticipativity (i.e., x∗
+
+> (s)
+
+̸ = x∗
+
+> (s′)
+
+). To recover a feasible 
+
+primal solution ZS 
+
+> P
+
+(λ∗) (and thus a valid upper bound for a minimization problem), we leverage the global decisions 
+
+˜x from the Master Problem to conduct a restricted primal search of the full DEP. In this step, we solve the DEP with the first-stage variables constrained to a narrow feasibility window (1 ±ϵ) ˜x
+
+with ϵ = 0 .05 . This approach uses the progress of the dual search to prune the primal space, focusing the solver on the most promising region of the first-stage domain X .Due to the assumption of relatively complete recourse, see Section 3.2, it is ensured that this restricted DEP will find optimal second-stage recourse variables {y(s)}s∈S for every scenario. The resulting objective value provides a valid primal bound ZS 
+
+> P
+
+, which we use to evaluate the final optimality gap. 
+
+Note on optimality. If the gap between the primal bound and the dual bound is non-zero, the solution is not guar-anteed to be optimal. To ensure exact convergence for non-convex SMIPs, LOTUS is designed to be embedded as a bounding procedure within, e.g., a global B&B scheme [ 1]. The accelerated primal convergence provided by LOTUS facilitates more aggressive pruning of the search tree early on, thereby reducing the number of nodes explored and mitigating the computational burden of weak dual bound convergence. 
+
+3.2. Theoretical Assumptions and Practical Motivations 
+
+The design of the LOTUS framework is driven by spe-cific structural properties of a Two-Stage SMIP. In this section, we outline the theoretical conditions for LOTUS and the practical challenges that motivate the proposed warm-start methodology. 
+
+3.2.1. Theoretical Assumptions 
+
+For LOTUS, we make the following assumptions regard-ing the problem structure. 
+
+Block-angular structure. We assume the constraint matrix has a block-angular structure, in which scenarios are linked solely through the first-stage decision variables x. This separability is the fundamental property that enables the Lagrangian relaxation of the NACs to decompose the DEP into independent, tractable subproblems. 
+
+Relatively complete recourse and compactness. We assume the problem exhibits relatively complete recourse and that the feasible regions X and Ys are compact (closed and bounded). These properties are critical for two reasons: 1. Algorithmic Stability: The Lagrangian dual function 
+
+ZS 
+
+> D
+
+(λ) is well-defined and finite for all λ ∈ Rn. This prevents infinite penalties in the objective or un-bounded solutions from destabilizing the subgradient updates. 2. Primal Recovery: It guarantees that the projection heuristic in Step 6 yields a feasible solution, as fixing 
+
+x to a feasible ˆx will not result in infeasibility in the second stage. 
+
+3.2.2. Practical motivations 
+
+Beyond structural validity, the LOTUS framework is specifically designed to address the limitations of standard solvers and classical decomposition methods for SMIPs. 4Tightening the integrality gap. Standard B&B solvers rely on linear programming relaxations to prune the search tree. However, SMIPs often suffer from weak LP relaxations ,where the dual bound (lower bound) ZS 
+
+> D
+
+provided by the relaxed LP is far from the optimal integer value ZS 
+
+> I
+
+. This large integrality gap leads to ineffective pruning and in-tractable runtimes. DD is motivated by the fact that the Lagrangian dual bound ZS 
+
+> D
+
+is strictly tighter than (or at least equal to) the LP relaxation bound ZS 
+
+> LP
+
+:
+
+ZS 
+
+> LP
+
+≤ ZS 
+
+> D
+
+≤ ZS 
+
+> I
+
+≤ ZS 
+
+> P
+
+.
+
+By solving subproblems that retain their integrality con-straints, LOTUS generates a high-quality dual bound ZS 
+
+> D
+
+.More importantly, the framework leverages stable multi-plier guidance to prioritize the discovery of high-quality feasible solutions ( ZS 
+
+> P
+
+), effectively narrowing the optimal-ity gap from the top down even when the theoretical dual bound remains relatively loose. 
+
+Accelerating primal convergence via warm start. Standard subgradient methods are notoriously slow to converge, largely due to the “identification phase”: they typically spend many initial iterations simply identifying the non-zero components of the optimal multiplier vector λ∗ (i.e., the active manifold). LOTUS circumvents this bottleneck by performing this identification on the computationally cheaper reduced problem ZS′ 
+
+> D
+
+(λ). The resulting warm start 
+
+λWS effectively projects the full-scale algorithm past the initial search phase, starting it closer to the neighborhood of the optimal active set. This proximity reduces the er-ratic oscillations typical of cold-start subgradient methods, providing more stable guidance for the primal heuristics. 
+
+4. Results 
+
+4.1. Experimental setup 
+
+To empirically evaluate the performance of the LO-TUS algorithm compared to DD, we conducted a two-phase computational case study in the context of a produc-tion/manufacturing problem (see Appendix B for details). 
+
+4.2. Empirical performance of LOTUS 
+
+We evaluate the performance of the LOTUS framework against a standard DD baseline. The primary goal is to assess whether the warm-start strategy provides a signifi-cant advantage in finding high-quality primal solutions and closing the optimality gap within a practical time limit of 
+
+120 minutes. For descriptive metrics, we use a stabilized analysis across 24 unique configurations, where the result of each configuration is the mean of 5 independent seeds. For a statistical analysis, we perform the Wilcoxon signed-rank test on the N = 111 raw instances [ 30 ] (based on the ranks of the differences) to determine whether the median differ-ence for the primal bound and the optimality gap between DD and LOTUS is significantly different from zero. Note that 9 instances were removed from the statistical analysis. These are instances in which DD failed to identify a feasible positive primal solution. Table 1 below shows that LOTUS achieved an average profit improvement of 0.93% . The 95% Confidence interval confirms the robustness of this improvement, as the entire interval remains strictly above zero. While the Average Profit Improvement may appear modest, the global p-value of < 0.001 confirms that LOTUS consistently identifies superior primal solutions. LOTUS demonstrates reliability, providing a solution equal (draw) to or better (win) than standard DD in 95 .8% (win rate + draw rate) of tested configurations.         
+
+> Table 1: Overall performance summary ( N= 111 )
+> Avg. Profit Improv. (%) Win Rate (%) Draw Rate (%) 95% Conf. Interval Primal
+> p-val Gap
+> p-val
+> 0.93 45 .83 50 .00 [0 .38 ,1.49] <0.001 0.349
+
+However, we observe a statistical divergence between the objective value and the optimality gap. The p-value for the optimality gap ( 0.349 ) suggests that LOTUS does not necessarily close the gap more efficiently than DD. This is consistent with our practical motivation: LOTUS prioritizes the top-down narrowing of the gap by improving the primal bound, even when the theoretical dual bound remains relatively stagnant.                                        
+
+> Table 2: Performance split by number of scenarios ( |S| ) over 2-hour and 4-hour runtimes.
+> |S|
+> Avg. Profit Improv. Win Rate Draw Rate N
+> Primal
+> p-val Gap
+> p-val Time
+> 250 1.94% 83 .33% 0.0% 28 0.0015 0.0026 2h
+> 500 0.93% 66 .67% 33 .33% 29 0.0006 0.2085 2h
+> 1000 0.45% 33 .33% 66 .67% 28 0.0213 0.6772 2h
+> 2000 0.41% 16 .67% 83 .33% 26 0.0899 0.9898 2h
+> 2000 0.67% 33 .33% 66 .67% 26 0.0090 0.3383 4h
+
+Table 2 details the performance of LOTUS as a function of the number of scenarios ( |S| ). LOTUS is most dominant at smaller scales ( |S| = 250 ), achieving a 1.94% increase in profit and winning in nearly 83% of cases. As the prob-lem scale increases to |S| = 2000 , the frequency of draws increases to 83 .33% within the 2-hour run limit, and the average profit improvement is not significant anymore. Ex-tending the runtime to 4 hours for the |S| = 2000 instances, allowing for a more exhaustive warm-start phase ( 30 iter-ations instead of 10 iterations), reveals the framework’s latent efficacy, yielding a significant p-value of 0.009 and an increase in the win rate to 33 .33% . This indicates that while a larger instance requires a longer warm-start phase, the superior coordination provided by the LOTUS warm start ultimately leads to improved primal convergence. A critical finding is that LOTUS achieves a higher total iteration count than DD across all tested numbers of scenarios. At |S| = 2000 , LOTUS completes 50 total 5Figure 2: Aggregated primal bound ratio ( R = ZP,LOT U S /Z P,DD )over time (in blue) and percentage of instances in the warm-start phase over time (in red). 
+
+iterations ( 10 during the warm-start and 40 during the main phase), whereas DD only performs 36 iterations. This iteration surplus confirms that LOTUS does not waste time on warm-starting. LOTUS seems to trade expensive full-scale iterations for cheaper reduced-scale iterations. To understand the performance of LOTUS relative to DD over the 120 -minute horizon, we analyze the rel-ative primal solution (lower bound) ratios over the full runtime. Figure 2 illustrates the evolution of the ratio 
+
+R := ZP,LOT U S /Z P,DD over time. Figure 2 shows that the mean ratio R (solid blue line) starts at exactly 1.000 when 
+
+100% of the instances are in the warm-start phase (see solid red line). As instances exit the warm-start phase (as shown by the drop in the red line), they enter the full-scale optimization phase, in which the mean ratio exhibits an upward trajectory. As each instance completes its specific warm-start exploration, it starts the main phase with a superior initial primal bound. By the time the red line reaches 0% , at which all configurations have transitioned to solving the full scenario set, LOTUS has secured an average head-start of 0.48% over DD in terms of the mean ratio R. This confirms that the warm-start multipliers 
+
+λW S allow LOTUS to overcome early convergence plateaus where standard DD stagnates. While the frequency of draws ( 45 .83% ) keeps the median near 1.000 for most of the time horizon, the 75 -th percentile diverges significantly after 30 minutes. Furthermore, the higher median values near the end of the 2-hour runtime indicate that LOTUS identifies superior solutions during the final convergence phase. However, since the framework incurs a lower profit in only 4.17% of cases, the 25 -th percentile remains at or above 1.000 . This means that the underperformance of LOTUS relative to DD becomes visible only in the extreme lower tail ( 3-th percentile). Figure 2 confirms that for the vast majority of instances, LOTUS is at least as robust as standard DD, while provid-ing a significant improvement in nearly half of the cases. The results also confirm that LOTUS exploits a double ad-vantage: the warm-start subgradient ascent iterations are much cheaper than in the full problem ( tL(S′) ≪ tL(S)), and in the main phase, a higher subgradient ascent itera-tion velocity is achieved. This combined effect generates the primal bound improvement compared to DD seen in Figure 2, resulting in a better primal mean and median for LOTUS within the same 120 -minute window. Appendix C presents further insight and empirical anal-ysis of the speed gains of LOTUS with respect to DD. 
+
+5. Discussion 
+
+While the results for the LOTUS are promising, several limitations must be acknowledged to contextualize the findings and guide future development. 
+
+5.1. Experimental design 
+
+A primary limitation is that warm-start configurations, such as the subset size and number of warm-start iterations, were selected based on preliminary experiments and applied universally. This assumes a degree of scale independence that may not hold for extreme instances. As the problem dimensionality increases, the optimal balance between the warm-start and main decomposition phases shifts. For our largest instances ( |S| = 2000 ), the two-hour limit proved insufficient to fully recover the initial computational overhead of the warm-start, leading to a high frequency of draws. However, the emergence of a significant p-value (0.009 ) at the four-hour mark confirms that LOTUS has the potential for performance gains, but this depends on the instance size and the allocated warm-start time. The existence of this “break-even point”, the moment when the time invested in low-cost exploration is recovered through superior primal convergence, suggests that future research is required for dynamic parameter tuning or adaptive subset scaling. 
+
+5.2. Algorithmic framework and benchmarking 
+
+The analysis relies on a standard Subgradient Descent implementation for both the warm-start and the main phase. While this isolates the impact of LOTUS, subgradi-ent methods are known for their sensitivity to step-size rules and potential for slow tail-end convergence. More sophis-ticated dual-update mechanisms, such as bundle methods [ 31 ], could offer better stability and faster dual bound progression. Furthermore, while standard DD was the appropriate benchmark for this foundational study, fu-ture work should integrate LOTUS with commercial-grade heuristics to compare its performance directly against the state-of-the-art in industrial solvers. 
+
+5.3. Generalizability and problem structure 
+
+The generalizability of these findings is linked to the structural properties of the set of test instances. The production planning instances include common SMIP chal-lenges, such as fixed-charge costs, integrality in the second 6stage, and weak LP relaxations. On the other hand, the quantitative gains (the 0.93% average profit improvement) are influenced by the model’s specific recourse structure. In problems where the first-stage and second-stage decisions are more loosely coupled, or where the cost of uncertainty is lower, the impact of a high-quality dual warm-start may be less pronounced. Testing LOTUS in other domains with similar math-ematical problem structures as described in Section 3.2 will be necessary to establish a more universal performance profile. Promising candidates for future experiments in-clude stochastic unit commitment in power systems, which is characterized by weak LP relaxations stemming from significant fixed-charge start-up costs and a reliance on scenario-based decomposition [ 5, 24 ]. Similarly, capaci-tated fixed-charge network design problems exhibit large integrality gaps and dense coupling, which LOTUS is de-signed to mitigate [ 13 ]. In both domains, LOTUS’s ability to identify a stable active manifold on a reduced set of scenarios could potentially overcome the computational bottlenecks currently faced by standard DD. 
+
+6. Conclusion 
+
+Solving large-scale, real-world two-stage SMIPs presents considerable computational challenges stemming from their non-convexity, high dimensionality, and large LP relax-ations. In this work, we introduced and evaluated the Lagrangian Optimization for Two-stage stochastic program-ming Using Subsets (LOTUS) framework, a novel approach that integrates a subset-based warm-start strategy into the Dual Decomposition (DD) method. By initializing the dual search with informed multipliers derived from a represen-tative scenario subset, LOTUS significantly enhances the discovery of high-quality primal solutions within practical computational windows. The reason why this happens is two-fold: first, its warm-start iterations are cheap, and, second, it achieves a higher iteration rate when going back to solving the full problem. The results of an extensive computational study across 
+
+120 test instances demonstrate that LOTUS is a robust and practical tool for industrial decision-making. While the mathematical optimality gap remains comparable to stan-dard DD, LOTUS identifies significantly superior primal bounds ( p < 0.001 ), achieving an average profit improve-ment of 0.93% . Furthermore, with a 95 .8% success rate, the framework offers a level of reliability that DD lacks in the early stages of the solve, where stable guidance is critical for integer recovery. Our analysis reveals a scale-dependent performance profile. While LOTUS provides immediate benefits for medium-sized problems, the largest instances require longer execution windows to overcome the initial computational overhead of the warm-start phase. The shift from frequent draws at the two-hour mark to a significant win rate at the four-hour mark for the largest instances confirms that the warm start provides superior coordination, eventually enabling the solver to break through the primal convergence plateaus where DD stagnates. The limitations identified in Section 5 give rise to several promising directions for future research. First, LOTUS could be integrated into a complete solution methodology, such as a B&B or B&C framework. The accelerated primal convergence provided by LOTUS facilitates more aggressive pruning of the search tree earlier on, thereby reducing the number of nodes explored and mitigating the computational burden of weak dual bound convergence. Furthermore, replacing subgradient ascent with more stable bundle or level methods could potentially accelerate the warm-start phase. Finally, developing an adaptive LOTUS framework in which the warm-start configuration and subset sizes are dy-namically determined based on convergence behavior could further optimize the temporal break-even point between the initial warm-start and the main execution phase.      
+
+> Acknowledgments This publication is partly financed by the Dutch Research Council (NWO) through the “Readiness” project ( TWM.BL.019.002 ) and the personal VIDI grant of A. Zocca ( VI.VIDI.233.247 ). The authors have no competing interests to declare that are relevant to the content of this work.
+> Declaration of Use of Generative AI The authors used generative artificial intelligence tools solely for the purpose of im-proving the clarity and linguistic quality of the manuscript. The tools were not used to generate scientific content, results, proofs, data, or interpretations. All substantive content reflects the authors’ original work, and the authors take full responsibility for the accuracy and integrity of the manuscript.
+
+References                               
+
+> [1] P. Aldenvik and M. S. Schierscher. Recovery of primal solutions from dual subgradient methods for mixed binary linear programming; a branch-and-bound approach. 2015. doi: https://api.semanticscholar.org/CorpusID:54580758. [2] C. Beltran-Royo. Fast scenario reduction by conditional scenarios in two-stage stochastic milp problems. Opti-mization Methods and Software , 37(1):23–44, 2022. doi: https://doi.org/10.1080/10556788.2019.1697696. [3] J. Benders. Partitioning procedures for solv-ing mixed-variables programming problems. Nu-merische Mathematik ,4:238–252, 12 1962. doi: https://doi.org/10.1007/BF01386316. [4] M. Bragin. Survey on lagrangian relaxation for milp: im-portance, challenges, historical review, recent advance-ments, and opportunities. Annals of Operations Research ,333:29–45, 2024. doi: https://doi.org/10.1007/s10479-023-05499-9. [5] C. C. Carøe and R. Schultz. Dual decomposition in stochastic integer programming. Operations Research Letters ,24(1):37–45, 1999. ISSN 0167-6377. doi: https://doi.org/10.1016/S0167-6377(98)00050-9.
+
+7[6] X. Chou and E. Messina. Problem-driven scenario gen-eration for stochastic programming problems: a survey. 
+
+Algorithms , 16(10):479, 2023. [7] J. Christiansen, B. Dandurand, A. Eberhard, and F. Oliveira. A study of progressive hedging for stochas-tic integer programming. Computational Optimiza-tion and Applications , 86:989–1034, 10 2023. doi: https://doi.org/10.1007/s10589-023-00532-w. [8] M. Colombo, J. Gondzio, and A. Grothey. A warm-start approach for large-scale stochastic linear programs. 
+
+Mathematical Programming , 127:371–397, 2009. doi: https://doi.org/10.1007/s10107-009-0290-9. [9] E. Cornielje. Lotus-framework, 2026. URL 
+
+https://github.com/ECornielje/LOTUS-framework .GitHub repository. [10] J. Dupačová, N. Groewe-Kuska, and W. Roemisch. Sce-nario reduction in stochastic programming: An approach using probability metrics. Mathematical Programming , 95: 493–, 01 2003. doi: https://doi.org/10.1007/s10107-002-0331-0. [11] Y. Feng and S. Ryan. Solution sensitivity-based scenario reduction for stochastic unit commitment. Computational Management Science , 13(1):29–62, January 2016. doi: https://doi.org/10.1007/s10287-014-0220-z. [12] D. Gade, G. Hackebeil, S. Ryan, J.-P. Watson, R. J.-B. Wets, and D. L. Woodruff. Obtaining lower bounds from the progressive hedging algorithm for stochastic mixed-integer programs. Mathematical Programming , 157:47–67, 4 2016. doi: https://doi.org/10.1007/s10107-016-1000-z. [13] B. Gendron, O. Gunluk, and A. Lodi. Node-based la-grangian relaxations for multicommodity capacitated fixed-charge network design. Discrete Applied Mathematics , 2018. doi: https://doi.org/10.1016/j.dam.2020.12.024. [14] G. Guo, G. Hackebeil, S. M. Ryan, J.-P. Watson, and D. L. Woodruff. Integration of progressive hedging and dual decomposition in stochastic integer programs. Operations Research Letters , 43(3):311–316, 2015. ISSN 0167-6377. doi: https://doi.org/10.1016/j.orl.2015.03.008. [15] Gurobi Optimization, LLC. Gurobi Optimizer Reference Manual , 2022. URL https://www.gurobi.com . Version 10.0. [16] H. Heitsch and W. Roemisch. Scenario reduction algo-rithms in stochastic programming. Computational Op-timization and Applications , 24:187–206, 01 2003. doi: https://doi.org/10.1023/A:1021805924152. [17] M. Hewitt, J. Ortmann, and W. Rei. Decision-based sce-nario clustering for decision-making under uncertainty. An-nals of Operations Research , 315(2):747–771, August 2022. doi: https://doi.org/10.1007/s10479-020-03843-x. [18] J. L. Higle. Stochastic Programming: Optimiza-tion When Uncertainty Matters , page 30–53. IN-FORMS, Sept. 2005. ISBN 9781877640216. doi: http://dx.doi.org/10.1287/educ.1053.0016. [19] K. Kim and V. Zavala. Algorithmic innovations and soft-ware for the dual decomposition method applied to stochas-tic mixed-integer programs. 10:225–266, 11 2017. doi: https://doi.org/10.1007/s12532-017-0128-z. [20] G. Laporte and F. V. Louveaux. The integer l-shaped method for stochastic integer programs with complete recourse. Operations Research Letters , 13(3):133–142, 1993. ISSN 0167-6377. doi: https://doi.org/10.1016/0167-6377(93)90002-X. [21] T. L. Magnanti and R. T. Wong. Accelerating ben-ders decomposition: Algorithmic enhancement and model selection criteria. Operations Research , 29(3): 464–484, 1981. ISSN 0030364X, 15265463. doi: https://doi.org/10.1287/opre.29.3.464. [22] B. Markhorst, M. Leitner, J. Berkhout, A. Zocca, and R. D. van der Mei. A two-step warm start method used for solving large-scale stochastic mixed-integer problems. 2024. doi: https://doi.org/10.48550/arXiv.2412.10098. [23] B. S. Narum, J. Fairbrother, and S. W. Wallace. Problem-based scenario generation by decomposing output distribu-tions. European Journal of Operational Research , 318(1): 154–166, 2024. [24] A. Papavasiliou and S. S. Oren. Multi-area stochastic unit commitment for high wind penetration in a transmission constrained network. Operations Research , 61(3):578–592, 2013. doi: https://doi.org/10.1287/opre.2013.1174. [25] B. Polyak. A general method for solving extremum prob-lems. Soviet Mathematics. Doklady , 8:33–36, Jan 1967. [26] R. Rahmaniani, T. G. Crainic, M. Gendreau, and W. Rei. The benders decomposition algorithm: A literature review. 
+
+European Journal of Operational Research , 259(3):801–817, 2017. [27] R. T. Rockafellar and R. J.-B. Wets. Scenarios and policy aggregation in optimization under uncertainty. Mathemat-ics of Operations Research , 16:119–147, Feb 1991. doi: https://doi.org/10.1287/moor.16.1.119. [28] J. J. Torres, C. Li, R. M. Apap, and I. E. Gross-mann. A review on the performance of linear and mixed integer two-stage stochastic programming soft-ware. Algorithms , 15(4), 2022. ISSN 1999-4893. doi: https://doi.org/10.3390/a15040103. [29] S. Wallace and W. Ziemba. Applications of stochastic programming. 5, 01 2005. doi: https://doi.org/10.1137/1.9780898718799. [30] R. F. Woolson. Wilcoxon Signed-Rank Test , pages 1–3. John Wiley & Sons, Ltd, 2008. ISBN 9780471462422. doi: https://doi.org/10.1002/9780471462422.eoct979. [31] X. Zhao and P. Luh. New bundle methods for solving lagrangian relaxation dual problems1. Journal of Opti-mization Theory and Applications , 113:373–397, 05 2002. doi: https://doi.org/10.1023/A:1014839227049. 
+
+8Appendix A. Details Step 3 (Subgradient Ascent) 
+
+Initialization (cold start). Since no prior information is available, we initialize the multipliers with a cold start : λ0(s) = 0 for all 
+
+s ∈ S .
+
+Step size rule. To determine the step size αk at iteration k, we utilize the Polyak step size rule [25]: 
+
+αk = γk
+
+ZS′ 
+
+> P
+
+− ZS′ 
+
+> D
+
+(λk )
+
+∥gk ∥2 , (A.1) where ZS′ 
+
+> D
+
+(λk ) is the current dual objective value, ZS′ 
+
+> P
+
+is the best known upper bound (primal feasible solution) found so far, and γk ∈ (0 , 2] is a scaling parameter initialized at γ0 = 1 .8.
+
+Primal heuristic (trust region). To tighten the upper bound ZS′
+
+> P
+
+needed for the Polyak rule, we run a primal heuristic every 20 iterations. We employ a fix-and-optimize strategy: we define a Restricted Master Problem (RMP) by enforcing a 5% tolerance neighborhood (trust region) around the current best first-stage solution ¯x. This significantly reduces the search space, allowing a MIP solver to rapidly identify high-quality feasible solutions. 
+
+Adaptive tuning and termination. We implement an adaptive mechanism to dampen oscillations: if the best dual bound fails to improve for five consecutive iterations, we update γk+1 ← 0.5γk .The algorithm terminates when either a maximum runtime Tmax 
+
+is reached or the relative optimality gap falls below ϵ = 0 .01% .
+
+Appendix B. Case study 
+
+Model formulation 
+
+To empirically evaluate the performance of LOTUS, we designed a comprehensive computational study utilizing the production planning problem introduced in [ 18 ]. The problem concerns a manufacturer that produces furniture (e.g., desks, tables, chairs) using a finite amount of resources (e.g., lum-ber, finishing, carpentry) with known demand. We extend this problem to a stochastic setting by treating market demand as an uncertain parameter. We also extend the basic model of [18 ] to incorporate several features that reflect real-world oper-ational constraints. While the base model remains tractable for standard solvers, these extensions introduce significant computa-tional challenges. Specifically, the inclusion of binary variables for fixed costs, integrality constraints for production batch-ing, and penalty logic for service failures results in a highly non-convex search space that is difficult for traditional B&B methods to navigate effectively. We obtain the following DEP formulation: 
+
+min   
+
+> ¯x, {y(s)}s∈S ,{υ(s)}s∈S ,α
+
+cT ¯x − X
+
+> s∈S
+
+p(s)qT y(s) (B.1a) 
+
++ X
+
+> s∈S
+
+p(s)f T υ(s) + uT ¯α
+
+s.t. x(s) ≥ W y (s), ∀s ∈ S (B.1b) 
+
+y(s) + υ(s) = d(s), ∀s ∈ S (B.1c) 
+
+x(s) ≤ ¯x, ∀s ∈ S (B.1d) 
+
+α(s) ≤ ¯α, ∀s ∈ S (B.1e) 
+
+¯x ≤ LT α, (B.1f) 
+
+y(s) ≥ bβ (s), ∀s ∈ S (B.1g) 
+
+y(s) ≤ d(s)β(s), ∀s ∈ S (B.1h) 
+
+x(s) ≥ 0, ∀s ∈ S (B.1i) 
+
+¯x ≥ 0, (B.1j) 
+
+y(s) ∈ Z|F | 
+
+> +
+
+, ∀s ∈ S (B.1k) 
+
+υ(s) ∈ Z|F | 
+
+> +
+
+, ∀s ∈ S (B.1l) 
+
+α ∈ { 0, 1}|R|, (B.1m) 
+
+¯α ∈ { 0, 1}|R|, (B.1n) 
+
+β(s) ∈ { 0, 1}|F |, ∀s ∈ S . (B.1o) We modeled the uncertainty using a finite set of scenarios, 
+
+s ∈ S . Each scenario represents a potential future demand state 
+
+d(s), and is assigned a probability p(s), such that P 
+
+> s∈S
+
+p(s) = 1 .The decision variables in the model are the vector of acquired resources ¯x ∈ R|R| 
+
+> +
+
+, the vectors of produced furniture units 
+
+ys ∈ Z|F | 
+
+> +
+
+, ∀s ∈ S , and the vectors of unmet demand υs ∈ Z|F | 
+
+> +
+
+,
+
+∀s ∈ S . The objective function (B.1a) minimizes the net cost over all scenarios, which is the sum over all scenarios of the total variable cost of resources cT ¯x minus the total sales revenue 
+
+qT ys plus the total fixed cost of resources uT α plus the expected penalty for unmet demand f T υ(s). The model relies on several key parameters. Vectors c ∈ R|R| 
+
+> +
+
+and q ∈ R|F | 
+
+> +
+
+contain the costs of acquiring each resource and the sales prices for each type of furniture, respectively. The market limitations are captured by the demand vectors ds ∈ R|F | 
+
+> +
+
+, ∀s ∈ S , which specify the maximum number of units that can be sold for each item in each scenario. The production process itself is defined by the technology matrix W ∈ R|R|×| F | 
+
+> +
+
+, where each element wrf 
+
+specifies the amount of resources r needed to produce a unit of furniture f . The constraint (B.1c) defines the service shortage. The constraint (B.1f) enforces the limit of resources and links resource acquisition to the fixed cost variable α. Constraints (B.1g) and (B.1h) together manage the minimum batch-size logic for production. 
+
+Implementation note. While the general framework in Section 3 employs equality NACs ( x(s) = x), we specialize the horizontal coupling across scenarios to x(s) ≤ x and α(s) ≤ α to reflect the physical reality of resource investment. In production planning, first-stage decisions are sunk-cost capacity acquisitions (e.g., machinery or labor) that act as a ceiling, it is physically illogical to force resource exhaustion if scenario-specific demand is low. Mathematically, this restricts dual multipliers to be non-negative ( λ ∈ R|S|  
+
+> +
+
+). While numerically more stable, the dual function remains non-differentiable, which is a structural prop-erty that triggers the tailing-off effect. In DD, this effect causes the Master Problem’s search to stall, resulting in first-stage candidates that converge too slowly to yield high-quality pri-mal solutions. Our warm-start strategy bypasses this stagnant phase by shifting the search directly into a region of high-quality consensus. The experiments thus serve as a structural proof-of-concept, demonstrating the method’s ability to iden-tify high-quality primal solutions even when the dual bound exhibits the slow asymptotic convergence typical of subgradient methods. 
+
+9Instance generation 
+
+To thoroughly test LOTUS, we require a set of computation-ally challenging problem instances that adhere to the theoretical requirements and practical motivations outlined in Section 3.2. Our generation procedure systematically engineers instances with a block-angular structure and structural properties known to produce weak LP relaxations, thereby creating the large integrality gaps that motivate the use of Lagrangian decompo-sition over standard B&B solvers. To satisfy the theoretical requirements of compactness and relatively complete recourse, all production capacities and inventory limits are enforced as finite upper bounds, and unmet demand is permitted at a high penalty cost. The generation methodology combines three core sources of complexity: 1. Fixed-cost structures: High setup costs are included to induce a highly non-convex search space. This directly tests LOTUS’s ability to tighten the integrality gap where 
+
+ZS 
+
+> LP
+
+provides poor guidance. 2. Resource scarcity: A dense matrix of production con-straints with tight capacities is designed to make the discovery of a feasible primal bound computationally diffi-cult, necessitating the stable multiplier guidance provided by the LOTUS warm start. 3. Scenario heterogeneity: High-variance stochastic demand scenarios are generated to ensure a complex dual space. This evaluates the framework’s primary practical motiva-tion: identifying a representative active manifold using a computationally cheaper subset. Based on the preliminary experiments, we fix the warm-start configuration at 10 iterations on a 30% subset. We use this warm-start configuration in a series of main experiments to perform a head-to-head comparison between LOTUS and a standard DD algorithm [ 5] across a wide range of problem instances (24 instances each for 5 seeds). All instances are generated to satisfy the theoretical assumptions of compactness and relatively complete recourse, ensuring the stability of the subgradient updates and the feasibility of primal recovery. Consistent with industrial profit-maximization objectives, the experiments are performed on the maximization formula-tion of the production planning problem. In this context, the Lagrangian dual bound serves as a theoretical upper bound, while the feasible solution identified by the projection heuristic constitutes the primal lower bound. This setup allows us to explicitly measure LOTUS’s ability to improve the lower bound through accelerated primal convergence, even in scenarios where the upper bound demonstrates characteristic tailing-off effects. All experiments were carried out on a cluster with a 2.4GHz CPU with 8GB RAM, single-threaded, using Gurobi 10 .0 [ 15 ]in Python 3.9. The code for generating the production planning problem instances and for running the experiments can be found on GitHub [9]. 
+
+Appendix C. Further Insight Into the Speed Gain 
+
+Theoretical Insight of the Speed Gain 
+
+The theoretical validity of accelerating the primal conver-gence can be formalized by analyzing the trade-off between computational cost and information retrieval. Let tL(S) denote the average time required to perform one subgradient iteration on the scenario set S. The computational advantage of LOTUS compared to DD relies on two structural properties: 
+
+1. Cost asymmetry. The computational cost of a subgradient iteration scales linearly with the number of scenarios. Therefore, iterations performed on the reduced set S′ are significantly cheaper than those on the full set: 
+
+tL(S′) ≪ tL(S). (C.1) This asymmetry enables LOTUS to perform the necessary “ex-ploration” of the dual space at low cost. 
+
+2. Active set identification. The speed gain depends critically on the quality of information transfer between the reduced and full problems. Let AS be the set of active non-anticipativity constraints (i.e., indices having non-zero multipliers λ) in the optimal solution of the full problem. Similarly, let AS′ be the active set identified by the reduced problem. The net speed gain is maximized when the overlap |A S ∩ A S′ | is large. If the reduced set S′ is representative, the warm start λWS correctly predicts a large portion of AS .Consequently, the number of expensive iterations Nfull re-quired to solve the full problem is reduced by the equivalent number of cheap iterations Nred already performed. We can approximate the asymptotic speed gain as: Gain ∝ Nred · (tL(S) − tL(S′)) 
+
+| {z }
+
+> Savings from cheap exploration
+
+− Loss (S, S′)
+
+| {z }
+
+> Correction for misidentified active sets
+
+. (C.2) This formulation highlights that LOTUS is most effective when the cost difference tL(S) − tL(S′) is large and the structural overlap between the full problem and the reduced subproblem is high, thereby minimizing the “Loss” associated with correcting multipliers that were incorrectly identified as active or inactive in the warm-start phase. 
+
+Numerical Results for the Speed Gain 
+
+The efficiency gains for LOTUS compared to DD are quanti-fied in Table C.3, which compares the average duration of each iteration.     
+
+> Table C.3: Average time (in sec) per subgradient ascent iteration in LOTUS warm-start phase tL(S′), LOTUS main phase tL(S′), and DD tDD (S′).
+
+LOTUS DD Speed gain 
+
+|S| tL(S′) (sec) tL(S) (sec) tDD (S) (sec) (%) 
+
+250 17 .2 23 .5 27 .2 13 .6500 29 .2 47 .6 56 .3 15 .41000 50 .2 89 .3 104 .3 14 .42000 72 .0 162 .0 200 .0 19 .0
+
+At |S| = 2000 , an iteration on the reduced set costs only 72 .0
+
+sec, while a DD iteration costs 200 .0s. This 2.7 times cost reduc-tion allows LOTUS to perform its initial dual space exploration in a significantly lower-cost environment. Interestingly, LOTUS demonstrates superior speed even when solving the full scenario set. In Step 5 of LOTUS, the average iteration time is 162 .0s,which is 19% faster than DD with 200 .0s. This suggests that the warm-start multipliers λW S provide a high-quality initial coordination of the solution space that simplifies the solution process for solving the full problem. As the number of scenarios decreases, the speedup of the LOTUS iterations relative to DD 
+
+10 Table C.4: Allocation of the iteration time budget for LOTUS and DD. The reported times and number of iterations are the averages across all instances (for the full phase of DD, we report the full runtime of 7200 sec). 
+
+Step 3 Step 5 DD 
+
+|S| time (sec) # iter. time (sec) # iter. # iter. 
+
+250 172 10 7028 299 265 500 292 10 6908 145 128 1000 502 10 6698 75 69 2000 720 10 6480 40 36 
+
+iterations decreases slightly. Overall, the iterations in the main phase of LOTUS are 15 .8% faster than those in DD. To evaluate the impact of the LOTUS warm-start strategy, we analyze the computational overhead and iteration efficiency as a function of the number of scenarios ( |S| ). The core of the performance advantage of LOTUS compared to DD lies in the cost asymmetry, see Section Appendix C, between the reduced scenario set ( S′) used in Step 3 (solving the warm start) and the full scenario set ( S) used in Step 5 (solving the full problem). Table C.4 summarizes how the 120 -minute (7200 s)
+
+time budget is allocated for both LOTUS and DD. On average, the warm-start phase (Step 3) of LOTUS consumes 415 seconds, taking up approximately 5.76% of the total runtime budget. As the number of scenarios increases, the absolute warm-start time grows, reaching 720 seconds ( 10% of the runtime budget) for 
+
+|S| = 2000 .
+
+11

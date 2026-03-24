@@ -1,0 +1,830 @@
+Title: Robust Permutation Flowshops Under Budgeted Uncertainty
+
+URL Source: https://arxiv.org/pdf/2602.22110v1
+
+Published Time: Thu, 26 Feb 2026 02:12:58 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# Robust Permutation Flowshops Under Budgeted Uncertainty 
+
+Noam Goldberg 1, Danny Hermelin 1, and Dvir Shabtay 11Department of Industrial Engineering & Management, Ben-Gurion University of the Negev 
+
+Abstract 
+
+We consider the robust permutation flowshop problem under the budgeted uncertainty model, where at most a given number of job processing times may deviate on each machine. We show that solutions for this problem can be determined by solving polynomially many in-stances of the corresponding nominal problem. As a direct consequence, our result implies that this robust flowshop problem can be solved in polynomial time for two machines, and can be approximated in polynomial time for any fixed number of machines. The reduction that is our main result follows from an analysis similar to Bertsimas and Sim (2003) except that dualiza-tion is applied to the terms of a min-max objective rather than to a linear objective function. Our result may be surprising considering that heuristic and exact integer programming based methods have been developed in the literature for solving the two-machine flowshop problem. We conclude by showing a logarithmic factor improvement in the overall running time implied by a naive reduction to nominal problems in the case of two machines and three machines. 
+
+# 1 Introduction 
+
+A permutation flowshop is a common production environment where multiple jobs are processed on a set of machines in the exact same sequence. The machines are arranged in series, meaning that the output of one machine becomes the input for the next. Each job has to be processed on each one of the machines, and all jobs have to follow the same path. That is, each job has to be processed by the same sequence of machines (by convention machine 1, machine 2, ..., machine 
+
+m). After completion on one machine, a job queues for processing on the next machine. So, the processing order of the jobs remains fixed throughout on each of the machines. This setup is widely used in manufacturing assembly lines, where the physical layout of conveyors and workstations makes it impossible or impractical for jobs to overtake one another. Different flowshop variants are also common in healthcare services, in particular when they are provided in stages, including, for example, preparation of patients prior to the service, which may then be followed by a final stage of recovery and production of images or reports [41]. In this paper, we are concerned about computing schedules with minimum makespan in such an environment, specifically when the processing times of the jobs are subject to uncertainty. Given that real-world durations often fluctuate due to machine variability, defects and malfunctions, or human factors, we investigate a robust approach to this classical problem. Before presenting our results, we briefly review some necessary background. 1
+
+> arXiv:2602.22110v1 [cs.DS] 25 Feb 2026
+
+1.1 Permutation Flowshops 
+
+We consider a permutation flow shop problem, that includes a set of n jobs [ n] := {1, . . . , n } to be processed in a flowshop consisting of m = O(1) machines with the objective of determining a schedule that minimizes the makespan (the completion time of the last job on the last machine). Let pij denote the processing time of job j ∈ [n] on machine i ∈ [m]. A schedule is defined by a permutation of the jobs σ = ( σ(1) , . . . , σ (n)), where σ(j) = k indicates that job k ∈ [n] is in the j-th position of the order, which is maintained on all of the machines. Let Ci,σ (j) denote the completion time of the job in the j-th position of the permutation σ on machine i ∈ [m]. The completion times are defined by the following recurrence: 
+
+Ci,σ (j) = max 
+
+n
+
+Ci,σ (j−1) , C i−1,σ (j)
+
+o
+
++ piσ (j),
+
+for i ∈ [m] and j ∈ [n], where Ci,σ (0) = 0 and C0,σ (j) = 0. The objective is to determine a permutation σ that minimizes Cmax (σ) := Cm,σ (n). Using the classical three-field notation [18], this problem is denoted by F m | prmu | Cmax .Due to its importance, the F m | prmu | Cmax problem has been extensively studied in the literature. A foundational result is Johnson’s algorithm [21] which solves the two-machine case optimally in O(n log n) time. In fact, Johnson showed that when m ≤ 3, the problem is equivalent to F m || Cmax , the flowshop variant in which the sequence of jobs is allowed to change on differ-ent machines, in the sense that F m || Cmax must have an optimal permutation solution (which is also feasible and hence optimal to F m | prmu | Cmax ). However, for any flowshop with three or more machines ( m ≥ 3), the F m | prmu | Cmax problem becomes strongly NP-hard [11]. Sev-eral exact solution methods have been studied in the literature to solve the F m | prmu | Cmax 
+
+problem, including several that apply integer programming formulations (see, e.g., [10, 39]) and ones that develop specialized branch-and-bound methods (see, e.g., [26, 13]). In terms of approx-imation algorithms, the current state-of-the-art results are due to Chen et al. [9] and Nagarajan and Sviridenko [29]. In [9] a 5/3 approximation algorithm was provided for the F 3 | prmu | Cmax 
+
+problem, while a 3 √m-approximation algorithm for the more general F m | prmu | Cmax is provided in [29]. Several authors also considered heuristic approaches to better tackle the problem in certain practical settings [8, 19, 30, 31, 38]. 
+
+1.2 Robust Permutation Flowshops 
+
+In classical scheduling, it is common to assume that the job parameters are certain and can be determined in advance. This, however, is not a realistic assumption in many applications. The area of robust optimization [2, 25, 17, 3, 14] attempts to deal with this discrepancy by analyzing optimization problems where parameters may vary in some given uncertainty set U. In the context of the F m | prmu | Cmax problem, the uncertainty applies to the processing times on the different machines, and so each element of U is a realization of the job processing times p ∈ Rm×n, to be referred to as a scenario . Let Cmax (p, σ ) denote the objective value of schedule σ in scenario p. The standard most common approach to robust optimization is the min-max robustness , where the goal is to compute a schedule σ that minimizes max p∈U {Cmax (p, σ )}. Another approach, which is not the focus of the current paper, but has been explored in particular in the scheduling literature, is to minimize the maximum regret , which is the worst-case difference between the realized makespan and the ideal outcome of having anticipated the same realization. Regarding the possible scenario 2realizations, the literature on robust combinatorial optimization has mostly focused on the following uncertainty set models: 
+
+• Discrete scenarios , where each scenario p ∈ U is given explicitly as part of the input. 
+
+• Box uncertainty , where each uncertain parameter can assume any value in a given interval. That is, in any scenario p ∈ U , we have pij − bpij ≤ pij ≤ pij + bpij for all i ∈ [m] and j ∈ [n], where the vectors pi, bpi, for i ∈ [m], are given as a part of the input. 
+
+• Budgeted uncertainty , where each uncertain parameter has two possible values: its nominal 
+
+value, pij , or its deviated value, bpij , and at most Γ parameters may deviate in any scenario. The discrete scenario approach typically leads to intractable min-max robustness problems. In fact, Kouvelis et al. [24] proved that the min-max robust F 2 || Cmax problem, which is equivalent to the min-max robust F 2 | prmu | Cmax problem [21], is ordinary NP-hard even when there are only two scenarios. Kasperski et al. [23] later strengthened this result and showed that the problem is in fact strongly NP-hard for all |U| ≥ 2. They proved that the problem admits a polynomial time approximation scheme (PTAS) when |U| = O(1), and a 2-approximation algorithm for the general problem with |U| arbitrary. Gilenson et al. [12] studied a different variant of the F 2|| Cmax problem under the discrete scenario approach, and showed that their variant is also NP-hard. In contrast to the discrete scenarios approach, in the box uncertainty setting, most scheduling problems reduce to their nominal counterpart. Indeed, the min-max robust problem reduces to its nominal ( i.e. non-robust) version by setting the processing times of each job to the upper bound of its uncertainty interval, i.e. pij = pij + bpij for all i ∈ [m] and j ∈ [n]. Consequently, one can apply any algorithm for the nominal problem in order to obtain an optimal solution for the min-max robust problem in this setting. This simple observation applies to almost all scheduling problems, provided that the scheduling criterion is a non-decreasing function of job completion times ( i.e. ,the criterion is regular ). While not the focus of this paper, we note that the maximum regret robust F 2|| Cmax problem is NP-hard under both discrete scenarios [24] and box uncertainty [36]. It is well-known that when Γ = n, budgeted uncertainty reduces to box uncertainty [2, 5]. Consequently, the maximum regret version of our problem is NP-hard already for m = 2. 
+
+1.3 Robust Permutation Flowshops under Budgeted Uncertainty 
+
+The current paper addresses the min-max robust F m | prmu | Cmax problem under the budgeted uncertainty approach [5, 4]. We denote this problem by F m | prmu | CΓmax . Specifically, we assume that the uncertainty set for the processing times, given p, bp ∈ Nm×n and Γ ∈ Nm, is defined as 
+
+UΓ,p, bp =
+
+n
+
+p ∈ Rm×n : δ ∈ { 0, 1}m×n, || δi|| 1 ≤ Γi, and pij = pij + δij bpij for all j ∈ [n], i ∈ [m]
+
+o
+
+.
+
+This problem has been previously studied for the case of m = 2 by Ying [40], and by Levorato 
+
+et al. [27]. Ying [40] primarily focused on the development of heuristic algorithms for F 2|| CΓmax ,whereas Levorato et al. [27] investigate exact decomposition methods (whose worst-case running time is not guaranteed to be polynomial). More recently, decomposition approaches for the exact solution of more general variants of the problem under budgeted uncertainty have been studied by Juvin et al. [22]. 31.4 Our Contribution 
+
+The main technical contribution of this paper is an algorithm that reduces any given instance of the F m | prmu | CΓmax problem to a polynomial number of nominal F m | prmu | Cmax instances. 
+
+Theorem 1. An optimal solution to the F m | prmu | CΓmax problem can be obtained by solving 
+
+O(nm) instances of the nominal F m | prmu | Cmax problem. This also extends to approximate solu-tions: For any ρ ≥ 1, an ρ-approximate solution to the nominal problem yields an ρ-approximation for the robust counterpart. 
+
+This reduction is in the spirit of Bertsimas and Sim [4], who introduced the concept of budgeted uncertainty, and presented a similar reduction for generic combinatorial optimization problems with uncertain linear objectives (see Section 1.5 for more details). However, since our nominal problem is of a min-max form (1), it does not directly fit into their framework, hence calling for an extension of the standard reduction. Our reduction has several algorithmic consequences. For the two machine case, a direct appli-cation of Johnson’s algorithm [21] to each of the O(n2) instances implied by Theorem 1 leads to a 
+
+O(n3 log n) algorithm for F 2 || CΓmax . However, by use of a sorting preprocessing scheme, we are able to reduce the running time by a factor of log n leading to the following theorem. 
+
+Theorem 2. The F 2 || CΓmax problem can be solved in O(n3) time. 
+
+Hall [20] presents an algorithm that constructs a (1 + ϵ)-approximate solution for any given F m || 
+
+Cmax instance in O(n3.5(m/ϵ )O(m4/ϵ 2)) time. Note that for m = O(1) this translates into an efficient polynomial-time approximation scheme (EPTAS) running in O(n3.5(1 /ϵ )O(1 /ϵ 2)) time. For m = 3, this algorithm yields a permutation schedule (see [33]) and based on Theorem 1, the following corollary is immediately established. 
+
+Corollary 1. There exists an EPTAS for the F 3 || CΓmax problem which provides a (1 + ϵ)-approximate solution for any instance of the problem in O(n6.5ϵ−O(ϵ−2)) time. 
+
+We can also apply the 5/3-approximation algorithm by Chen et al. [9] along with our novel preprocessing scheme to obtain the following result for the F 3 || CΓmax problem. 
+
+Theorem 3. A 5/3-approximate solution to any F 3 || CΓmax instance can be obtained in O(n4)
+
+time. 
+
+Finally, for larger m = O(1) values, Nagarajan and Sviridenko [29, Theorem 3.1] provides a polynomial time approximation algorithm that provides a 3 √m-approximation (assuming m ≤ n)for the F m | prmu | Cmax problem. Although polynomial, the exact running time complexity bound of this algorithm is not given in [20], but [33] showed that it is lower bounded by Ω( n4) (for 
+
+m = O(1)). Their result leads to the following corollary of Theorem 1. 
+
+Corollary 2. A 3√m-approximate solution to any F m | prmu | CΓmax instance can be obtained in polynomial time. 
+
+In practice, one could use the result in Theorem 1 along with several heuristic approaches for 
+
+F m | prmu | Cmax [8, 19, 30, 31, 38] to obtain a fast heuristic for F m | prmu | CΓmax . A similar use can be done by applying exact algorithms [10, 13, 26], with the disadvantage of having a running time that is not guaranteed to be polynomial. Note that Theorem 2 renders the heuristic and exact algorithms in [40, 27] for F 2 || CΓmax practically obsolete, as these algorithms either do not produce the optimal solution, or do so but are lacking polynomial runtime guarantees. 41.5 Related Work 
+
+Following the general robust optimization framework of Ben-Tal et al. [2], Bertsimas and Sim [4] introduced the budgeted uncertainty set to address robust combinatorial optimization problems. The main appeal of this approach is that uncertainty is modeled as a simple polyhedral uncertainty set that is specifically designed to mitigate the inherent conservatism of box uncertainty. This is achieved by restricting the number of parameters that can simultaneously deviate from their nominal values via the budget parameter Γ. In the context of binary combinatorial optimization, where the objective is to minimize a linear function c · x over a set of feasible solutions x ∈ X ⊆{0, 1}n, and the uncertainty is associated with the objective coefficients. Specifically, for a nominal vector c, a deviation vector bc, and a given budget Γ, the problems investigated in [4] are of the form min x∈X max c∈U {c · x}, where U = UΓ,c, bc with m = 1. It is shown that solving any problem of this form can be reduced to solving n + 1 non-robust instances of the problem, implying that the robust counterpart of a polynomially solvable binary optimization problem remains polynomially solvable. There are also a few extensions and improvements to this result [1, 15, 34]. While the result of Bertsimas and Sim [4] and its extensions can be used to establish the tractability of many robust combinatorial optimization problems, there are many cases in which the introduction of robustness under the budgeted uncertainty makes a tractable combinatorial optimization problem NP-hard. In particular, this applies to several scheduling problems that cannot be cast as problems studied in [4]. Minimizing the weighted sum of completion times or the number of tardy jobs on a single machine are two examples of such problems [7, 16]. A different example is the NP-hard bin packing problem, which has asymptotic fully-polynomial approximation schemes, but may not admit such an approximation scheme when item sizes are uncertain under the budgeted uncertainty model [6]. Indeed, it appears that there is no direct way of formulating our problem as a min x∈X max c∈U {c · x} problem, which might have lead [40, 27] to conjecture that the problem is NP-hard. On the other hand, we remark that the single machine problem of minimizing the (unweighted) sum of completion times under budgeted uncertainty is solved in polynomial time by extending the algorithm of Bertsimas and Sim [37, 7]. 
+
+# 2 Min-Max Formulation 
+
+Let Σ denote the set of all permutations σ : [ n] → [n]. It is well known (see e.g. [32]) that the computation of the makespan for a given permutation σ ∈ Σ can be modeled as a directed acyclic graph (digraph) on an m × n grid of nodes (see Figure 1). Each node ( i, j ) ∈ [m] × [n] in the grid corresponds to the operation of the job at position σ(j) on machine i, with an associated weight equal to the processing time piσ (j). The edges in the graph represent the precedence constraints that are implicit in the flowshop problem: vertical edges from ( i − 1, j ) to ( i, j ) represent the job availability constraint, while horizontal edges from ( i, j − 1) to ( i, j ) represent the machine availability constraint. The makespan Cmax (σ) equals the length of longest path from the source node (1 , 1) to the sink the sink node ( m, n ) (also known as the critical path ). From Figure 1, it is easy to see that in any critical path, there are exactly m − 1 jobs k1 ≤· · · ≤ km−1 where the path crosses from some row i to row i + 1. Thus, given any σ, to compute 
+
+Cmax (σ) it suffices to determine these k − 1 critical jobs . More specifically, let k0 = 1, and let K
+
+denote the set of all tuples k ∈ [n]m with k1 ≤ · · · ≤ km = n. Then, the makespan value of the 5p1,σ (1) p1,σ (2) p1,σ (3) p1,σ (4) 
+
+p2,σ (1) p2,σ (2) p2,σ (3) p2,σ (4) 
+
+p3,σ (1) p3,σ (2) p3,σ (3) p3,σ (4) 
+
+Job 1 Job 2 Job 3 Job 4 
+
+Machine 1
+
+Machine 2
+
+Machine 3
+
+Figure 1: An depiction of the flowshop digraph for a flowshop with three machines and four jobs, where the node labels indicate their weights (processing times). An example of a critical path is highlighted in bold, with k1 = 2 and k2 = 4. given F m || Cmax instance can be computed by 
+
+Cmax := min  
+
+> σ∈Σ
+
+Cmax (σ) = min  
+
+> σ∈Σ
+
+max 
+
+> k∈K
+
+( mX
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+piσ (j)
+
+)
+
+. (1) Equation (1) directly leads to the following min-max formulation of F m | prmu | CΓmax :
+
+CΓmax = min  
+
+> σ∈Σ
+
+max  
+
+> p∈U
+
+Cmax (p, σ ) = min  
+
+> σ∈Σ
+
+max  
+
+> p∈U
+
+max 
+
+> k∈K
+
+( mX
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+piσ (j)
+
+)
+
+. (2) 
+
+# 3 Reduction to Nominal Instances 
+
+In the following section, we show how to reduce an instance of F m | prmu | CΓmax into polynomial many instances of the non-robust F m | prmu | Cmax problem. Our proof follows similar lines as in Bertsimas and Sim [4], however it also differs as we are directly dealing with the objective function 
+
+Cmax (σ) in (1), which is a maximum of linear functions for a given fixed permutation (rather than a linear function as in [4], and the subsequent literature that followed its main results). The current section is entirely devoted to proving Theorem 1. 
+
+Lemma 1. Solving an F m | prmu | CΓmax instance reduces to solving O(nm) instances of the nominal F m | prmu | Cmax problem. Proof. Let (Γ , p, bp) be a given F m | prmu | CΓmax instance. Next, observe that following the formulation of our problem as (2) and the fact that we can interchange two consecutive max 6operators, the objective CΓmax can be written as 
+
+CΓmax = min  
+
+> σ∈Σ
+
+max  
+
+> p∈U
+
+Cmax (p, σ ) = min  
+
+> σ∈Σ
+
+max  
+
+> p∈U
+
+max 
+
+> k∈K
+
+( mX
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+piσ (j)
+
+)
+
+= min  
+
+> σ∈Σ
+
+max  
+
+> k∈K
+
+max 
+
+> p∈U
+
+( mX
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+piσ (j)
+
+)
+
+.
+
+Focusing on the inner maximization problem for a fixed σ ∈ Σ and k ∈ [n]m, by definition of U we have 
+
+f (σ, k ) := max 
+
+> p∈U
+
+( mX
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+piσ (j)
+
+)
+
+= max  
+
+> δiσ (j)∈{ 0,1}∀i∈[m]: || δi|| 1≤Γi
+
+( mX
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+
+
+piσ (j) + δij bpiσ (j)
+
+)
+
+.
+
+Following [5, Proposition 1] the value of f (σ, k ) equals the value of the following linear program: max 
+
+> m
+
+X
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+piσ (j) +
+
+> m
+
+X
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+bpiσ (j)δiσ (j)
+
+subject to 
+
+> ki
+
+X
+
+> j=ki−1
+
+δiσ (j) ≤ Γi ∀i ∈ [m]0 ≤ δiσ (j) ≤ 1 ∀i ∈ [m], j ∈ [ki] \ [ki−1 − 1] Applying strong duality, the value of f (σ, k ) also equals min 
+
+> m
+
+X
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+piσ (j) +
+
+> m
+
+X
+
+> i=1
+
+Γiμi +
+
+> m
+
+X
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+λiσ (j)
+
+subject to μi + λiσ (j) ≥ bpiσ (j) ∀i ∈ [m], ∀j ∈ [ki] \ [ki−1 − 1] 
+
+λiσ (j), μ i ≥ 0 ∀i ∈ [m], ∀j ∈ [ki] \ [ki−1 − 1] It is not difficult to see that the optimal solution ( λ∗, μ ∗) to the above dual program satisfies 
+
+λ∗ 
+
+> iσ (j)
+
+= max {bpiσ (j) − μ∗ 
+
+> i
+
+, 0} ∀i ∈ [m], ∀j ∈ [ki] \ [ki−1 − 1] .
+
+Therefore, we can rewrite f (σ, k ) as f (σ, k ) = min μ≥0 f (σ, k, μ ), where 
+
+f (σ, k, μ ) := 
+
+> m
+
+X
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+piσ (j) +
+
+> m
+
+X
+
+> i=1
+
+Γiμi +
+
+> m
+
+X
+
+> i=1
+> ki
+
+X
+
+> j=ki−1
+
+max 
+
+nbpiσ (j) − μi, 0
+
+o
+
+.
+
+The problem min μ≥0 f (σ, k, μ ) is a minimization of a piecewise linear function in variable vector μ.Therefore, the minimum of this problem must be attained either at one of its breakpoints or at one of its endpoints. Accordingly, for each i ∈ [m], an optimal μi must be an element of the set 
+
+Qi(σ, k i−1, k i) := {0, bpiσ (ki−1), . . . , bpiσ (ki)}.
+
+7Altogether, setting Q(σ, k ) := Q1(σ, k 0, k 1) × · · · × Qm(σ, k m−1, k m), and letting ef (σ, k, μ ) = 
+
+f (σ, k, μ ) − P 
+
+> i
+
+Γiμi, we have shown that 
+
+CΓmax = min  
+
+> σ∈Σ
+
+max  
+
+> k∈K
+
+min 
+
+> μ∈Q(σ,k )
+
+(ef (σ, k, μ ) + 
+
+> m
+
+X
+
+> i=1
+
+Γiμi
+
+)
+
+.
+
+Now, let Q′ := {0, bp11 , . . . , bp1n} × . . . × { 0, bpm1, . . . , bpmn }, and note that Q(σ, k ) ⊆ Q′ for any σ ∈ Σand any k ∈ K. Moreover, note that for any μ ≥ 0 (and, in particular, for μ / ∈ Q(σ, k )), we have 
+
+f (σ, k, μ ) ≥ f (σ, k ) for all σ ∈ Σ and k ∈ K, by the weak duality of linear programs. Hence, the problem can be written as 
+
+CΓmax = min 
+
+> μ∈Q′
+
+(
+
+min  
+
+> σ∈Σ
+
+max  
+
+> k∈K
+
+{ ef (σ, k, μ )} +
+
+> m
+
+X
+
+> i=1
+
+Γiμi
+
+)
+
+. (3) Evidently, the inner problem min σ∈Σ max k∈K ef (σ, k, μ ) is precisely an instance of the nominal 
+
+F m | prmu | Cmax problem formulated as (1), with its processing times defined by pij = pij +max {bpij − μi, 0}, for each i ∈ [m] and j ∈ [n]. Since |Q′| = O(nm), this completes the proof of Lemma 1. The following corollary and its proof are similar to [4, Theorem 4]. 
+
+Corollary 3. Given a ρ-approximation algorithm for the nominal problem, a ρ-approximate so-lution for the F m | prmu | CΓmax can be determined based on ρ-approximate solutions of O(nm)
+
+instances of the nominal F m | prmu | Cmax problem. Proof. Given a ρ-approximation algorithm for the nominal problem, for every μ, in the inner prob-lem of (3) we are able to compute some σμ ∈ Σ satisfying max k∈K ef (σμ, k, μ ) ≤ ρ min σ∈Σ max k∈K ef (σ, k, μ ). Substituting in (3), min 
+
+> μ∈Q′
+
+(
+
+max  
+
+> k∈K
+
+{ ef (σμ, k, μ )} +
+
+> m
+
+X
+
+> i=1
+
+Γiμi
+
+)
+
+≤ min 
+
+> μ∈Q′
+
+(
+
+ρ min  
+
+> σ∈Σ
+
+max  
+
+> k∈K
+
+{ ef (σ, k, μ )} +
+
+> m
+
+X
+
+> i=1
+
+Γiμi
+
+)
+
+≤ ρC Γmax 
+
+# 4 Algorithmic Consequences 
+
+We now consider the corollaries of Theorem 1 and develop algorithmic schemes for speeding up sorting-based algorithms for solving the nominal subproblems that apply for m = 2 and m = 3, leading to Theorems 2 and 3, respectively. We also elaborate on some details of the immediate corollaries of Theorem 1 including the specialization of the complexity bounds that apply for general 
+
+m = O(1), involved in Corollaries 1 and 2. Recall that the F m | prmu | Cmax and F m || Cmax 
+
+problems are equivalent for m ≤ 3, as the latter problem must have an optimal schedule which is a permutation schedule [21]. As this property applies also to the robust counterparts of these problems, in the following we refer to these as F 2 || CΓmax and F 3 || CΓmax , for m = 2 and m = 3, respectively. 84.1 Exact Solution for Two Machines 
+
+Lemma 1 establishes that the F 2 || CΓmax problem can be solved exactly using O(n2) invocations of Johnson’s algorithm. Since Johnson’s algorithm runs in O(n log n) time, this immediately implies that the F 2 || CΓmax problem can be solved in O(n3 log n) time. In the following we show how to “shave off” an O(log n) factor from this time complexity, yielding an improved O(n3) time algorithm, as stated by Theorem 2. The speed-up in runtime is achieved by using an initial auxiliary sorting of the job processing times, which allows us to reduce the subsequent runtime of each invocation of Johnson’s algorithm from O(n log n) to O(n). Johnson’s algorithm constructs an optimal job processing permutation σ∗ for a given F 2|| Cmax 
+
+instance as given by Algorithm 1. For convenience, we use π to denote an auxiliary ordering of the jobs, to be distinguished from σ that corresponds to an actual job processing permutation. Given 
+
+π1 and π2, the running time of the algorithm is O(n), and it is O(n log n) including the initial sorting that is needed for computing these orderings. 
+
+Algorithm 1 Johnson’s Algorithm [21] 
+
+Input: Processing time vectors pi ∈ Nn for i ∈ [2], and orderings πi ∈ Σ such that piπ i(j1) ≤ piπ i(j2)
+
+whenever j1 ≤ j2. 
+
+> 1:
+
+Partition the jobs into two subsets: J1 = {j ∈ [n] : p1j ≤ p2j } and J2 = [ n] \ J1. 
+
+> 2:
+
+Construct σ∗ so that the jobs in J1 appears first in non-decreasing order of p1j (i.e. , according to π1), followed by the jobs in J2 in non-increasing order of p2j (i.e. , in reverse order of π2). 
+
+Output: σ∗
+
+The improved running time is achieved by avoiding the need to re-sort the processing times in each of the O(n2) invocations of Johnson’s algorithm (Algorithm 1). This is done using a preprocessing step that involves a computation of “extreme orderings” of the processing times for the smallest and largest candidate values of μ1 and μ2, given by the set Q′ defined in the proof of Lemma 1. Then, for each intermediate value of μ, we show how to sort the associated processing times in O(n) using the preprocessed “extreme orderings”. The details of our method are summarized by Algorithm 2. 
+
+Algorithm 2 Robust Johnson’s Algorithm 
+
+Input: Γ and pi, bpi ∈ Nn, for i ∈ [2].  
+
+> 1:
+
+For i ∈ [2], sort the components of vectors pi and pi + bpi in nondecreasing order, denoting these schedules πimax and π0 
+
+> i
+
+, respectively.  
+
+> 2:
+
+for μ = ( μ1, μ 2) ∈ Q′ do  
+
+> 2.1:
+
+For i ∈ [2], compute the non-decreasing order of job processing times πi according to pij =
+
+pij + max {bpij − μi, 0}. 
+
+> 2.2:
+
+For i ∈ [2], partition [ n] into Ji, 0 ∪ Ji, max , where Ji, 0 := {j ∈ [n] : bpij − μi > 0} and 
+
+Ji, max := {j ∈ [n] : bpij − μi ≤ 0}. Let π0 
+
+> i
+
+be the ordering of Ji, 0 according to π0, and let πmax 
+
+> i
+
+be the ordering of Ji, max according to πmax  
+
+> i
+
+. 
+
+> 2.3:
+
+For i ∈ [2], merge the two schedules π0 
+
+> i
+
+and πmax  
+
+> i
+
+into a single schedule eπi. 
+
+> 2.4:
+
+σμ ← Johnson( p1, p 2, eπ1, eπ2). 
+
+Output: Output the schedule σμ with smallest Cmax (σμ) over all μ = ( μ1, μ 2) ∈ Q′.The following lemma, proved using a similar argument to the one used in [16], establishes the 9correctness of the robust version of Johnson’s algorithm. 
+
+Lemma 2. Suppose μ = ( μ1, μ 2) ∈ Q′, and let i ∈ [2] . Then, the ordering eπi computed in line 2.3 of Algorithm 2 is a nondecreasing ordering of the job processing times pij = pij + max {bpij − μi, 0}
+
+and it can be computed in O(n) time. Proof. For jobs j ∈ Ji, max we have bpij ≤ μi, and so pij = pij + max {bpij − μi, 0} = pij . Thus, the nondecreasing order of their processing times is determined by πmax  
+
+> i
+
+. For jobs j ∈ Ji, 0 we have 
+
+bpij > μ i, and so pij = pij + max {bpij − μi, 0} = pij + bpij − μi. Thus, the nondecreasing order of their processing time is determined by π0 
+
+> i
+
+, as subtracting the same value μi from each processing time does not alter the ordering of these jobs from that of pij + bpij . Finally, the claim of the lemma follows from the fact that eπi is obtained by merging the two subsets Ji, 0 and Ji, max (ordered according to π0 
+
+> i
+
+and πmax  
+
+> i
+
+, respectively) in O(n) time. Following Lemma 2, for each μ ∈ Q′, Algorithm 2 orders the processing times for each of the two machines in O(n) time. Using these computed orderings, each invocation of Johnson’s algorithm requires O(n) time. As there are O(n2) invocations in total, the total running time of line 2 in the algorithm is O(n3). Thus, the overall running time of the entire algorithm is 
+
+O(n log n + n3) = O(n3), which completes the proof of Theorem 2. 
+
+4.2 Three Machines 
+
+The classical algorithm of Hall [20] for the F m || Cmax problem constructs a (1 + ϵ)-approximate solution for any given F m || Cmax instance in O(n3.5(m/ϵ )O(m4/ϵ 2)) time. Using Theorem 1, and the equivalence between F 3 || Cmax and F 3 || CΓmax , this directly gives us a (1 + ε)-approximation algorithm for the latter problem running in O(n6.5ϵ−O(ϵ−2)) time (as stated in Corollary 1). This running time also conceals a large constant in this case, hence it might be deemed impractical. Alternatively, the current state-of-the-art constant-factor approximation algorithm for F 3 || Cmax 
+
+is the 5/3-factor approximation by Chen et al. [9], which runs in O(n log n) time. A direct imple-mentation of Theorem 1 leads to a similar approximation for the F 3 || CΓmax problem with a runtime complexity bound of O(n4 log n). However, as demonstrated in the two-machine case, this com-plexity can also be reduced to O(n4), as claimed by Theorem 3, by utilizing a sorting preprocessing scheme. We begin by reviewing the algorithm of Chen et al. [9], presented in the following as Algorithm 3. We then demonstrate how a preprocessing step can reduce the total execution time for solving the robust problem. 10 Algorithm 3 Three-machine 5/3-approximation [9] 
+
+Input: p1, p 2, p 3 ∈ Nn. 
+
+> 1:
+
+Initialize σ′ to some permutation with Cmax (σ′) = ∞. 
+
+> 2:
+
+Solve the 2-machine problem with processing time vectors q1 = p1 + p2 and q2 = p2 + p3,denoting its optimal schedule σ with critical jobs k1, k 2 ∈ [n].  
+
+> 3:
+
+if k1̸ = k2 and Pk2−1 
+
+> j=k1+1
+
+p2σ(j) + min {p2σ(k1), p 2σ(k2)} > 23
+
+Pnj=1 p2j then  
+
+> 4:
+
+if Pk1−1 
+
+> j=1
+
+p1σ(j) + p1σ(k1) ≥ p3σ(k2) + Pnj=k2+1 p3σ(j) then  
+
+> 5:
+
+Determine ∃ℓ ∈ [k2 − 1] \ [k1] such that Pk2−1 
+
+> j=k1+1
+
+p2σ(j) + Pℓj=k1 p2σ(j) ≥ 23
+
+Pnj=1 p2j 
+
+> 6:
+
+else  
+
+> 7:
+
+Determine ∃ℓ ∈ [k2 − 1] \ [k1] such that Pnj=k2+1 p2σ(j) + Pk2 
+
+> j=ℓ
+
+p2σ(j) ≥ 23
+
+Pnj=1 p2j 
+
+> 8:
+
+Let permutation 
+
+σ′ = ( σ(k1+1) , . . . , σ (ℓ−1) , σ (1) , . . . , σ (k1), ℓ, σ (k2), σ (k2+1) , . . . , σ (n), σ (ℓ+1) , . . . , σ (k2−1)) 
+
+Output: arg min σ∗=σ,σ ′ {Cmax (σ∗)}
+
+Evidently, the bottleneck of Algorithm 3 is the solution of a two machine problem with process-ing times q1 = p1 + p2 and q2 = p2 + p3, in step 2, which is also known as the machine aggregation heuristic of [35]. The running time of this step is O(n log n) as it involves Johnson’s algorithm (Al-gorithm 1). All subsequent steps 3-8 of Algorithm 3 are O(n). The algorithm for solving the robust problem following the initial preprocessing step is essentially the same as Algorithm 2, except that now we have a three dimensional vector μ = ( μ1, μ 2, μ 3) ∈ Q′ and in each iteration Algorithm 3 is invoked to solve the nominal F 3 || Cmax problem in place of directly calling Johnson’s algorithm (Algorithm 1). Our initial preprocessing step must now enable O(n) sorting of the components of vectors qi,for i ∈ [2], which now depend on a triple ( μ1, μ 2, μ 3) ∈ Q′. Accordingly, since for i ∈ [2] and j ∈ [n], 
+
+qij = pij + max {bpij − μi, 0} + pi+1 ,j + max {bpi+1 ,j − μi+1 , 0}, additional precomputation is required. In particular, the preprocessing now involves precomputing four “extreme orderings” in addition to the ones computed in Algorithm 2. Overall, we precompute eight (nondecreasing) orderings of the components of the following vectors: 
+
+• Pi+1  
+
+> l=i
+
+(pl + bpl), to be denoted π0,0 
+
+> i
+
+, for each i ∈ [2]. 
+
+• Pi+1  
+
+> l=i
+
+pl + bpi, to be denoted π0,max  
+
+> i
+
+for each i ∈ [2]. 
+
+• Pi+1  
+
+> l=i
+
+pi + bpi+1 , to be denoted πmax ,0 
+
+> i
+
+, for each i ∈ [2]. 
+
+• Pi+1  
+
+> l=i
+
+pi, to be denoted πmax ,max  
+
+> i
+
+, for each i ∈ [2]. In each iteration, for given ( μ1, μ 2, μ 3) ∈ Q′ the ordering of qij = pij + max {bpij − μi, 0}+ pi+1 ,j +max {bpi+1 ,j − μi+1 , 0} for i ∈ [2] and j ∈ [n] can be obtained by merging the subsets: 
+
+• Ji, 0,0 := {j ∈ [n] : bpij − μi > 0 and bpi+1 ,j − μi+1 > 0} ordered according to π0,0 
+
+> i
+
+,
+
+• Ji, 0,max := {j ∈ [n] : bpij − μi > 0 and bpi+1 ,j − μi+1 ≤ 0} ordered according to π0,max  
+
+> i
+
+,
+
+• Ji, max ,0 := {j ∈ [n] : bpij − μi ≤ 0 and bpi+1 ,j − μi+1 > 0} ordered according to πmax ,0 
+
+> i
+
+,
+
+• Ji, max ,max := {j ∈ [n] : bp1j − μ1 ≤ 0 and bpi+1 ,j − μi+1 ≤ 0} ordered according to πmax ,max  
+
+> i
+
+.11 Of course the precomputation of the required (constant number of) orderings remains O(n log n). The merging of four subsets for each i ∈ [2] remains O(n) so each invocation of Algorithm 3 in the proposed extension of Algorithm 2 remains O(n). Hence, the overall running time of the algorithm is O(n4), thereby establishing the claim of Theorem 3. 
+
+4.3 More Than Three Machines 
+
+For the more general F m | prmu | CΓmax problem, Nagarajan and Sviridenko [29] provide a simple 2√m-approximation randomized algorithm based on uniform random selection. They further de-velop a polynomial-time procedure to derandomize the algorithm, yielding a deterministic version with an approximation ratio of 3 √m. Therefore, based on the result in Theorem 1, Corollary 2 follows. It should be noted that their study does not include a running time complexity analysis of the deterministic approximation algorithm [29], although it appears to run in polynomial time. Poggi and Sotelo [33] establish a lower bound of Ω( n4) for the algorithm appearing in [29] (when 
+
+m = O(1)). However, the exact gap between the actual running time and this lower bound appears to have remained unresolved to date. 
+
+# 5 Summary and Discussion 
+
+In this paper, we studied the min-max robust variant of the permutation flow shop problem with uncertain processing times following the budgeted uncertainty model. We established that the problem could be reduced into a polynomial number of nominal (deterministic) problems, given that m = O(1). This main result was key to establishing several complexity and approximation results for our robust scheduling problem. One important result was showing that the two machine-case could be solved in O(n3) time. This is while the same problem had been studied in the literature from the point of view of heuristic algorithms and algorithms lacking (worst-case) polynomial time guarantees. We also showed that the three-machine problem (known to be strongly NP-hard even in the absence of uncertainty) admitted an EPTAS and could also be approximated within a factor of 5/3 in O(n4) time. We further proved the existence of a 3 √m-approximation algorithm for the general case of a constant number of m machines. Our focus in this paper on m machine-dependent uncertainty budgets with given parameters, Γ i,for i ∈ [m], is motivated by previous studies of this problem (see [40, 28, 22]). However, if deviations in processing times are driven by external factors so that they are practically machine-independent, adopting a single uncertainty budget parameter Γ for all m machines may be more realistic. Using a similar analysis as done in Section 3, it is straightforward to show that, following this approach, we can reduce any instance of F m | prmu | CΓmax to O(n) instances of the nominal (non-robust) 
+
+F m | prmu | Cmax problem. Accordingly, the results in Theorems 2 and 3 and Corollaries 1 and 2 apply to this uncertainty model as well, where the running time complexity bounds would all be reduced by a factor of O(nm−1). Finally, although robust optimization is a well-established research area, only a few studies have incorporated this methodology, and in particular under the budgeted uncertainty approach, in scheduling models. This stands in contrast to the reality that many practical scheduling applications involve significant uncertainty in job parameters. Consequently, there remains a vast variety of scheduling problems to be explored in this setting, suggesting fertile grounds for future research. 12 References 
+
+[1] E. ´Alvarez-Miranda, I. Ljubi´ c, and P. Toth. A note on the Bertsimas & Sim algorithm for robust combinatorial optimization problems. 4OR , 11(4):349–360, 2013. [2] A. Ben-Tal, A. Nemirovski, and L. El Ghaoui. Robust optimization . Princeton university press, 2009. [3] D. Bertsimas and D. d. Hertog. Robust and adaptive optimization . Dynamic Ideas LLC, 2022. [4] D. Bertsimas and M. Sim. Robust discrete optimization and network flows. Mathematical Programming , 98:49–71, 2003. [5] D. Bertsimas and M. Sim. The price of robustness. Operations Research , 52(1):35–53, 2004. [6] M. Bougeret, G. D´ osa, N. Goldberg, and M. Poss. Constant-ratio approximation for robust bin packing with budgeted uncertainty. SIAM Journal on Discrete Mathematics , 36(4):2534–2552, 2022. [7] M. Bougeret, A. A. Pessoa, and M. Poss. Robust scheduling with budgeted uncertainty. 
+
+Discrete Applied Mathematics , 261:93–107, 2019. [8] H. G. Campbell, R. A. Dudek, and M. L. Smith. A heuristic algorithm for the n job, m
+
+machine sequencing problem. Management Science , 16(10):B–630, 1970. [9] B. Chen, C. A. Glass, C. N. Potts, and V. A. Strusevich. A new heuristic for three-machine flow shop scheduling. Operations Research , 44:891–898, 1996. [10] A. Frieze and J. Yadegar. A new integer programming formulation of the permutation flow shop problem. European Journal of Operational Research , 40:90–98, 1989. [11] M. R. Garey, D. S. Johnson, and R. Sethi. The complexity of flow-shop and job-shop scheduling. 
+
+Mathematics of Operations Research , 1(2):117–129, 1976. [12] M. Gilenson, D. Shabtay, L. Yedidsion, and R. Malshe. Scheduling in multi-scenario environ-ment with an agreeable condition on job processing times. Annals of Operations Research ,307(1):153–173, 2021. [13] J. Gmys, M. Mezmaz, N. Melab, and D. Tuyttens. A computationally efficient branch-and-bound algorithm for the permutation flow-shop scheduling problem. European Journal of Operational Research , 284(3):814–833, 2020. [14] M. Goerigk and M. Hartisch. An introduction to robust combinatorial optimization. Interna-tional Series in Operations Research and Management Science , 2024. [15] K.-S. Goetzmann, S. Stiller, and C. Telha. Optimization over integers with robustness in cost and few constraints. In International Workshop on Approximation and Online Algorithms ,pages 89–101. Springer, 2011. [16] N. Goldberg and D. Shabtay. A parametrized complexity view on robust scheduling with budgeted uncertainty. arXiv preprint arXiv:2602.02748 , 2026. 13 [17] B. L. Gorissen, ˙I. Yanıko˘ glu, and D. Den Hertog. A practical guide to robust optimization. 
+
+Omega , 53:124–137, 2015. [18] R. L. Graham, E. L. Lawler, J. K. Lenstra, and A. R. Kan. Optimization and approximation in deterministic sequencing and scheduling: a survey. In Annals of Discrete Mathematics ,volume 5, pages 287–326. Elsevier, 1979. [19] J. N. D. Gupta. A functional heuristic algorithm for the n-job, m-machine flowshop scheduling problem. Operational Research Quarterly , 23(4):561–564, 1972. [20] L. A. Hall. Approximability of flow shop scheduling. Mathematical Programming , 82(1):175– 190, 1998. [21] S. M. Johnson. Optimal two-and three-stage production schedules with setup times included. 
+
+Naval Research Logistics Quarterly , 1(1):61–68, 1954. [22] C. Juvin, L. Houssin, and P. Lopez. Flow-shop and job-shop robust scheduling problems with budgeted uncertainty. European Journal of Operational Research , 326:54–68, 2025. [23] A. Kasperski, A. Kurpisz, and P. Zieli´ nski. Approximating a two-machine flow shop scheduling under discrete scenario uncertainty. European Journal of Operational Research , 217(1):36–43, 2012. [24] P. Kouvelis, R. Daniels, and G. Vairaktarakis. Robust scheduling of a two–machine flow-shop with uncertain processing times. IIE Transactions , 32(1):421–432, 2000. [25] P. Kouvelis and G. Yu. Robust discrete optimization and its applications , volume 14. Springer Science & Business Media, 2013. [26] T. Ladhari and M. Haouari. A computational study of the permutation flow shop problem based on a tight lower bound. Computers & Operations Research , 32(7):1831–1847, 2005. [27] M. Levorato, R. Figueiredo, and Y. Frota. Exact solutions for the two-machine robust flow shop with budgeted uncertainty. European Journal of Operational Research , 300(1):46–57, 2022. [28] M. Levorato, R. Figueiredo, and Y. Frota. Exact solutions for the two-machine robust flow shop with budgeted uncertainty. European Journal of Operational Research , 300(1):46–57, 2022. [29] V. Nagarajan and M. Sviridenko. Tight bounds for permutation flow shop scheduling. Math-ematics of Operations Research , 34:417–427, 2009. [30] M. Nawaz, E. E. Enscore Jr, and I. Ham. A heuristic algorithm for the m-machine, n-job flow-shop sequencing problem. Omega , 11(1):91–95, 1983. [31] D. S. Palmer. Sequencing jobs through a multi-stage process in the minimum total time— a quick method of obtaining a near optimum. Journal of the Operational Research Society ,16(1):101–107, 1965. [32] M. Pinedo. Scheduling: Theory, Algorithms and Systems . Springer, 2022. 14 [33] M. Poggi and D. Sotelo. A linear time approximation algorithm for permutation flow shop scheduling. Theoretical Computer Science , 416:87–94, 2012. [34] M. Poss. Robust combinatorial optimization with knapsack uncertainty. Discrete Optimization ,27:88–102, 2018. [35] H. R¨ ock and G. Schmidt. Machine aggregation heuristics in shop scheduling . Univer-sit¨ atsbibliothek d. TU, Abt. Publikation, 1982. [36] Y. Shafransky and V. Shinkarevich. On the complexity of constructing a minmax regret solution for the two-machine flow shop problem under the interval uncertainty. Journal of Scheduling , 23(6):745–749, 2020. [37] B. Tadayon and J. C. Smith. Algorithms and complexity analysis for robust single-machine scheduling problems. Journal of Scheduling , 18(6):575–592, 2015. [38] ´E. Taillard. Some efficient heuristic methods for the flow shop sequencing problem. European Journal of Operational Research , 47(1):65–74, 1990. [39] F. Tseng, E. Stafford, and J. Gupta. An empirical analysis of integer programming formulations for the permutation flowshop. Omega , 32(4):285–293, 2004. [40] K.-C. Ying. Scheduling the two-machine flowshop to hedge against processing time uncertainty. 
+
+Journal of the Operational Research Society , 66(9):1413–1425, 2015. [41] S. Youn, H. N. Geismar, and M. Pinedo. Planning and scheduling in healthcare for better care coordination: Current understanding, trending topics, and future opportunities. Production and Operations Management , 31(12):4407–4423, 2022. 15

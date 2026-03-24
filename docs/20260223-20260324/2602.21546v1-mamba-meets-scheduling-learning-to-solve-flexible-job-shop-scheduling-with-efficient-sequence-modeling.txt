@@ -1,0 +1,1259 @@
+Title: Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling
+
+URL Source: https://arxiv.org/pdf/2602.21546v1
+
+Published Time: Thu, 26 Feb 2026 01:25:27 GMT
+
+Number of Pages: 18
+
+Markdown Content:
+# Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling 
+
+## Zhi Cao 
+
+cz20000927@mail.dlut.edu.cn Dalian University of Technology Dalian, China 
+
+## Cong Zhang 
+
+cong.zhang92@gmail.com Nanyang Technological University Singapore 
+
+## Yaoxin Wu 
+
+y.wu2@tue.nl Eindhoven University of Technology Eindhoven, the Netherlands 
+
+## Yaqing Hou 
+
+houyq@dlut.edu.cn Dalian University of Technology Dalian, China 
+
+## Hongwei Ge 
+
+hwge@dlut.edu.cn Dalian University of Technology Dalian, China 
+
+## Abstract 
+
+The Flexible Job Shop Problem (FJSP) is a well-studied combinatorial optimization problem with extensive applications for manufactur-ing and production scheduling. It involves assigning jobs to various machines to optimize criteria, such as minimizing total completion time. Current learning-based methods in this domain often rely on localized feature extraction models, limiting their capacity to cap-ture overarching dependencies spanning operations and machines. This paper introduces an innovative architecture that harnesses Mamba, a state-space model with linear computational complexity, to facilitate comprehensive sequence modeling tailored for FJSP. In contrast to prevalent graph-attention-based frameworks that are computationally intensive for FJSP, we show our model is more efficient. Specifically, the proposed model possesses an encoder and a decoder. The encoder incorporates a dual Mamba block to extract operation and machine features separately. Additionally, we introduce an efficient cross-attention decoder to learn interactive embeddings of operations and machines. Our experimental results demonstrate that our method achieves faster solving speed and sur-passes the performance of state-of-the-art learning-based methods for FJSP across various benchmarks. 
+
+## CCS Concepts 
+
+• Applied computing → Supply chain management ; • Com-puting methodologies → Machine learning .
+
+## Keywords 
+
+Flexible job-shop scheduling, Neural Combinatorial Optimization, Mamba model, Attention model, Reinforcement Learning  
+
+> Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org.
+> Conference’17, Washington, DC, USA
+> ©2026 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM ISBN 978-1-4503-XXXX-X/2018/06 https://doi.org/10.1145/nnnnnnn.nnnnnnn
+
+## 1 Introduction 
+
+The Flexible Job Shop Problem (FJSP) extends the classical Job Shop Scheduling Problem (JSSP) and is a significant combinatorial opti-mization challenge in computer science and operations research. It is prevalent in manufacturing, automotive, and aerospace [ 2 ]. Unlike JSSP, FJSP allows for a more complex assignment of jobs, where each operation can be processed by any machine from a set of eligible machines, introducing additional flexibility and complexity in scheduling [ 5]. FJSP aims to assign jobs to a set of heteroge-neous machines while optimizing objectives such as minimizing the makespan (total completion time of all jobs), total flowtime, or tardiness. Due to its NP-hard nature, solving FJSP optimally is highly impractical, and therefore, practical solutions often depend on heuristic approaches [ 9] or approximate algorithms [ 15 , 24 ]. These methods aim to provide near-optimal solutions within a reasonable computational time, balancing quality and efficiency. In the current research landscape, there has been a notable in-crease in investigation focused on integrating machine learning techniques to address the challenging JSSP and FJSP. Notably, JSSP has garnered significant attention and scrutiny within these efforts [13 , 18 , 29 , 33 – 35 ]. Conversely, FJSP remains relatively unexplored, primarily due to the intricate complexity inherent in the problem. Current research focusing on learning to tackle FJSP often casts the problem as a sequential decision problem. They leverage deep reinforcement learning to tackle this intricate challenge. In their approaches, the states are typically represented by directed acyclic graphs (known as disjunctive graphs), over which the decisions (i.e., selecting a candidate operation to be assigned and scheduled to one of the compatible machines) are made. These graph-structured states are first mapped to latent space by extracting embeddings us-ing deep neural nets, with graph neural networks as a fundamental component [ 25 ]. Due to the more powerful representation learning ability, an emerging trend utilizes the graph-attention mechanisms to replace graph convolutions for learning graph embeddings [ 31 ]. Nevertheless, both models focus on extracting operation and ma-chine embeddings within a localized neighbourhood surrounding the target, following the graph’s topology. This approach may hin-der comprehensive representation learning, leading to constrained performance outcomes. Furthermore, the computational overhead associated with graph attention challenges the efficiency required for addressing the FJSP, a critical dimension of the method’s overall  
+
+> arXiv:2602.21546v1 [cs.LG] 25 Feb 2026 Conference’17, July 2017, Washington, DC, USA Zhi Cao, Cong Zhang, Yaoxin Wu, Yaqing Hou, and Hongwei Ge
+
+performance. Henceforth, designing node connections in disjunc-tive graphs is always tricky and head-scratching for an effective trade-off between computational efficiency and performance [ 31 ]. Therefore, a natural question is, can we develop a neural architec-ture that can improve the performance based on learning the full sequence of operations (and machines) to bypass the need for elab-orate graph-based state design and maintain faster-solving speed at the same time? In this paper, we answer this question by proposing Mamba-
+
+Cross Attention, a novel neural network with Mamba [ 10 ] as the core, to enable efficient and comprehensive sequence modelling for FJSP. M-CA comprises an encoder and a decoder. The encoder extracts operation and machine features separately. In specific, the encoder integrates dual Mamba blocks to separately extract latent representations for operation-specific attributes (e.g., processing times, precedence constraints) and machine-specific states (e.g., workload, availability). This bifurcated design ensures specialized feature learning while mitigating interference between heteroge-neous data modalities. The decoder then employs a lightweight cross-attention mechanism to fuse these representations, enabling the model to jointly reason about operation-machine assignments and scheduling sequences. By replacing computationally expensive graph-attention layers with Mamba’s linear-complexity structured state space models (SSMs), we demonstrate that M-CA achieves significant efficiency gains without sacrificing solution quality. In summary, our contributions are as follows: 
+
+• We extend the boundary of Mamba models to scheduling domains by showing that Mamba is effective and efficient in learning to solve FJSP. To our knowledge, this is the first attempt to apply Mamba to solving discrete combinatorial optimization problems in manufacturing scheduling. 
+
+• We proposed the Mamba-CrossAttention network to en-able high-quality end-to-end solution generation for FJSP. It learns the interactive representation of operations and ma-chines from their full sequence, breaking the neighbourhood restriction of existing graph-based approaches. 
+
+• We show through extensive experiments that our approach can provide near-optimal solutions for FJSP, achieving new state-of-the-art results among learning-based approaches with a faster solving speed. 
+
+## 2 Related Work 
+
+The rapid progress of artificial intelligence has sparked a new surge of interest in approaching manufacturing scheduling problems through a machine learning perspective, particularly leveraging deep learning techniques [ 8, 20 , 26 ]. For the Job Shop Schedul-ing Problem (JSSP), neural differentiable methods rooted in deep reinforcement learning (DRL) have emerged as the predominant machine learning paradigm. The prevailing neural approaches for JSSP predominantly favoured construction heuristics, which learn to extend partial solutions to complete ones sequentially. Notably, L2D [ 35 ] stands as a milestone work in this domain, where a GIN-based policy learns latent embeddings of partial solutions, depicted as disjunctive graphs and selects operations for assign-ment to respective machines at each construction step. Similar dispatching strategies can be observed in RL-GNN [ 18 ] and Sched-uleNet [ 17 ], which introduce artificial machine nodes containing machine-progress information into the disjunctive graph to inte-grate machine status into decision-making. These augmented dis-junctive graphs are treated as undirected, with a type-aware GNN model featuring two independent modules proposed for extracting machine and task node embeddings. Despite notable advancements over L2D, the performance remains suboptimal. DGERD [ 4 ] fol-lows a procedure akin to L2D but employs a Transformer-based embedding network [ 30 ]. In a recent development, MatNet [ 16 ]adopts an encoding-decoding framework for learning construction heuristics for flexible flow shop problems. However, its assump-tion of independent machine groups for operations at each stage is overly restrictive for JSSP. JSSenv [ 29 ] introduces a meticulously designed and well-optimized simulator for JSSP, instantiated as an extension of the OpenAI gym environment suite [ 3 ]. Instead of utilizing disjunctive graphs, JSSenv models and represents partial schedule states using Gantt charts [ 14 ], and also introduces a DRL agent to learn to solve JSSP instances individually online. Nonethe-less, its online nature, necessitating training for each instance, is less rewarding than offline-trained methodologies that can solve unseen problem instances once trained. In addition to construction heuristics, there are learning-to-improve methods that iteratively refine an initial solution to ones with better quality [33, 34]. Unlike JSSP, which has been vastly studied, relatively little at-tention has been invested in FJSP. Song et al. [ 27 ] introduce a Deep Reinforcement Learning (DRL) based method to address FJSP by learning high-quality priority dispatching rules (PDRs) end-to-end. The approach combines operation selection and machine assign-ment into a unified decision-making process, utilizing a unique het-erogeneous graph representation of scheduling states that captures complex relationships between operations and machines. DAN [ 31 ]replaces the graph convolution kernel with the graph-attention mechanism. DAN consists of interconnected operation message attention blocks and machine message attention blocks, enabling the precise representation of complex relationships between the two. Despite the promising results, their methods require a tai-lored design of the graph-based state. The representation learning over these graphs is confined within a localized neighbourhood for each operation and machine, therefore heavily relying on message-passing to capture the holistic context of the problem, potentially limiting the overall performance, especially when utilizing shallow Graph Neural Networks (GNNs) or encountering over-smoothing issues with deeper GNN architectures [21]. 
+
+## 3 Preliminaries 3.1 Mamba Network 
+
+State Space Models. The State Space Models (SSM) maps a con-tinuous input signal 𝑥 (𝑡 ) ∈ R to a corresponding output 𝑦 (𝑡 ) ∈ R
+
+through the state representation ℎ(𝑡 ) ∈ R𝑁 . This state space de-scribes the evolution of the state over time and can be expressed using ordinary differential equations as follows: 
+
+ℎ′ (𝑡 ) = 𝑨 ℎ(𝑡 ) + 𝑩 𝑥 (𝑡 )
+
+𝑦 (𝑡 ) = 𝑪 ℎ(𝑡 ) + 𝑫 𝑥 (𝑡 ) (1) Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling Conference’17, July 2017, Washington, DC, USA 
+
+where ℎ′ (𝑡 ) = 𝑑ℎ (𝑡 ) 
+
+> 𝑑𝑡
+
+, and 𝑨 , 𝑩 , 𝑪 , and 𝑫 are learnable parameter matrices. 
+
+Discretization. Due to the continuous nature of SSM, finding its analytical solution is difficult. Also to facilitate the solution of dis-crete sequence inputs, such as operation and machine sequences in scheduling, discretization methods are introduced. Through dis-cretization, SSM is able to treat discrete sequences as samples of a continuous signal at fixed time intervals. The resulting discrete state space model can be expressed as follows: 
+
+ℎ𝑘 = 𝑨 ℎ𝑘 −1 + 𝑩 𝑥 𝑘 
+
+𝑦 𝑘 = 𝑪 ℎ𝑘 + 𝑫 𝑥 𝑘 
+
+(2) where ℎ𝑘 denotes the state vector at moment 𝑘 and 𝑥 𝑘 denotes the input vector at moment 𝑘 . The continuous time matrices 𝐴 and 𝐵 
+
+are transformed into discrete 𝐴 and 𝐵 matrices by applying some discretization techniques such as the ZOH (Zero Order Holding) method. In this case, 𝑨 = exp (Δ𝑨 ), 𝑩 = (Δ𝑨 )−1 (exp (Δ𝑨 ) − 𝑰 ) · Δ𝑩 .
+
+Selective Scan Mechanism. Mamba further introduces selective SSM by parameterizing the inputs to the SSM. This allows the model to process sequences selectively to focus on or ignore spe-cific inputs. This selective mechanism allows the Mamba model to strike a balance between sequence feature extraction capability and computational efficiency, giving it the potential to outperform Transformer. In addition, Mamba has been designed with hardware-aware algorithms that enable parallel scan training. 
+
+## 3.2 Flexible Job Shop Scheduling 
+
+Figure 1: Disjunctive graph representations of JSP and FJSP with 3 jobs and 3 machines. The arrows on black lines in-dicate precedence within jobs, while dotted lines represent disjunctive arcs, whose directions must be determined to es-tablish a valid schedule. Disjunctive arcs of the same color indicate the linked operations should be executed by the same machine(s). 
+
+The job shop scheduling problem (JSSP) aims to schedule 𝑛 jobs 
+
+𝐽 = {𝐽 1, 𝐽 2, . . . , 𝐽 𝑛 } across 𝑚 machines 𝑀 = {𝑀 1, 𝑀 2, . . . , 𝑀 𝑚 }. Each job 𝐽 𝑖 ∈ 𝐽 comprises a series of operations, where 𝑂 𝑖 𝑗 represents the 
+
+𝑗 -th operation in the 𝑖 -th job. In the standard JSSP, each operation 
+
+𝑂 𝑖 𝑗 must be processed on a specific machine 𝑀 𝑘 with a processing time 𝑝 𝑘 𝑖 𝑗 . Operations should be scheduled so that each machine handles only one operation at a time, and the operations within each job are executed in their designated sequence. The objective is to optimally assign operations to machines to minimize the makespan, i.e., the overall processing time for all operations. In the flexible job shop problem (FJSP), each operation 𝑂 𝑖 𝑗 can be processed on one or more machines. Compared to JSSP, this flexibility introduces an additional layer of optimization complexity, and an effective solution should strategically utilize machines to minimize the makespan. The disjunctive graph representations of JSSP and FJSP are shown in Figure 1. 
+
+## 4 Methodology 
+
+Current research predominantly relies on either graph convolu-tion or graph attention mechanisms as the fundamental approach for learning the embeddings of machines and operations for FJSP, which typically necessitates a specialized graph-based state con-figuration of the problem. Nonetheless, the embeddings learned from local regions surrounding the target (operation or machine) often require K-hop message passing, typically instantiated as a neural network with K layers where each layer represents the graph convolution or graph attention operator, to acquire the global con-text of the graph. This framework is susceptible to over-smoothing challenges [ 21 ] and struggles to capture the holistic operation and machine sequences for FJSP. In this paper, we show that learning the operation and machine embeddings from the whole sequence is more effective (i.e., yielding better performance) and more efficient with the linear state-space model. We start by first modelling the FJSP problem as a sequential decision-making problem. 
+
+## 4.1 MDP Formulation 
+
+The process of constructing a solution to an FJSP instance can be viewed as a sequential decision-making process where at each deci-sion step 𝑡 (and 𝑇 (𝑡 ) is the wall-clock time), we dispatch an available operation-machine pair (𝑂 𝑖 𝑗 , 𝑀 𝑘 ), indicating that the operation 𝑂 𝑖 𝑗 
+
+is selected to be scheduled and processed on its compatible ma-chine 𝑀 𝑘 at 𝑡 . This process continues until all operations have been scheduled. The formal Markov Decision Process (MDP) for FJSP is defined as follows. 
+
+Action . The action space A ( 𝑡 ) at step 𝑡 is defined as the set of operations ready to be scheduled and their corresponding eligible machines. They are arranged in operation-machine pairs. A pair 
+
+(𝑂 𝑡 , 𝑀 𝑡 ) ∈ A ( 𝑡 ) if and only if the operation 𝑂 𝑡 is available for processing and there is an eligible machine 𝑀 𝑘 that can execute 𝑂 
+
+at 𝑡 . Specifically, an operation 𝑂 𝑖 𝑗 from job 𝐽 𝑖 is considered eligible for processing at 𝑡 if its immediate predecessor, 𝑂 𝑖 𝑗 −1, has already been completed, and there exists an idle machine 𝑀 𝑘 ready for processing 𝑂 𝑖 𝑗 . As the scheduling process progresses, the number of unscheduled operations gradually decreases, continuing until all operations have been scheduled. Therefore, the decision action is performed |O| times, with |O| denoting the total number of operations, as each operation requires to be scheduled only once. 
+
+State . The state 𝑠 𝑡 encompasses the overall status and configu-rations of operations and machines at 𝑡 (e.g., processing dura-tion of operation and machine available time). We use the hand-craft features to represent 𝑠 𝑡 . Specifically, let O( 𝑡 ), M ( 𝑡 ), and 
+
+A ( 𝑡 ) be the set of all operations, all machines, and the actions at 𝑡 . Then, 𝑠 𝑡 consists of features from three parties, including 
+
+ℎ𝑂 𝑖 𝑗 ∈ R𝑜 for each operation 𝑂 𝑖 𝑗 ∈ O( 𝑡 ), ℎ𝑀 𝑘 ∈ R𝑚 for each ma-chine 𝑀 𝑘 ∈ M ( 𝑡 ), and ℎ(𝑂 𝑖 𝑗 ,𝑀 𝑘 ) ∈ R𝑎 for each eligible operation-machine pair (𝑂 𝑖 𝑗 , 𝑀 𝑘 ) ∈ A ( 𝑡 ). For operations already processed at 𝑡 , we employ a dummy zero feature vector, as they will not affect the current scheduling. Conference’17, July 2017, Washington, DC, USA Zhi Cao, Cong Zhang, Yaoxin Wu, Yaqing Hou, and Hongwei Ge Machine Features 
+
+> Operation Features
+
+…
+
+> Out  Concat
+> …
+> Action
+
+Scheduling Environment 
+
+…
+
+…
+
+> O-M Pair Features
+
+Problem State 
+
+Mamba 
+
+Block 
+
+Mamba 
+
+Block   
+
+> Cross -
+> Attention
+> Q
+> KV
+> Q
+> KV
+> Layer
+> Norm
+> Layer
+> Norm
+> Cross -
+> Attention
+> Reshape
+> Decision
+> Network
+> Dual Mamba Encoder Cross Attention Decoder
+
+Decision Making 
+
+Feature Extraction Network 
+
+> Conv
+> SSM
+
+σ X
+
+σ
+
+Mamba Block 
+
+> Multi -head
+> Attention
+
+Cross -Attention 
+
+> ADD
+> Feed
+> Forward Q
+> KV
+> …
+> …
+
+Decision Network 
+
+> ADD
+
+Figure 2: The overall architecture of our proposed Mamba-CrossAttention framework. It comprises two fundamental compo-nents: the feature extraction network and the decision-making network. At each step in the scheduling process, the feature extraction network extracts raw features of operations and machines from the environment. The decision network concatenates the output of the feature extraction network with the machine-operation pair features to form candidates, and selects the optimal O-M pair according to the probability to complete the end-to-end solution generation. State transition . After invoking the action 𝑎 𝑡 in 𝑠 𝑡 , the config-urations of the scheduling environment are changed (e.g., new machines become available). The operation features ℎ𝑂 𝑖 𝑗 , machine features ℎ𝑀 𝑘 , and action features ℎ(𝑂 𝑖 𝑗 ,𝑀 𝑘 ) are updated accordingly, resulting in the next state 𝑠 𝑡 +1. Due to limited space, we refer the audiences to Appendix A for the details of the state vectors and transitions. 
+
+Reward . The difference in makespan between states 𝑠 𝑡 and 𝑠 𝑡 +1
+
+can be used to estimate the quality of the decision 𝑎 𝑡 made at 𝑡 .Thus, we define the reward for (𝑠 𝑡 , 𝑎 𝑡 ) as 𝑟 (𝑠 𝑡 , 𝑎 𝑡 , 𝑠 𝑡 +1) = 𝐶 max (𝑠 𝑡 ) − 
+
+𝐶 max (𝑠 𝑡 +1). It is easy to show that the cumulative reward 𝐺 =
+
+Í| O |  
+
+> 𝑡 =0
+
+𝑟 (𝑆 𝑡 , 𝑎 𝑡 , 𝑆 𝑡 +1) = 𝐶 max (𝑠 0) − 𝐶 max . Since the makespan 𝐶 max (𝑠 0)
+
+of the initial state 𝑠 0 is constant, maximizing the cumulative reward 
+
+𝐺 can be equivalent to minimizing the total completion time 𝐶 max .
+
+Policy . The M-CA policy network 𝜋 𝜃 (𝑎 𝑡 |𝑠 𝑡 ), parameterized by trainable parameters 𝜃 , generates the probability of selecting ac-tion 𝑎 𝑡 at state 𝑠 𝑡 . It consists of a feature extraction network and a decision-making network. To find an optimal 𝜃 , we developed an actor-critic algorithm. Specifically, the actor selects actions based on 𝜋 𝜃 (𝑎 𝑡 |𝑠 𝑡 ), while the critic estimates the cumulative reward 𝐺 
+
+and provides feedback to update the policy. The next section details 
+
+𝜋 𝜃 (𝑎 𝑡 |𝑠 𝑡 ) and the actor-critic algorithm for optimizing 𝜃 .
+
+## 4.2 Mamba-CrossAttention Policy Network 
+
+The architecture of the Mamba-CrossAttention (M-CA) model is il-lustrated in Figure 2. It comprises two fundamental components: the feature extraction network and the decision-making network. The feature extraction network follows an encoder-decoder structure. The encoder integrates dual Mamba blocks to extract operation and machine embeddings independently. These embeddings are subse-quently fed into the cross-attention decoder to acquire interactive embeddings of machines and operations. Subsequently, the inter-active features and the reshaped operation-machine pair features are concatenated and directed to the decision-making network to determine the probability associated with selecting each eligible operation-machine pair. As per our action selection strategy, the pair with the highest probability is chosen under the greedy strat-egy, while under the sampling strategy, selection is proportional to the probability distribution. 
+
+4.2.1 Feature Extraction Network. 
+
+Encoder. The Dual Mamba Encoder (DME) is designed to extract the raw features of machines and operations separately. For all operations raw feature sequence 𝐻 𝑂 𝑢 = {. . . , ℎ 𝑂 𝑖 𝑗 , . . . } and ma-chine raw feature sequence 𝐻 𝑀 𝑢 = {. . . , ℎ 𝑀 𝑘 , . . . }, we use linear projections to expand their dimensions and feed them into Mamba Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling Conference’17, July 2017, Washington, DC, USA 
+
+blocks. Mamba follows the residual structure. In the Mamba block, the main branch uses a convolution layer to extract local features, which are then activated and fed into the SSM. The residual branch of inputs are processed using an activation function (SiLU [ 11 ]). After that, the main branch and the res idual branch are connected in a nonlinear manner (i.e., multiplication) to obtain the processed features. The computational process of the DME is as follows: 
+
+𝐻 ′ 
+
+> 𝑂 𝑢
+
+= SSM (𝜎 (Conv (Linear (𝐻 𝑂 𝑢 ))) + 𝜎 (Linear (𝐻 𝑂 𝑢 )) ,𝐻 ′ 
+
+> 𝑀 𝑢
+
+= SSM (𝜎 (Conv (Linear (𝐻 𝑀 𝑢 ))) + 𝜎 (Linear (𝐻 𝑀 𝑢 )) . (3) Mamba focuses on specific machines or operations in the full se-quence rather than on all features during feature extraction by integrating the selective scanning mechanism in SSM. In other words, Mamba achieves a balance between feature extraction capa-bility and computational efficiency through selectivity. In contrast to graph attention mechanisms, Mamba does not need to model the neighborhood relationships between operations or machines manually but instead focuses on the implicit connections between them. With the SSM inherence and the selective scan mechanism, it achieves linear time complexity 𝑂 (|O|) and 𝑂 (|M|) in processing the operation sequence 𝐻 𝑂 𝑢 and machine sequence 𝐻 𝑀 𝑢 . There-fore, Mamba is a simple and effective way to extract features for scheduling problems. In addition, the Dual Mamba Encoder can be used alone for feature extraction, in which case the output features of Equation 3 are used directly as inputs to the decision module. 
+
+Decoder. The Cross-Attention Decoder is designed to simulate two-way selection between machines and operations during the scheduling process. The process of CrossAttention is as follows, which includes a multi-head attention layer and a feed-forward layer: 
+
+ˆh𝑖 = h𝑖 + MHA (hi, 𝐸 ),
+
+h′ 
+
+> 𝑖
+
+= ˆh𝑖 + FF ( ˆh𝑖 ). (4) where 𝐻 = (h1, . . . , hn), 𝐸 = (e1, . . . , en) denotes the input feature matrices. 𝐻 denotes the 𝑄 matrix and 𝐸 denotes the 𝐾 and 𝑉 matrix. We utilize the cross-attention mechanism in an efficient way. Our decoder consists of two cross-attention layers. After encoding, we obtain the operation embedding matrix 𝐻 ′ 
+
+> 𝑂 𝑢
+
+and the machine embedding matrix 𝐻 ′ 
+
+> 𝑀 𝑢
+
+. We use 𝐻 ′ 
+
+> 𝑀 𝑢
+
+as the input to the 𝑄 matrix of the first cross-attention layer and 𝐻 ′ 
+
+> 𝑂 𝑢
+
+as the 𝐾 and 𝑉 matrices to obtain the machine matrix 𝐻 ′′  
+
+> 𝑀 𝑢
+
+containing the features of the operation. This process simulates the selection of machines for operations. After that, we input the matrix 𝐻 ′ 
+
+> 𝑂 𝑢
+
+as 𝑄 and the matrix 
+
+𝐻 ′′  
+
+> 𝑀 𝑢
+
+as 𝐾 and 𝑉 into the second cross-attention layer to obtain the operation matrix 𝐻 ′′  
+
+> 𝑂 𝑢
+
+, which contains the machine features. This process simulates the selection of operations for machines. And we use LayerNorm to stabilize training. The whole process in the decoder can be represented as follows: 
+
+𝐻 ′′  
+
+> 𝑀 𝑢
+
+= CrossAttention (𝐻 ′ 
+
+> 𝑀 𝑢
+
+, 𝐻 ′ 
+
+> 𝑂 𝑢
+
+),𝐻 ′′  
+
+> 𝑂 𝑢
+
+= CrossAttention (𝐻 ′ 
+
+> 𝑂 𝑢
+
+, 𝐻 ′′  
+
+> 𝑀 𝑢
+
+). (5) Through the above process, we achieve the implicit interaction between machine and operation in the state feature extraction pro-cess, and complete the fusion of machine and operation features. Although the operation-machine allocation is made by the decision network, we argue that their hidden connections need to be consid-ered at a global level during the feature extraction phase. Therefore, we propose the cross-attention decoder. Additionally, the traditional self-attention mechanism has 𝑂 (|O| 2) computational complexity when extracting operation features, i.e., each element in the se-quence has to pay attention to all the elements in the sequence, which does not allow for interaction between different feature se-quences. In contrast, our cross-attention decoder has a lightweight complexity of 𝑂 (|O| × |M|) , and the operation feature 𝐻 ′ 
+
+> 𝑂 𝑢
+
+can interact with both operation and machine features in 𝐻 ′′  
+
+> 𝑀 𝑢
+
+at the second cross-attention layer, which combines both self-attention and cross-attention features. Considering that the number of op-erations |O| is much larger than the number of machines |M| in scheduling problems in manufacturing (i.e. more jobs and a fixed number of machines), the complexity of our method tends to be linearly related to |O| . Combining the linear-time encoder and the lightweight decoder, our approach has the potential to be applied to solve large-scale problems in real-world production scenarios. 
+
+4.2.2 Decision-Making Network. 
+
+After processing the raw features of the operations and machines with the feature extraction network, we use non-zero averaging for pooling to obtain the global features ℎ′′    
+
+> 𝐺 (𝑂 )
+
+and ℎ′′    
+
+> 𝐺 (𝑀 )
+
+of the machines and operations. The averaging process is as follows: 
+
+ℎ′′    
+
+> 𝐺 (𝑂 )
+
+= 1
+
+𝑂 𝑖 𝑗 ∈ O 𝑢 |ℎ′′  
+
+> 𝑂 𝑖 𝑗
+
+≠ 0∑︁ 𝑂 𝑖 𝑗 ∈ O 𝑢 ,ℎ ′′  
+
+> 𝑂 𝑖 𝑗 ≠0
+
+ℎ′′  
+
+> 𝑂 𝑖 𝑗
+
+, ℎ ′′  
+
+> 𝑂 𝑖 𝑗
+
+∈ 𝐻 ′′  
+
+> 𝑂 𝑢
+
+,ℎ′′    
+
+> 𝐺 (𝑀 )
+
+= 1
+
+𝑀 𝑘 ∈ M 𝑢 |ℎ′′  
+
+> 𝑀 𝑘
+
+≠ 0∑︁ 𝑀 𝑘 ∈ M 𝑢 ,ℎ ′′  
+
+> 𝑀 𝑘 ≠0
+
+ℎ′′  
+
+> 𝑀 𝑘
+
+, ℎ ′′  
+
+> 𝑀 𝑘
+
+∈ 𝐻 ′′  
+
+> 𝑀 𝑢
+
+.
+
+(6) Then, we concatenate the operation features ℎ′′  
+
+> 𝑂 𝑖 𝑗
+
+,machine fea-tures ℎ′′  
+
+> 𝑀 𝑘
+
+, global features ℎ′′    
+
+> 𝐺 (𝑂 )
+
+and ℎ′′    
+
+> 𝐺 (𝑀 )
+
+with the operation-machine pair features ℎ(𝑂 𝑖 𝑗 ,𝑀 𝑘 ) to form the complete decision net-work’s candidate feature ℎ𝑐 (𝑂 𝑖 𝑗 , 𝑀 𝑘 ).
+
+ℎ𝑐 (𝑂 𝑖 𝑗 , 𝑀 𝑘 ) = ℎ′′  
+
+> 𝑂 𝑖 𝑗
+
+ℎ′′  
+
+> 𝑀 𝑘
+
+ℎ′′    
+
+> 𝐺 (𝑂 )
+
+ℎ′′    
+
+> 𝐺 (𝑀 )
+
+ℎ(𝑂 𝑖 𝑗 ,𝑀 𝑘 ) . (7) Finally, the probability of selecting each candidate (i.e., O-M pair) is obtained by the actor network MLP 𝜃 .
+
+𝜋 𝜃 (𝑎 𝑡 | 𝑠 𝑡 ) = Softmax (MLP 𝜃 (ℎ𝑐 (𝑂 𝑖 𝑗 , 𝑀 𝑘 ))) . (8) where 𝜋 𝜃 (𝑎 𝑡 | 𝑠 𝑡 ) denotes the probability distribution of choosing action 𝑎 𝑡 in state 𝑠 𝑡 .
+
+## 4.3 Training Algorithm 
+
+In this research, we utilize the proximal policy optimization (PPO) algorithm [ 23 ] to effectively train the proposed scheduling model. It follows the actor-critic architecture, containing the actor network 
+
+𝑀𝐿𝑃 𝜃 and the critic network 𝑀𝐿𝑃 𝜙 . 𝑀𝐿𝑃 𝜃 is used to generate ac-tion probabilities during training and testing, while 𝑀𝐿𝑃 𝜙 is only used to evaluate the model during training. To ensure training stability, we employ the generalized advantage estimation (GAE) technique [ 22 ]. The model is trained for 𝑁 total iterations, with ev-ery iteration containing a batch of 𝐵 instances. In each iteration, the DME or M-CA policy interacts with a batch of FJSP environments 
+
+𝐸 of the same scale instances in parallel, gathering transition data for updating the model parameters Θ later. The environments are Conference’17, July 2017, Washington, DC, USA Zhi Cao, Cong Zhang, Yaoxin Wu, Yaqing Hou, and Hongwei Ge 
+
+refreshed every 𝑁 𝑟𝑒𝑠 batches based on a fixed distribution. Addition-ally, the policy undergoes validating on predetermined validation environments 𝐸 𝑣 for every 𝑁 𝑣𝑎𝑙 batch. The validation datasets are generated under the same distribution as the training data. In our experiments, we combine two distinct strategies for action selection. The first strategy involves a greedy approach, where the action with the highest probability is consistently chosen, primarily utilized during validation for high-confident evaluation results. The second strategy entails an action-sampling approach, where actions are sampled from the distribution 𝜋 𝜃 during training to ensure adequate exploration. The detailed algorithm is given in Appendix B. 
+
+## 5 Experiments 5.1 Benchmarks 
+
+In this work, we evaluate our approaches with six public bench-marks widely used in previous work [ 27 , 31 , 32 ]. They are Barnes dataset [ 1], Brandimarte dataset [ 2 ], Dauzere dataset [ 6], and 3 groups of Hurink dataset [ 12 ]. We give more details of the bench-mark data in Appendix C. As for the synthetic data, we used the instances from [ 27 ] for testing, spanning six problem sizes, 10 × 5,
+
+20 × 5, 15 × 10 , 20 × 10 , 30 × 10 and 40 × 10 , each of which consists of 100 instances. In these data, the processing time 𝑝 𝑘 𝑖 𝑗 for each op-eration 𝑂 𝑖 𝑗 on machine 𝑀 𝑘 is uniformly sampled from 𝑈 (1, 20 ). We also test the generalization performance by evaluating our method on the extremely large instances that are randomly generated with sizes from 100 × 10 to 10000 × 10 . More details are provided in Appendix G. 
+
+Figure 3: Average gaps on Benchmarks with greedy strategy. 
+
+## 5.2 Baselines 
+
+We conducted extensive experiments to thoroughly evaluate the performance of our method by comparing it against a series of state-of-the-art baselines, including (1) Exact Solver: Google OR-Tools [19 ], where we set an 1800-second time limit across all benchmarks. However, for the extremely large instances in the generalization experiment, we set a longer time limit for OR-Tools for better so-lutions; (2) The priority dispatching rules (PDRs) that are widely used in real industries: FIFO (first in first out), MOPNR (most op-erations remaining), SPT (shortest processing time) and MWKR (most work remaining). We refer the audiences to Appendix D for the detailed description and definition of these PDRs; (3) Learning-based methods (categorized by representation learning approach): Heterogeneous graph based HGNN [ 27 ], Graph attention based DAN [31] and lightweight MLP[32]. 
+
+## 5.3 Experiment Configurations 
+
+We used the same hyperparameter settings for all problem sizes. We train the model for 10,000 iterations, each iteration containing 20 independent trajectories (i.e., instances). The instances used for training are regenerated every 20 iterations. The model is validated on 100 instances, which are generated using the same rules as the training instances and fixed during training. We validate the model performance every 10 iterations and store the best weights. The learning rate was set to 1 × 10 −4 and decayed to 1 × 10 −5 halfway through the training process. The training settings are the same when training the DME and MCA. For the Mamba structure, we use its classic Mamba [ 10 ] setting. We simply set the number of Mamba blocks used for operation and machine features extraction to 1 and empirically observed strong performance. The model dimension (i.e., the embedding dimension) is set to 128. For cross-attention, we set the head number of multi-head attention to 8. For the decision network, both actor and critic networks are 3-layer MLPs, with hidden layers of dimension 64. Our training and testing experiments were conducted with a single RTX 3090 GPU. For the comparison methods, we followed their original settings to reproduce them. 
+
+## 5.4 Results 
+
+Results on benchmarks. First, to explore the cross-distribution generalizability of our approaches, we test them on various public benchmarks. We directly used the model trained on the problem size of 10 × 5 to test and observe promising results. For HGNN and DAN, we also used models trained on the same size, and some of the results were better than their original papers. For MLP, due to the lack of code, we directly used the results from their paper, which was also trained on size 10 × 5. As popular, for each problem size we report the average objective value (i.e., makespan), the average optimal solution gap, and the average time (second) to obtain a solution. The optimal solution gap 𝑔 is used to measure the gap between the solution’s makespan 𝐶 and the best-known solution’s makespan 𝐶 𝐵𝑆 , which is calculated as follows: 
+
+𝑔 =  𝐶 /𝐶 𝐵𝑆 − 1 × 100% . (9) For public benchmarks, we use the best-known upper bounds from their original paper as best-known solutions. For synthetic data, we used the results from OR-Tools as best-known solutions. We report results for greedy strategies (i.e., -G) and sampling strategies (i.e., -S). The greedy strategy has only one trajectory and selects the operation-machine pair with the highest probability at each step. The sampling strategy parallelizes 100 trajectories for an in-stance and samples each step of the selection by probability, and finally selects the best solution among all trajectories. The sampling strategy ensures adequate exploration of model performance and improves the quality of solutions, but increases time and memory overhead. However, this time increase does not come from the model’s inference process, but from autoregressive interactions with the environment, which will be further analyzed in the Ap-pendix E. As shown in Table 1, our encoder-decoder approach (i.e., M-CA) achieves the best results overall, with sampling strategy Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling Conference’17, July 2017, Washington, DC, USA 
+
+Table 1: Results on benchmarks 
+
+Brandimarte Hurink(rdata) Hurink(edata) Hurink(vdata) Barnes Dauzere Obj/Gap Time(s) Obj/Gap Time(s) Obj/Gap Time(s) Obj/Gap Time(s) Obj/Gap Time(s) Obj/Gap Time(s) OR-Tools 174.20 1447 935.80 1397 1028.93 900 919.60 639 995.19 879 2224.17 1701 1.50% 0.11% -0.03% -0.01% -0.18% 0.52% FIFO 205.56 0.16 1087.12 0.17 1244.92 0.17 982.89 0.17 1281.57 0.19 2564.67 0.35 31.82% 17.25% 20.83% 7.58% 28.77% 15.63% MOR 200.36 0.16 1066.73 0.17 1227.07 0.17 966.01 0.17 1231.52 0.19 2478.56 0.38 28.08% 15.07% 19.24% 5.68% 23.89% 11.61% SPT 237.52 0.16 1200.41 0.16 1312.84 0.16 1082.88 0.17 1245.67 0.19 2765.61 0.35 44.88% 29.47% 26.79% 18.2% 24.43% 24.99% MWKR 201.74 0.16 1053.10 0.17 1219.01 0.17 952.01 0.17 1200.19 0.19 2455.61 0.35 28.91% 13.86% 18.6% 4.22% 20.59% 10.58% MLP* 186.80 0.41 1041.83 0.28 1187.93 0.27 963.50 0.27 1133.62 0.39 2463.22 0.41 14.04% 12.14% 15.54% 5.35% 13.83% 11.02% HGNN-G 199.80 0.86 1039.65 0.94 1205.98 0.94 956.43 0.95 1183.14 1.02 2436.00 1.94 25.43% 11.78% 17.11% 4.72% 18.57% 9.74% HGNN-S 192.60 2.53 998.98 2.86 1129.28 2.89 932.10 2.78 1108.71 3.06 2373.61 7.53 19.97% 7.04% 9.42% 1.47% 11.22% 7.07% DAN-G 188.60 0.93 1031.68 0.98 1178.93 0.97 942.63 1.27 1181.71 1.04 2394.06 1.95 16.5% 11.13% 14.66% 2.9% 18.58% 7.92% DAN-S 182.20 3.07 981.93 3.99 1122.73 3.50 925.00 4.35 1109.00 4.34 2338.28 8.98 9.93% 5.33% 9.1% 0.68% 11.27% 5.45% DME-G 181.60 0.44 1030.00 0.45 1204.80 0.46 941.88 0.46 1169.10 0.53 2396.83 0.96 10.88% 11.16% 17.1% 2.83% 17.15% 8.01% DME-S 178.90 2.43 982.60 2.85 1133.53 2.97 925.55 2.99 1117.71 3.63 2347.06 7.77 7.24% 5.47% 10.33% 0.77% 12.15% 5.82% M-CA-G 181.00 0.57 1020.88 0.58 1183.78 0.60 943.23 0.60 1143.00 0.65 2382.72 1.20 
+
+10.23% 9.8% 15.55% 2.98% 14.78% 7.38% 
+
+M-CA-S 177.90 2.66 975.90 3.12 1119.03 3.26 924.88 3.27 1103.05 4.00 2329.67 8.43 
+
+6.78% 4.61% 8.65% 0.65% 10.73% 5.05% 
+
+> The best results of greedy and sampling are highlighted by bold values. The results of the methods marked with (*) are obtained directly from the original paper.
+
+Table 2: Results on synthetic data 
+
+FJSP 10x5 FJSP 20x5 FJSP 15x10 FJSP 20x10 Obj Gap Time(s) Obj Gap Time(s) Obj Gap Time(s) Obj Gap Time(s) OR-Tools 96.32 0.00% 1745 188.15 0.00% 1800 143.53 0.00% 1696 195.98 0.00% 1805 FIFO 119.4 24.06% 0.07 216.08 14.87% 0.10 184.55 28.65% 0.16 233.48 19.22% 0.23 MOR 115.38 19.87% 0.05 214.16 13.85% 0.10 173.15 20.68% 0.17 219.8 12.2% 0.23 SPT 129.82 34.76% 0.05 230.48 22.56% 0.10 198.33 38.22% 0.17 255.17 30.25% 0.23 MWKR 113.23 17.58% 0.05 209.78 11.51% 0.10 171.25 19.41% 0.18 216.11 10.3% 0.23 HGNN-G 112.47 16.82% 0.30 211.77 12.57% 0.58 165.39 15.29% 0.94 215.93 10.22% 1.25 HGNN-S 106.19 10.30% 0.74 210.5 11.88% 1.47 160.34 11.77% 2.42 215.88 10.18% 3.55 DAN-G 108.76 12.96% 0.32 197.03 4.72% 0.63 160.61 11.9% 0.97 199.73 1.95% 1.45 DAN-S 102.21 6.13% 0.52 193.89 3.06% 1.27 152.34 6.17% 2.82 195.14 -0.4% 4.97 DME-G 106.17 10.24% 0.15 193.36 2.8% 0.30 157.91 10.05% 0.46 193.65 -1.17% 0.61 DME-S 100.79 4.67% 0.34 190.46 1.24% 0.96 149.93 4.49% 2.26 190.13 -2.96% 4.26 M-CA-G 105.8 9.85% 0.19 193.12 2.66% 0.38 157.56 9.78% 0.58 193.9 -1.03% 0.78 M-CA-S 100.41 4.24% 0.38 190.21 1.1% 1.05 149.85 4.44% 2.47 189.83 -3.11% 4.61 results that outperform all learning-based approaches as well as pri-ority dispatch rules. Our encoder-only approach (i.e., DME) is also competitive and achieves the best greedy results on Hurink(vdata). For the greedy strategy, in Figure 3, DAN achieved the best results on Hurink’s edata, and MLP was best on the Barnes dataset. Our approaches achieve the first or second minimum makespan on all benchmarks. In addition, our Mamba-based approaches have great Conference’17, July 2017, Washington, DC, USA Zhi Cao, Cong Zhang, Yaoxin Wu, Yaqing Hou, and Hongwei Ge 
+
+Table 3: Generalization on large size instances 
+
+FJSP 30x10 FJSP 40x10 FJSP 100x10 FJSP 1000x10 FJSP 10000x10 Obj Gap Time(s) Obj Gap Time(s) Obj Gap Time(s) Obj Gap Time(s) Obj Gap Time OR-Tools 274.67 0.00% 1772 365.96 0.00% 1769 940.7 0.00% 1800 10283.9 0.00% 3603 - OOM-CPU -FIFO 328.238 19.56% 0.37 426.968 16.7% 0.51 1045.7 11.17% 1.72 10302 0.24% 87.28 102534.6 - 2.72h MOR 317.428 15.6% 0.37 421.344 15.16% 0.52 1043 10.88% 1.73 10296.8 0.18% 86.13 102542.8 - 2.85h SPT 350.074 27.47% 0.36 445.17 21.66% 0.51 1026 9.06% 1.71 9570.7 -6.88% 84.22 94728.4 - 2.71h MWKR 312.926 13.96% 0.37 414.816 13.37% 0.52 1038.7 10.42% 1.74 10273 -0.04% 85.12 102508 - 2.76h HGNN 313.79 14.27% 1.82 416.56 13.85% 2.57 1043.2 10.90% 6.26 10287.1 -33.01% 1020 - OOM-GPU -DAN 283.57 3.27% 2.24 373.22 2.0% 2.80 924.8 -1.68% 8.69 9157.8 -40.36% 140.30 93871.8 - 3.46h DME 277.17 0.94% 0.93 366.44 0.15% 1.28 913.9 -2.84% 3.51 9617.5 -37.38% 106.10 99804.4 - 3.10h M-CA 277 0.87% 1.17 367.06 0.32% 1.59 916.8 -2.54% 4.52 9038.1 -41.15% 120.44 90200 - 3.34h 
+
+> "OOM" indicates that the method is out of memory. "GPU" indicates the video memory (24GB), "CPU" indicates the system memory (128GB).
+
+Table 4: Ablation Studies 
+
+FJSP 10x5 FJSP 20x5 FJSP 15x10 FJSP 20x10 Obj Gap Time(s) Obj Gap Time(s) Obj Gap Time(s) Obj Gap Time(s) DAN 108.76 12.96% 0.32 197.03 4.72% 0.63 160.61 11.9% 0.97 199.73 1.95% 1.31 DME 106.17 10.24% 0.15 193.36 2.8% 0.30 157.91 10.05% 0.46 193.65 -1.17% 0.62 DM2E 105.12 9.13% 0.19 193.88 3.07% 0.38 159.06 10.84% 0.58 194.29 -0.84% 0.80 DM3E 105.47 9.51% 0.23 194.11 3.19% 0.46 158.11 10.19% 0.69 194.2 -0.89% 0.97 CA 105.97 10.0% 0.14 193.15 2.67% 0.31 158.44 10.45% 0.50 194.67 -0.65% 0.61 M-CA 105.8 9.85% 0.19 193.12 2.66% 0.38 157.56 9.78% 0.58 193.9 -1.03% 0.80 M2-CA 105.7 9.82% 0.22 194.5 3.4% 0.43 158.51 10.46% 0.67 196.7 0.39% 0.92 M3-CA 105.78 9.83% 0.26 194.19 3.21% 0.51 162.3 13.14% 0.77 195.27 -0.35% 1.07 potential to solve JSSP instances, outperforming the L2D [ 35 ] ap-proach on various benchmarks, which is specifically designed for JSSP, as we will illustrate in Appendix F. 
+
+Results on synthetic data. Second, we test the performance of our method on synthetic data. As in the previous approach [ 27 ], for problem sizes of 10 ×5, 20 ×5, 15 ×10 and 20 ×10 , we train the model on each size and test it on the same size. For the large-scale problems, 
+
+30 × 10 and above, we use the model trained on 20 × 10 for general-ization testing. As shown in Table 2, our Mamba-based approach outperforms the previous learning-based approaches and has a time advantage. Both our encoder-only (i.e., DME) and encoder-decoder (i.e., M-CA) methods outperform the previous state-of-the-art method, DAN, and beat the exact solver OR-tools on 20 × 10 .Further, our proposed efficient cross-attention decoder can improve the performance of the DME and maintain less time overhead. Com-pared to the previous DAN approach, our methods have speedups of 2× and 1.6×. Although the PDRs are able to obtain solutions in a shorter time, their short-sighted nature leads to suboptimal solutions. In Table 3, we consider manufacturing scenarios in real facto-ries where the number of jobs is much larger than the number of machines. For large-scale problems ( 30 × 10 and 40 × 10 ) as well as super-sized problems ( 100 × 10 and above), our approaches show great generalization. At these sizes, we test with the greedy strat-egy due to the longer solution time. However, the previous HGNN method was unable to solve the 10000 × 10 problem due to its complex graph structure, which exceeded the GPU memory of our device (24GB). And OR-Tools solver exceeded the system memory limit of our device (128 GB). On super-sized problems larger than 
+
+100 × 10 , OR-tools is unable to provide exact solutions. On 1000 × 10 ,we extended its time limit to one hour and still could not obtain high-quality solutions. As a comparison, our M-CA approach main-tains high performance and achieves significantly better results than OR-Tools and PDRs. Thus, our approach has the ability to solve large-scale scheduling problems in real manufacturing scenarios. More results and analysis are presented in Appendix G. 
+
+## 5.5 Ablation Studies 
+
+On Architecture of Mamba Network. Similar to the attention model, multiple Mamba blocks can be concatenated to form larger models. We attempted to use encoders with multilayer Mamba blocks for feature extraction. As shown in Table 4, we trained and tested the Dual Mamba Encoder of 1-3 layers of Mamba blocks on synthetic data of different sizes. The setup using two layers of Mamba blocks (i.e. DM2E) performs best on size 10 ×5 instances, but is no longer advantageous as the problem size increases. Therefore, the encoders using only one layer of Mamba block are simple but efficient, and offer strengths in inference speed. 
+
+On Impact of Cross Attention. Our proposed efficient cross-attention based decoder can be used alone (i.e., CA in Table 4). The CA mechanism performs well on small-scale problem sizes 10 × 5
+
+and 20 × 5, but its performance degrades on large-scale problems 
+
+15 × 10 and 20 × 10 . Therefore, this performance degradation can Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling Conference’17, July 2017, Washington, DC, USA 
+
+be mitigated by combining the Mamba encoder and CA decoder. Finally, our encoder-decoder approach (i.e., M-CA) achieves better results on all 4 problem sizes. We further tested combining the CA decoder with the multilayer Mamba encoder (i.e., M2-CA and M3-CA), and the experiment results show that the multilayer Mamba encoder does not significantly improve the performance. Therefore, we finally used a single-layer encoder. 
+
+## 6 Conclusion 
+
+In this study, we introduce Mamba-CrossAttention, a novel ar-chitecture leveraging Mamba for comprehensive sequence mod-elling in FJSP. Unlike prevalent graph-attention-based frameworks known for their computational intensity in FJSP, our proposed model demonstrates superior efficiency. Experimental results show-case that our method achieves faster solving speeds and outper-forms state-of-the-art learning-based approaches for FJSP across diverse benchmark scenarios. This highlights the efficacy and prac-ticality of our proposed architecture in addressing the complexities of the Flexible Job Shop Problem while enhancing computational efficiency and performance outcomes. We will further optimize the model and environment to provide even faster end-to-end solution speed to scheduling problems, exploiting the potential for real-time scheduling in manufacturing scenarios. 
+
+## References 
+
+[1] J Wesley Barnes and John B Chambers. 1996. Flexible job shop scheduling by tabu search. Graduate Program in Operations and Industrial Engineering, The University of Texas at Austin, Technical Report Series, ORP96-09 (1996). [2] Paolo Brandimarte. 1993. Routing and scheduling in a flexible job shop by tabu search. Annals of Operations research 41, 3 (1993), 157–183. [3] Greg Brockman, Vicki Cheung, Ludwig Pettersson, Jonas Schneider, John Schul-man, Jie Tang, and Wojciech Zaremba. 2016. Openai gym. arXiv preprint arXiv:1606.01540 (2016). [4] Ruiqi Chen, Wenxin Li, and Hongbing Yang. 2022. A Deep Reinforcement Learn-ing Framework Based on an Attention Mechanism and Disjunctive Graph Em-bedding for the Job Shop Scheduling Problem. IEEE Transactions on Industrial Informatics (2022). [5] Stéphane Dauzère-Pérès, Junwen Ding, Liji Shen, and Karim Tamssaouet. 2024. The flexible job shop scheduling problem: A review. European Journal of Opera-tional Research 314, 2 (2024), 409–432. [6] Stéphane Dauzère-Pérès and Jan Paulli. 1997. An integrated approach for model-ing and solving the general multiprocessor job-shop scheduling problem using tabu search. Annals of Operations Research 70, 0 (1997), 281–306. [7] Ebru Demirkol, Sanjay Mehta, and Reha Uzsoy. 1998. Benchmarks for shop scheduling problems. European Journal of Operational Research 109, 1 (1998), 137–141. [8] Alican Dogan and Derya Birant. 2021. Machine learning and data mining in manufacturing. Expert Systems with Applications 166 (2021), 114060. [9] Parviz Fattahi, Mohammad Saidi Mehrabad, and Fariborz Jolai. 2007. Mathemati-cal modeling and heuristic approaches to flexible job shop scheduling problems. 
+
+Journal of intelligent manufacturing 18 (2007), 331–342. [10] Albert Gu and Tri Dao. 2023. Mamba: Linear-time sequence modeling with selective state spaces. arXiv preprint arXiv:2312.00752 (2023). [11] Dan Hendrycks and Kevin Gimpel. 2016. Gaussian error linear units (gelus). 
+
+arXiv preprint arXiv:1606.08415 (2016). [12] Johann Hurink, Bernd Jurisch, and Monika Thole. 1994. Tabu search for the job-shop scheduling problem with multi-purpose machines. Operations-Research-Spektrum 15 (1994), 205–215. [13] Zangir Iklassov, Dmitrii Medvedev, Ruben Solozabal, and Martin Takac. 2022. Learning to generalize Dispatching rules on the Job Shop Scheduling. arXiv preprint arXiv:2206.04423 (2022). [14] Anant Singh Jain and Sheik Meeran. 1999. Deterministic job-shop scheduling: Past, present and future. European journal of operational research 113, 2 (1999), 390–434. [15] Klaus Jansen, Monaldo Mastrolilli, and Roberto Solis-Oba. 2000. Approximation algorithms for flexible job shop problems. In LATIN 2000: Theoretical Informat-ics: 4th Latin American Symposium, Punta del Este, Uruguay, April 10-14, 2000 Proceedings 4 . Springer, 68–77. [16] Yeong-Dae Kwon, Jinho Choo, Iljoo Yoon, Minah Park, Duwon Park, and Youngjune Gwon. 2021. Matrix encoding networks for neural combinatorial optimization. In Advances in Neural Information Processing Systems , M. Ranzato, A. Beygelzimer, Y. Dauphin, P.S. Liang, and J. Wortman Vaughan (Eds.), Vol. 34. Curran Associates, Inc., 5138–5149. https://proceedings.neurips.cc/paper/2021/ file/29539ed932d32f1c56324cded92c07c2-Paper.pdf [17] Junyoung Park, Sanjar Bakhtiyar, and Jinkyoo Park. 2021. ScheduleNet: Learn to solve multi-agent scheduling problems with reinforcement learning. arXiv preprint arXiv:2106.03051 (2021). [18] Junyoung Park, Jaehyeong Chun, Sang Hun Kim, Youngkook Kim, and Jinkyoo Park. 2021. Learning to schedule job-shop problems: representation and policy learning using graph neural network and reinforcement learning. International journal of production research 59, 11 (2021), 3360–3377. [19] Laurent Perron and Vincent Furnon. 2019. OR-Tools . Google. https://developers. google.com/optimization/ [20] Robbert Reijnen, Igor G Smit, Hongxiang Zhang, Yaoxin Wu, Zaharah Bukhsh, and Yingqian Zhang. 2023. Job Shop Scheduling Benchmark: Environments and Instances for Learning and Non-learning Methods. arXiv e-prints (2023), arXiv–2308. [21] T Konstantin Rusch, Michael M Bronstein, and Siddhartha Mishra. 2023. A survey on oversmoothing in graph neural networks. arXiv preprint arXiv:2303.10993 
+
+(2023). [22] John Schulman, Philipp Moritz, Sergey Levine, Michael Jordan, and Pieter Abbeel. 2015. High-dimensional continuous control using generalized advantage estima-tion. arXiv preprint arXiv:1506.02438 (2015). [23] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. 2017. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 
+
+(2017). [24] Melissa Shahgholi Zadeh, Yalda Katebi, and Ali Doniavi. 2019. A heuristic model for dynamic flexible job shop scheduling problem considering variable processing times. International Journal of Production Research 57, 10 (2019), 3020–3035. [25] Igor G Smit, Jianan Zhou, Robbert Reijnen, Yaoxin Wu, Jian Chen, Cong Zhang, Zaharah Bukhsh, Yingqian Zhang, and Wim Nuijten. 2024. Graph neural net-works for job shop scheduling problems: A survey. Computers & Operations Research (2024), 106914. [26] Igor G Smit, Jianan Zhou, Robbert Reijnen, Yaoxin Wu, Jian Chen, Cong Zhang, Zaharah Bukhsh, Yingqian Zhang, and Wim Nuijten. 2025. Graph neural net-works for job shop scheduling problems: A survey. Computers & Operations Research 176 (2025), 106914. [27] Wen Song, Xinyang Chen, Qiqiang Li, and Zhiguang Cao. 2023. Flexible job-shop scheduling via graph neural network and deep reinforcement learning. IEEE Transactions on Industrial Informatics 19, 2 (2023), 1600. [28] Eric Taillard. 1993. Benchmarks for basic scheduling problems. European Journal of Operational Research 64, 2 (1993), 278–285. [29] Pierre Paul Alain Tassel, Martin Gebser, and Konstantin Schekotihin. 2021. A Reinforcement Learning Environment For Job-Shop Scheduling. In 2021 PRL Workshop–Bridging the Gap Between AI Planning and Reinforcement Learning .[30] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. Attention is all you need. Advances in neural information processing systems 30 (2017). [31] Runqing Wang, Gang Wang, Jian Sun, Fang Deng, and Jie Chen. 2024. Flexible Job Shop Scheduling via Dual Attention Network-Based Reinforcement Learning. 
+
+IEEE transactions on neural networks and learning systems 35, 3 (2024), 3091–3102. [32] Erdong Yuan, Liejun Wang, Shuli Cheng, Shiji Song, Wei Fan, and Yongming Li. 2024. Solving flexible job shop scheduling problems via deep reinforcement learning. Expert Systems with Applications 245 (2024), 123019. [33] Cong Zhang, Zhiguang Cao, Wen Song, Yaoxin Wu, and Jie Zhang. 2024. Deep Reinforcement Learning Guided Improvement Heuristic for Job Shop Scheduling. In The Twelfth International Conference on Learning Representations . https: //openreview.net/forum?id=jsWCmrsHHs [34] Cong Zhang, Zhiguang Cao, Yaoxin Wu, Wen Song, and Jing Sun. 2024. Learning Topological Representations with Bidirectional Graph Attention Network for Solving Job Shop Scheduling Problem. In Uncertainty in Artificial Intelligence .PMLR, 4192–4208. [35] Cong Zhang, Wen Song, Zhiguang Cao, Jie Zhang, Puay Siew Tan, and Xu Chi. 2020. Learning to dispatch for job shop scheduling via deep reinforcement learning. Advances in neural information processing systems 33 (2020), 1621–1632. 
+
+## A Details of raw features 
+
+For operations, machines, and operation-machine pairs, we used the same raw features as in the previous work DAN. Their details are as follows. 
+
+1) Features of operations: For each operation 𝑂 𝑖 𝑗 ∈ O( 𝑡 ) ,the feature vector ℎ𝑂 𝑖 𝑗 contains 10 elements: Conference’17, July 2017, Washington, DC, USA Zhi Cao, Cong Zhang, Yaoxin Wu, Yaqing Hou, and Hongwei Ge 
+
+• Scheduling flag: indicates whether operation 𝑂 𝑖 𝑗 is sched-uled. 
+
+• Minimum processing time of 𝑂 𝑖 𝑗 among all machines. 
+
+• Average processing time of 𝑂 𝑖 𝑗 among all machines. 
+
+• Span of processing time of 𝑂 𝑖 𝑗 among all machines. 
+
+• Proportion of machines that 𝑂 𝑖 𝑗 can be processed on. 
+
+• Estimated Lower bound of the completion time: 𝐶 (𝑂 𝑖 𝑗 ) =
+
+𝐶 (𝑂 𝑖 ( 𝑗 −1) ) + min  
+
+> 𝑘 ∈𝑀 𝑖 𝑗
+
+𝑝 𝑘 𝑖 𝑗 , which represents the sum of the lower bound of the completion time of the immediate precedence operation of 𝑂 𝑖 𝑗 and the minimum processing time of 𝑂 𝑖 𝑗 
+
+on all eligible machines. 
+
+• Remaining number of operations: the number of unsched-uled operations in job 𝐽 𝑖 .
+
+• Remaining workload: the sum of average processing time of unscheduled operations in job 𝐽 𝑖 .
+
+• Waiting time: the time from when the operation is eligible to the current time 𝑇𝑠 , which is 0 when the operation is not eligible. 
+
+• Remaining processing time: If operation 𝑂 𝑖 𝑗 is being pro-cessed, the time from 𝑇 𝑠 until the completion of processing. 
+
+2) Features of machines: For each machine 𝑀 𝑘 ∈ M ( 𝑡 ), the feature vector ℎ𝑀 𝑘 contains 8 elements: 
+
+• Working flag: indicates whether the machine 𝑀 𝑘 is process-ing an operation. 
+
+• Minimum processing time among all operations. 
+
+• Average processing time of operations that 𝑀 𝑘 can process. 
+
+• Number of unscheduled operations that 𝑀 𝑘 can process. 
+
+• Number of candidates that 𝑀 𝑘 can process. 
+
+• Free time: the moment when machine 𝑀 𝑘 stops working. 
+
+• Waiting time: the time from the free time until 𝑇 𝑠 , indicating the time to wait for the operation to be processed. 
+
+• Remaining processing time: the time from 𝑇 𝑠 until the free time, indicating the time to complete the processing opera-tion. 
+
+3) Features of eligible operation-machine pairs: For each eligi-ble operation-machine pair (𝑂 𝑖 𝑗 , 𝑀 𝑘 ) ∈ A ( 𝑡 ), the feature vector 
+
+ℎ(𝑂 𝑖 𝑗 ,𝑀 𝑘 ) contains 8 elements: 
+
+• Processing time 𝑝 𝑘 𝑖 𝑗 of 𝑂 𝑖 𝑗 on 𝑀 𝑘 .
+
+• Ratio of 𝑝 𝑘 𝑖 𝑗 to the maximum processing time of 𝑂 𝑖 𝑗 .
+
+• Ratio of 𝑝 𝑘 𝑖 𝑗 to the maximum processing time of candidates that 𝑀 𝑘 can process. 
+
+• Ratio of 𝑝 𝑘 𝑖 𝑗 to the maximum processing time of unscheduled operations. 
+
+• Ratio of 𝑝 𝑘 𝑖 𝑗 to the maximum processing time of unscheduled operations that 𝑀 𝑘 can process. 
+
+• Ratio of 𝑝 𝑘 𝑖 𝑗 to the maximum processing time of eligible pairs. 
+
+• Ratio of 𝑝 𝑘 𝑖 𝑗 to remaining workload of 𝐽 𝑖 .
+
+• Sum of waiting time of 𝑂 𝑖 𝑗 and 𝑀 𝑘 .When the state is transitioned to the next state, all features are changed according to the environment. Specifically, the operation’s scheduling flags, wait times, and the machine’s work flags, free time, etc. are recalculated based on the change of environment, and the details of the update rules will be explained in the code. 
+
+## B Details of the Training Algorithm 
+
+In Algorithm 1, we use pseudo-code to describe our training process. 
+
+Algorithm 1 Training Mamba for FJSP  
+
+> 1:
+
+Input: A Dual Mamba Encoder or M-CA Encoder-Decoder with initial parameters Θ = {𝜔, 𝜃, 𝜙 }, behavior actor network 
+
+𝜃 old , pre-sampled training environment 𝐸 , and fixed validation environment 𝐸 𝑣 ; 
+
+> 2:
+
+for 𝑛 ep = 1, 2, ..., 𝑁 do  
+
+> 3:
+
+𝜃 old ← 𝜃  
+
+> 4:
+
+for 𝑖 = 1, 2, ..., 𝐵 do  
+
+> 5:
+
+for 𝑡 = 0, 1, ...,𝑇 do  
+
+> 6:
+
+Sample 𝑎 𝑖,𝑡 using 𝜋 𝜃 old (· | 𝑠 𝑖,𝑡 ); 
+
+> 7:
+
+Receive the reward 𝑟 𝑖,𝑡 and the next state 𝑠 𝑖,𝑡 +1; 
+
+> 8:
+
+Update 𝑠 𝑖,𝑡 ← 𝑠 𝑖,𝑡 +1; 
+
+> 9:
+
+end for  
+
+> 10:
+
+Compute the generalized advantage estimates ˆ𝐴 𝑖,𝑡 for 𝑡 =
+
+0, 1, ...,𝑇 using collected transitions;  
+
+> 11:
+
+end for  
+
+> 12:
+
+for 𝑘 = 1, 2, ..., 𝐾 do  
+
+> 13:
+
+Compute the total loss Í|𝐸 | 
+
+> 𝑖 =1
+
+ℓPPO  
+
+> 𝑖
+
+(Θ); 
+
+> 14:
+
+Update all parameters Θ; 
+
+> 15:
+
+end for  
+
+> 16:
+
+if Every 𝑁 𝑟𝑒𝑠 episodes then  
+
+> 17:
+
+Resample 𝐵 instances to reset the training environment;  
+
+> 18:
+
+end if  
+
+> 19:
+
+if Every 𝑁 val episodes then  
+
+> 20:
+
+Validate the model on 𝐸 𝑣 and save the best Θ; 
+
+> 21:
+
+end if  
+
+> 22:
+
+end for 
+
+## C Details of Benchmarks 
+
+In Table 5, we show the public benchmarks we use in terms of data source, range of problem sizes, range of operation processing times and number of instances. 
+
+Table 5: Details of Benchmarks 
+
+Benchmarks Source Sizes Range Instances Brandimarte [2] 10x6-20x15 [1,20] 10 Hurink(rdata) [12] 10x5-30x10 [1,99] 40 Hurink(edata) [12] 10x5-30x10 [1,99] 40 Hurink(vdata) [12] 10x5-30x10 [1,99] 40 Barnes [1] 10x11-15x17 [1,99] 21 Dauzere [6] 10x5-20x10 [1,100] 18 
+
+## D Details of the Baselines 
+
+In this solution, we represent the scheduling process of baseline PDRs in detail, explaining how they solve FJSP instances. 
+
+• First In First Out (FIFO): selects the earliest ready candidate operation and the earliest ready compatible machine. Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling Conference’17, July 2017, Washington, DC, USA 
+
+• Most Operations Remaining (MOPNR): selects the candidate operation with the most remaining successor operations and the machine that can process that operation immediately. 
+
+• Shortest Processing Time (SPT): selects the compatible operation-machine pair with the shortest processing time. 
+
+• Most Work Remaining (MWKR): selects the candidate opera-tion with the most average processing time remaining for the successor and the machine that can process that operation immediately. 
+
+## E Analysis of the solution time 
+
+As shown in Table 6, we report the composition of solution time, including the model’s feature extraction time (i.e., Model), other time (i.e., Other, which mainly involves interaction with the envi-ronment), and end-to-end solution generation time (i.e., Total). On larger size instances (e.g., 20 × 10 , 30 × 10 , and 40 × 10 ), the increase in solution time stems primarily from multiple autoregressive inter-actions with the environment. We find that the sampling strategy significantly increases the time except the model inference time, which is related to the parallel processing of multiple trajectories in the environment. The sampling strategy has a small effect on the feature extraction time. For a fair comparison, our approaches use the same environment as DAN. Compared to DAN, our approaches have a faster feature extraction speed, resulting in a shorter solution generation time. We will further optimize the environment settings to speed up the sampling strategy. 
+
+## F Results on JSSP benchmarks 
+
+The job shop scheduling problem (JSSP) is a simple variant of the flexible job shop scheduling problem (FJSP) in which each operation can be processed on only one machine. To further explore the ability of our approaches to solve JSSP, we train our models and DAN on JSSP 30 × 20 instances, and test them on public benchmarks. We use 1000 training iterations, each iteration containing 20 instances, and replace them every 20 iterations. We use the validation set to validate every 10 iterations and get the best models for testing. The operation times in training and validation data are sampled from the distribution of 𝑈 (1, 99 ).We test the generalizability of our approaches on popular JSSP benchmarks, including Taillard’s instances [ 28 ] and DMU instances [7 ]. For the previous work L2D [ 35 ], we use the best results from their paper for comparison, which outperform PDRs. As shown in Table 7, our Mamba-based approaches (i.e. DME and M-CA) show strong potential in solving JSSP, surpassing DAN and L2D. On Taillard’s instances, our M-CA method generalizes well and achieves the best results on multiple sizes. On DMU instances, our encoder-only Mamba approach shows better generalization, obtaining better large-scale JSSP solutions. Notably, our approach outperforms the L2D approach which was designed to solve JSSP specifically, exhibiting excellent cross-problem generalization, and we will further explore cross-problem learning in future research. 
+
+## G Results of super-sized instances 
+
+To further explore the scalability of our approach, we test our approach on super-sized FJSP instances with the greedy strategy. We test 100 × 10 , 500 × 10 , 1000 × 10 , 5000 × 10 , and 10000 × 10 
+
+FJSP instances with models trained on size 20 × 10 . The datasets are generated following the settings in [ 27 ]. For the size 100 × 10 ,
+
+500 × 10 and 1000 × 10 , we used 10 instances for each size. For the size 5000 × 10 and 10000 × 10 , we used 5 instances for each size due to its longer solving time. We report objective values, GPU memory overhead, and time to generate solutions. For OR-tools and PDRs, they do not depend on the GPU to execute, and therefore do not have GPU memory overhead. In the learning-based approaches, we further explore the solution performance of the self-attention model. We try to replace the Mamba block with a single self-attention layer and observe its performance. As shown in Table 6, the self-attention layer is able to extract operation and machine features and outperforms Mamba on problem size of 1000 × 10 , but it is unable to solve problems of size above 5000 × 10 due to its huge GPU memory overheads. HGNN also faces the problem of excessive memory overhead due to its complex graph structure. Compared to DAN, the memory overhead of our approaches are slightly increased, but our approaches are able to extract the full sequence features and bring better performance. The graph attention mechanism used by DAN can only focus on the neighboring nodes in the sequence, which leads to suboptimal solutions. At the same time, in solving super-sized problems, the exact solver OR-tools is not able to achieve high-quality solutions in a reasonable time. We extended the time limit of OR-tools to 3600s at 1000 × 10 , 7200s at 5000 × 10 and 18000s at 10000 × 10 . However, it consumes too much memory and CPU cores during the solving process, exceeding the system memory limit of our device (128 GB), so we could not obtain its results on 
+
+10000 × 10 . Also, at the size of 5000 × 10 , the OR-tools results are far from feasible solutions. We ran it several times and its results remain the same. Thus, it is not feasible to use OR-tools to solve super-sized problems. As a comparison, our M-CA method exhibits surprising generalization on instances exceeding 500 times the size of the training data (i.e., 20 × 10 vs. 10000 × 10 ), outperforming DAN and heuristic priority dispatching rules. We will further explore the large-scale generalizability of our approaches in future studies. 
+
+## H Training Curve 
+
+In Figure 4, we show the training curves of DME and M-CA on validation datasets of 4 different training sizes ( 10 × 5, 20 × 5, 15 × 10 ,
+
+20 × 10 ). 
+
+## I Solution Visualization 
+
+We use Gantt charts to visualize the solutions for some of the instances in FJSP benchmarks. In Figures 5, 6, and 7, we compare the solutions obtained by HGNN, DAN, DME, and M-CA with the greedy strategy. In Figure 8, we visualize a JSSP instance from Taillard’s benchmark of size 30 × 20 .Conference’17, July 2017, Washington, DC, USA Zhi Cao, Cong Zhang, Yaoxin Wu, Yaqing Hou, and Hongwei Ge 
+
+Table 6: Composition of solution time 
+
+FJSP 20x10 FJSP 30x10 FJSP 40x10 Obj Model(s) Other(s) Total(s) Obj Model(s) Other(s) Total(s) Obj Model(s) Other(s) Total(s) DAN-G 199.73 1.06 0.39 1.45 283.57 1.63 0.62 2.24 373.22 2.02 0.78 2.80 DAN-S 195.14 1.09 3.88 4.97 280.51 1.74 8.48 10.22 370.85 2.28 14.04 16.32 DME-G 193.65 0.20 0.41 0.61 277.17 0.30 0.63 0.93 366.44 0.40 0.89 1.28 DME-S 190.13 0.27 3.99 4.26 274.48 0.39 7.99 8.38 364.21 0.59 14.32 14.91 M-CA-G 193.9 0.36 0.42 0.78 277 0.53 0.64 1.17 367.06 0.71 0.88 1.59 M-CA-S 189.83 0.50 4.11 4.61 274.78 0.76 8.90 9.66 364.94 1.02 15.16 16.18 
+
+Table 7: Results on JSSP benchmarks 
+
+Ta 15x15 Ta 20x15 Ta 20x20 Ta 30x15 Ta 30x20 Ta 50x15 Ta 50x20 Ta 100x20 L2D Obj 1547.4 1774.7 2128.1 2378.8 2603.9 3393.8 3593.9 6097.6 Gap 26.00% 30.00% 31.60% 33.00% 33.60% 22.40% 26.50% 13.60% DAN-G Obj 1425.1 1634.4 1916.6 2132.8 2355.6 3136.6 3244.4 5708.5 Gap 15.97% 19.72% 18.49% 19.23% 20.94% 13.13% 14.11% 6.39% Time 1.49 2.00 2.72 3.08 4.19 5.34 7.52 17.12 DAN-S Obj 1350.6 1553.8 1816.6 2035.5 2278.5 3025.5 3148.7 5583.4 Gap 9.91% 13.84% 12.32% 13.81% 16.96% 9.12% 10.72% 4.06% Time 6.97 11.70 35.09 32.33 75.68 87.95 219.33 883.28 DME-G Obj 1414.7 1617 1915.2 2149.6 2348.2 3111.7 3196.8 5606.6 
+
+Gap 15.16% 18.48% 18.44% 20.24% 20.53% 12.25% 12.42% 4.49% 
+
+Time 0.77 1.07 1.55 1.70 2.43 2.98 4.51 10.45 DME-S Obj 1349.4 1524.8 1802.5 2035.8 2247.1 2995.9 3115 5469.2 
+
+Gap 9.81% 11.72% 11.46% 13.84% 15.36% 8.05% 9.55% 1.93% 
+
+Time 6.92 11.77 35.16 33.16 77.82 90.51 226.32 930.67 M-CA-G Obj 1432.3 1603.3 1904.8 2128.8 2341 3109.7 3193.9 5610.1 Gap 16.54% 17.50% 17.80% 19.04% 20.18% 12.18% 12.32% 4.56% Time 0.93 1.25 1.75 1.92 2.72 3.42 4.99 12.10 M-CA-S Obj 1356.6 1519.4 1811.9 2018.9 2242.6 2976 3091.1 5471.1 Gap 10.39% 11.34% 12.05% 12.91% 15.12% 7.35% 8.71% 1.97% Time 6.61 11.53 35.28 33.11 77.97 89.68 229.06 905.95 DMU 20x15 DMU 20x20 DMU 30x15 DMU 30x20 DMU 40x15 DMU 40x20 DMU 50x15 DMU 50x20 L2D Obj 4215.3 4804.5 5557.9 5967.4 6663.9 7375.8 8179.4 8751.6 Gap 38.95% 37.74% 41.86% 39.48% 35.39% 39.37% 36.20% 38.85% DAN-G Obj 3769.6 4219.5 5002.1 5567 6161.6 6791 7521 8123.2 Gap 24.13% 21.08% 27.82% 30.05% 25.24% 28.27% 25.22% 28.62% Time 2.29 3.04 3.28 3.76 4.59 6.67 4.73 8.32 DAN-S Obj 3559.9 4009.8 4826.3 5250.2 5932.2 6547.9 7324 7924.5 Gap 17.28% 15.18% 23.34% 22.54% 20.52% 23.70% 21.95% 25.46% Time 12.79 36.42 35.52 64.43 65.27 142.14 72.70 234.09 DME-G Obj 3722 4166.5 4844.5 5267.6 5866.6 6542.5 6964.3 7660.5 
+
+Gap 22.56% 19.65% 24.20% 23.23% 19.41% 23.86% 16.30% 21.76% 
+
+Time 1.10 1.51 1.72 2.46 2.44 3.47 2.65 4.04 DME-S Obj 3473.7 4004.8 4573 5046.3 5558.9 6269.6 6679.5 7363.9 
+
+Gap 14.55% 14.96% 17.35% 18.15% 13.36% 18.70% 11.60% 17.13% 
+
+Time 11.89 35.15 33.98 77.83 59.39 143.75 86.15 224.31 M-CA-G Obj 3590.4 4151.3 4811.5 5244.8 5927.4 6544.2 7107.3 7779.5 Gap 18.53% 19.25% 23.33% 22.78% 20.68% 23.90% 18.61% 23.49% Time 1.40 2.00 2.14 3.05 2.93 4.17 3.29 5.11 M-CA-S Obj 3452.8 3984.6 4591.3 5030.3 5600 6290.3 6794.1 7421.3 Gap 13.90% 14.50% 17.71% 17.67% 14.09% 19.01% 13.45% 17.86% Time 12.44 37.55 35.58 83.52 62.47 149.74 94.50 246.25 Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling Conference’17, July 2017, Washington, DC, USA 
+
+Table 8: Results on super-sized instances 
+
+FJSP 100x10 FJSP 500x10 FJSP 1000x10 FJSP 5000x10 FJSP 10000x10 Obj/Mem Time(s) Obj/Mem Time(s) Obj/Mem Time(s) Obj/Mem Time(s) Obj/Mem Time OR-tools 940.7 1800.00 5038.5 1801.08 10283.9 3603.00 579152.4 7214.00 - -FIFO 1045.7 1.72 5233.8 28.91 10302 87.28 51411 2029.67 102534.6 2.72h MOR 1043 1.73 5227.4 28.96 10296.8 86.13 51400.8 2097.52 102542.8 2.85h SPT 1026 1.71 4911.1 28.91 9570.7 84.22 47545.4 2088.12 94728.4 2.71h MWKR 1038.7 1.74 5221.5 25.46 10273 85.12 51406.4 2056.33 102508 2.76h HGNN 1043.2 6.26 5221 144.51 10287.1 1019.86 - - - -2198MB 4226MB 10600MB OOM OOM DAN 924.8 8.69 4662.1 53.18 9157.8 140.30 45630.2 2347.30 93871.8 3.46h 336MB 340MB 362MB 478MB 626MB Self-Attention 919.1 3.55 4598.9 72.07 9072.8 388.56 - - - -438MB 2706MB 9500MB OOM OOM DME 913.9 3.51 4714.2 37.78 9617.5 106.10 49693.6 2272.34 99804.4 3.10h 340MB 378MB 400MB 684MB 1130MB M-CA 916.8 4.52 4595.7 43.29 9038.1 120.44 45040.6 2438.62 90200 3.34h 344MB 382MB 424MB 784MB 1232MB 
+
+"OOM" indicates that the method is out of GPU memory (24GB). Conference’17, July 2017, Washington, DC, USA Zhi Cao, Cong Zhang, Yaoxin Wu, Yaqing Hou, and Hongwei Ge 
+
+(a) Problem size 10 × 5 (b) Problem size 20 × 5
+
+(c) Problem size 15 × 10 (d) Problem size 20 × 10 
+
+Figure 4: Training curves for all problem sizes. Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling Conference’17, July 2017, Washington, DC, USA 0 50 100 150 200 250 
+
+Time 
+
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> Machine
+
+job 1 job 2 job 3 job 4 job 5 job 6 job 7 job 8 job 9 job 10 job 11 job 12 job 13 job 14 job 15 job 16 job 17 job 18 job 19 job 20 
+
+(a) HGNN Makespan:259 Gap:31.47% 0 50 100 150 200 250 
+
+Time 
+
+> Machine
+
+job 1 
+
+job 2 
+
+job 3 
+
+job 4 
+
+job 5 
+
+job 6 
+
+job 7 
+
+job 8 
+
+job 9 
+
+job 10 
+
+job 11 
+
+job 12 
+
+job 13 
+
+job 14 
+
+job 15 
+
+job 16 
+
+job 17 
+
+job 18 
+
+job 19 
+
+job 20 (b) DAN Makespan:239 Gap:21.32% 0 50 100 150 200 
+
+Time 
+
+> Machine
+
+job 1 
+
+job 2 
+
+job 3 
+
+job 4 
+
+job 5 
+
+job 6 
+
+job 7 
+
+job 8 
+
+job 9 
+
+job 10 
+
+job 11 
+
+job 12 
+
+job 13 
+
+job 14 
+
+job 15 
+
+job 16 
+
+job 17 
+
+job 18 
+
+job 19 
+
+job 20 
+
+(c) DME Makespan:228 Gap:15.74% 0 50 100 150 200 
+
+Time 
+
+> Machine
+
+job 1 
+
+job 2 
+
+job 3 
+
+job 4 
+
+job 5 
+
+job 6 
+
+job 7 
+
+job 8 
+
+job 9 
+
+job 10 
+
+job 11 
+
+job 12 
+
+job 13 
+
+job 14 
+
+job 15 
+
+job 16 
+
+job 17 
+
+job 18 
+
+job 19 
+
+job 20 (d) M-CA Makespan:221 Gap:12.18% 
+
+Figure 5: Brandimarte Mk10. Conference’17, July 2017, Washington, DC, USA Zhi Cao, Cong Zhang, Yaoxin Wu, Yaqing Hou, and Hongwei Ge 0 100 200 300 400 500 600 
+
+Time 
+
+> 0
+> 1
+> 2
+> 3
+> 4
+> Machine
+
+job 1 job 2 job 3 job 4 job 5 job 6 job 7 job 8 job 9 job 10 
+
+(a) HGNN Makespan:621 Gap:17.17% 0 100 200 300 400 500 600 
+
+Time 
+
+> 1
+> 2
+> 3
+> 4
+> Machine
+
+job 1 
+
+job 2 
+
+job 3 
+
+job 4 
+
+job 5 
+
+job 6 
+
+job 7 
+
+job 8 
+
+job 9 
+
+job 10 (b) DAN Makespan:633 Gap:19.43% 0 100 200 300 400 500 600 
+
+Time 
+
+> 1
+> 2
+> 3
+> 4
+> Machine
+
+job 1 
+
+job 2 
+
+job 3 
+
+job 4 
+
+job 5 
+
+job 6 
+
+job 7 
+
+job 8 
+
+job 9 
+
+job 10 
+
+(c) DME Makespan:609 Gap:14.91% 0 100 200 300 400 500 
+
+Time 
+
+> 1
+> 2
+> 3
+> 4
+> Machine
+
+job 1 
+
+job 2 
+
+job 3 
+
+job 4 
+
+job 5 
+
+job 6 
+
+job 7 
+
+job 8 
+
+job 9 
+
+job 10 (d) M-CA Makespan:569 Gap:7.36% 
+
+Figure 6: Hurink Rdata 5. Mamba Meets Scheduling: Learning to Solve Flexible Job Shop Scheduling with Efficient Sequence Modeling Conference’17, July 2017, Washington, DC, USA 0 500 1000 1500 2000 
+
+Time 
+
+> 0
+> 2
+> 4
+> 6
+> 8
+> Machine
+
+job 1 job 2 job 3 job 4 job 5 job 6 job 7 job 8 job 9 job 10 job 11 job 12 job 13 job 14 job 15 job 16 job 17 job 18 job 19 job 20 
+
+(a) HGNN Makespan:2198 Gap:2.85% 0 500 1000 1500 2000 
+
+Time 
+
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> Machine
+
+job 1 
+
+job 2 
+
+job 3 
+
+job 4 
+
+job 5 
+
+job 6 
+
+job 7 
+
+job 8 
+
+job 9 
+
+job 10 
+
+job 11 
+
+job 12 
+
+job 13 
+
+job 14 
+
+job 15 
+
+job 16 
+
+job 17 
+
+job 18 
+
+job 19 
+
+job 20 (b) DAN Makespan:2172 Gap:1.64% 0 500 1000 1500 2000 
+
+Time 
+
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> Machine
+
+job 1 
+
+job 2 
+
+job 3 
+
+job 4 
+
+job 5 
+
+job 6 
+
+job 7 
+
+job 8 
+
+job 9 
+
+job 10 
+
+job 11 
+
+job 12 
+
+job 13 
+
+job 14 
+
+job 15 
+
+job 16 
+
+job 17 
+
+job 18 
+
+job 19 
+
+job 20 
+
+(c) DME Makespan:2158 Gap:0.98% 0 500 1000 1500 2000 
+
+Time 
+
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> Machine
+
+job 1 
+
+job 2 
+
+job 3 
+
+job 4 
+
+job 5 
+
+job 6 
+
+job 7 
+
+job 8 
+
+job 9 
+
+job 10 
+
+job 11 
+
+job 12 
+
+job 13 
+
+job 14 
+
+job 15 
+
+job 16 
+
+job 17 
+
+job 18 
+
+job 19 
+
+job 20 (d) M-CA Makespan:2151 Gap:0.66% 
+
+Figure 7: Dauzere 18a. Conference’17, July 2017, Washington, DC, USA Zhi Cao, Cong Zhang, Yaoxin Wu, Yaqing Hou, and Hongwei Ge 
+
+(a) L2D Makespan:2595 Gap:29.43% 0 500 1000 1500 2000 2500 
+
+Time  
+
+> 0.0
+> 2.5
+> 5.0
+> 7.5
+> 10.0
+> 12.5
+> 15.0
+> 17.5
+> 20.0
+> Machine
+
+(b) DAN Makespan:2509 Gap:25.14% 0 500 1000 1500 2000 2500 
+
+Time 
+
+> 0.0
+> 2.5
+> 5.0
+> 7.5
+> 10.0
+> 12.5
+> 15.0
+> 17.5
+> 20.0
+> Machine
+
+(c) DME Makespan:2469 Gap:23.14% 0 500 1000 1500 2000 2500 
+
+Time  
+
+> 0.0
+> 2.5
+> 5.0
+> 7.5
+> 10.0
+> 12.5
+> 15.0
+> 17.5
+> 20.0
+> Machine
+
+(d) M-CA Makespan:2454 Gap:22.39% 
+
+Figure 8: Taillard Ta41.

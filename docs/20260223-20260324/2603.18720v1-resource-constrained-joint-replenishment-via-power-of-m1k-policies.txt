@@ -1,0 +1,3368 @@
+Title: Resource-Constrained Joint Replenishment via Power-of-$m^{1/k}$ Policies
+
+URL Source: https://arxiv.org/pdf/2603.18720v1
+
+Published Time: Fri, 20 Mar 2026 00:56:50 GMT
+
+Number of Pages: 32
+
+Markdown Content:
+# Resource-Constrained Joint Replenishment via Power-of-m1/k Policies 
+
+Danny Segev ∗
+
+Abstract 
+
+The continuous-time joint replenishment problem has long served as a foundational inven-tory management model. Even though its unconstrained setting has seen recent algorithmic advances, the incorporation of resource constraints into this domain precludes the appli-cation of newly discovered synchronization techniques. Such constraints arise in a broad spectrum of practical environments where resource consumption is bounded as an aggregate rate over time. Prominent examples include inbound logistics facing volumetric limits on shipping containers, in-plant manufacturing restricted by material handling bandwidth, and administrative policies capping cumulative purchasing budgets. However, for nearly four decades, the prevailing approximation guarantee for resource-constrained joint replenish-ment has remained 1ln 2 ≈ 1.4427 , achieved via classical power-of-2 policies. In this paper, we circumvent these structural policy restrictions by devising generalized rounding frameworks, demonstrating that a well-known convex relaxation is much tighter than previously established. In particular, we expand our analytical scope to encompass frac-tional base expansion factors, randomized shifting, and staggered interleaved grids. Through this multifaceted methodology, we present a sequence of gradually improving performance guarantees. First, by proposing a best-of-two framework that exploits structural asymme-tries between deterministic power-of-m1/k policies, we surpass the classical barrier to obtain a 1.3776 -approximation. Second, by injecting a random shift into the logarithmic grid do-main and formulating a factor-revealing linear program to optimize a dual-policy approach, we attain a 1.2512 -approximation. Finally, by superimposing a secondary offset grid to subdivide rounding intervals and suppress holding cost inflation, we utilize interleaved poli-cies to arrive at our ultimate approximation ratio of 56 ln 2 ≈ 1.2023 , which is proven to be best-possible for the class of interleaved power-of-m1/k policies. 
+
+Keywords: Joint replenishment, resource constraints, approximation algorithms, randomized rounding, interleaved policies. 
+
+> ∗
+
+School of Mathematical Sciences and Coller School of Management, Tel Aviv University, Tel Aviv 69978, Israel. Email: segevdanny@tauex.tau.ac.il .
+
+> arXiv:2603.18720v1 [cs.DS] 19 Mar 2026
+
+Contents 
+
+1 Introduction 1
+
+1.1 Model formulation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31.2 Known approximability results . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41.3 Main contributions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+
+2 Static Power-of-m1/k Policies 7
+
+2.1 The convex relaxation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 72.2 Power-of-m1/k policies: Preliminaries . . . . . . . . . . . . . . . . . . . . . . . . . 82.3 Rounding procedure . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 82.4 Policy instantiation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 92.5 Proof of Claim 2.1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 
+
+3 Shifted Power-of-m1/k Policies 11 
+
+3.1 Introducing randomization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 3.2 Policy instantiation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 3.3 Best-of-two policy via factor-revealing LP . . . . . . . . . . . . . . . . . . . . . . 14 3.4 Proof of Claim 3.1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 
+
+4 Shifted Interleaved Power-of-m1/k Policies 18 
+
+4.1 Introducing shifted interleaved policies . . . . . . . . . . . . . . . . . . . . . . . . 18 4.2 Policy instantiation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19 4.3 Optimality of single-shot configuration . . . . . . . . . . . . . . . . . . . . . . . . 20 4.4 Proof of Claim 4.1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21 
+
+5 Concluding Remarks 23 References 24 A Additional Proofs 27 
+
+A.1 Proof of Claim 2.2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 27 A.2 Proof of Claim 3.2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 27 A.3 Proof of Claim 4.4 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28 A.4 Proof of Claim 4.5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 29 1 Introduction 
+
+Since its formal inception in the mid-1960s, with indirect explorations surfacing even earlier, the continuous-time joint replenishment problem has operated as a foundational inventory man-agement model. Conceptually, the core challenge we are facing centers on the simultaneous lot-sizing of multiple commodities over a given planning horizon, aiming to identify a replenish-ment policy that minimizes long-run average operating costs. Beyond its theoretical elegance, this framework functions as a major platform for both advancing a wide range of supply chain methodologies and developing highly practical industrial solutions. Given the massive body of work along these lines, spanning rigorous methods, heuristic approaches, experimental studies, real-life applications, and software solutions, providing an exhaustive overview of relevant liter-ature extends beyond the scope of this paper. Instead, readers are directed to extensive surveys (Aksoy and Erenguc, 1988; Goyal and Satir, 1989; Muckstadt and Roundy, 1993; Khouja and Goyal, 2008; Bastos et al., 2017) and dedicated book chapters (Silver and Peterson, 1985; Zipkin, 2000; Muckstadt and Sapra, 2010; Simchi-Levi et al., 2014) for a comprehensive understanding of these developments. From a technical perspective, the primary algorithmic obstacle we confront in rigorous treat-ment of the joint replenishment problem involves efficiently synchronizing multiple economic order quantity models. Viewed in isolation, separately optimizing each commodity requires finding the precise equilibrium point between its own marginal ordering and inventory holding costs. However, once embedded within an integrated system, these commodities become in-tricately linked through a shared joint ordering cost, triggered every time an order is placed, irrespective of the exact subset of commodities included. Consequently, identifying an optimal policy requires a fine-grained balance, coordinating replenishment cycles to group commodi-ties and maximize the benefit of shared setup expenses, without simultaneously inflating on-hand inventory levels. This delicate interplay between individual and shared operational costs presents fundamental analytical questions, driving continuous research into structural charac-terizations of rigorously analyzable lot-sizing strategies and their algorithmic implications for several decades. 
+
+Classical work. To address these synchronization challenges, a series of seminal papers intro-duced the concept of “power-of-2 policies” (Roundy, 1985, 1986; Jackson et al., 1985; Maxwell and Muckstadt, 1985; Muckstadt and Roundy, 1987). This approach operates by rounding optimal solutions of natural convex relaxations into highly structured policies, restricting every replenishment interval to be a power of 2 multiplied by a shared base period. When the latter period is exogenously predetermined, this mechanism guarantees a long-run average cost that falls within factor √9/8 ≈ 1.0606 of optimal. Furthermore, allowing the base period itself to be optimized tightens this performance bound to a factor of 1√2 ln 2 ≈ 1.0201 . For decades, these findings have stood as celebrated breakthroughs in inventory management, with their elegant derivations and broad applicability extensively studied in subsequent research; see, e.g., Federgruen et al. (1992), Muckstadt and Roundy (1993), and Teo and Bertsimas (2001). Conse-quently, a long-standing open question asked whether entirely different coordination mechanisms can outperform power-of-2 policies and establish even stronger approximation guarantees. 1Recent advances. Answering this persistent question, our recent work (Segev, 2025a) has fully characterized the computational landscape of continuous-time joint replenishment. Specif-ically, we introduced a new synchronization framework, termed Ψ-pairwise alignment, leading to the first polynomial-time approximation scheme, exactly matching earlier intractability re-sults (Cohen-Hillel and Yedidsion, 2018; Schulz and Telha, 2024). This algorithmic method guarantees that, for any given ϵ > 0, we can compute a replenishment policy whose long-run average cost falls within factor 1 + ϵ of optimal, requiring a running time of O(2 ˜O(1 /ϵ 3) · nO(1) ).Building upon this framework, our subsequent investigations (Segev, 2025b) streamlined the analysis of Ψ-pairwise alignment, arriving at an improved running time of O(2 ˜O(1 /ϵ ) · nO(1) ),while simultaneously resolving additional long-standing conjectures. Most notably, we proved that finely tuned evenly spaced policies attain an approximation guarantee of 1.0192 , strictly outperforming their power-of-2 counterparts, and proposed a black-box reduction that migrates variable-base performance bounds to fixed-base settings, yielding a ( 1√2 ln 2 + ϵ)-approximation. 
+
+Resource-constrained joint replenishment. Despite this recent progress, our alignment techniques exhibit basic limitations when transitioning from idealized models to more complex logistical realities. In particular, their structural reliance on so-called “approximate representa-tives” is very fragile when confronted with constrained generalizations of the joint replenishment problem. Most notably, it is entirely unclear whether Ψ-pairwise alignment retains any rele-vancy with the introduction of even rudimentary capacity restrictions. To bridge these critical gaps, our present work investigates the resource-constrained joint replenishment problem, whose core operational mechanism is similarly structured around the synchronization of multiple eco-nomic order quantity models. However, as formally explained in Section 1.1, the entire system must additionally adhere to strict upper bounds on the frequency, volume, or shared expense of replenishment events. For an elaborate discussion on the theory, practice, and rich history of these constraints, one could consult the classical work of Dobson (1987), Jackson et al. (1988), and Roundy (1989), as well as foundational investigations into capacitated lot-sizing and multi-item storage systems by Anily (1991), Gallego et al. (1996), and Gayon et al. (2017). In what follows, we highlight a number of real-life environments where such capacity requirements nat-urally arise, especially when resource consumption is bounded as an aggregate rate over time. In global procurement and maritime logistics, for example, commodities sourced from com-mon overseas suppliers are frequently consolidated into standard shipping containers. Here, strict volumetric and weight limits force decision-makers to synchronize replenishment cycles to maximize container utilization without exceeding aggregate fleet capacity (Porras and Dekker, 2008). For in-plant logistics and Just-In-Time manufacturing, material handling equipment such as automated guided vehicles or forklifts operates under bounded bandwidth, restricting the frequency at which component batches can be transferred from storage to assembly lines (Moon and Cha, 2006; Hoque, 2006). Similarly, inbound receiving operations face inspection limitations, where the total labor hours required to process incoming batches cannot exceed the available workforce capacity over a given period (e.g., Dobson, 1987; Jackson et al., 1988). In capacitated production-distribution networks, bottleneck machines possess a finite number of setup hours allocated per year (see Bitran and Yanasse, 1982; Roundy, 1989; Gayon et al., 2017). 2Finally, spatial and financial limitations play a crucial role when corporate policies restrict the aggregate storage volume or the purchasing budget dedicated to replenishment activities across a fiscal cycle (Anily, 1991; Gallego et al., 1996). To thoroughly examine the computational consequences of these capacity limitations and to properly contextualize our main contributions, we proceed by providing a complete mathemat-ical formulation of the resource-constrained joint replenishment problem in its continuous-time setting. Subsequently, we will review cornerstone algorithmic techniques in this context, con-sisting of classic approximation guarantees alongside recent proof-of-concept findings. 
+
+1.1 Model formulation The economic order quantity model. For a gradual exposition, let us begin by intro-ducing the economic order quantity (EOQ) model, forming the basic building block of joint replenishment settings. Here, we are asked to identify the optimal time interval T between successive orders of a single commodity, with the objective of minimizing its long-run average cost over the continuous planning horizon [0 , ∞). Specifically, this commodity is assumed to be characterized by a stationary demand rate of d, to be fully met upon occurrence, meaning that we do not allow for lost sales or back orders. In this setting, periodic policies simply fix a uniform ordering frequency across the planning horizon. Namely, orders will be placed at each of the points 0, T, 2T, 3T, . . . , making the time interval T our sole decision variable to be optimized. To understand the intrinsic tradeoff we are facing, each of these orders incurs a fixed cost of K > 0 regardless of its quantity, motivating infrequent orders by itself. However, this trend is counterbalanced by a linear holding cost of h > 0, incurred per time unit for each inventory unit in stock, implying that we wish to avoid high inventory levels via frequent orders. As such, the fundamental question is how to determine the time interval T , aiming to minimize long-run average ordering and holding costs. Based on the preceding discussion, it is straightforward to verify that optimal policies will be placing orders only when their on-hand inventory level is completely exhausted, or put differently, zero-inventory ordering (ZIO) policies are optimal. Therefore, we can succinctly represent the objective function of interest as C(T ) = KT + HT , with the convention that 
+
+H = hd  
+
+> 2
+
+. Elementary calculus arguments show that this cost function is strictly convex and that its unique minimizer is T ∗ = √K/H , corresponding to the well-known square-root formula. A host of additional properties in this context can be discovered by consulting authoritative book chapters, such as those of Zipkin (2000, Sec. 3), Muckstadt and Sapra (2010, Sec. 2), or Simchi-Levi et al. (2014, Sec. 7.1), and we will mention particularly useful ones throughout our analysis. 
+
+The joint replenishment problem. With these foundations in place, the essence of joint replenishment can be captured by posing the next question: How should we coordinate multiple economic order quantity models, when different commodities are tied together via joint ordering costs? Specifically, we would like to synchronize the lot-sizing of n distinct commodities, where each commodity i ∈ [n] is coupled with its own EOQ model, parameterized by ordering and holding costs Ki and Hi, respectively. As previously explained, setting a time interval of 3Ti between successive orders of this commodity would lead to a marginal operational cost of 
+
+Ci(Ti) = Ki 
+
+> Ti
+
++ HiTi. However, the complicating feature is that we concurrently face joint ordering costs, paying K0 whenever an order is placed, regardless of its particular subset of commodities. Given these parameters, any joint replenishment policy can be represented through a vector 
+
+T = ( T1, . . . , T n), where Ti stands for the time interval between successive orders of each com-modity i ∈ [n]. For such policies, the first component of our objective function, ∑ 
+
+> i∈[n]
+
+Ci(Ti),encapsulates the sum of marginal EOQ-based costs. Its second component, which will be designated by J(T ), captures long-run average joint ordering costs. Formally, this term is de-fined as the asymptotic density J(T ) = K0 · lim ∆→∞ N (T, ∆) ∆ , where N (T, ∆) stands for the number of joint orders occurring across [0 , ∆] with respect to the time intervals T1, . . . , T n.That is, letting MTi,∆ = {0, T i, 2Ti, . . . , ⌊ ∆ 
+
+> Ti
+
+⌋ · Ti} be the set of integer multiples of Ti within 
+
+[0 , ∆] , we have N (T, ∆) = | ⋃ 
+
+> i∈[n]
+
+MTi,∆|. Putting both components together, the long-run average operational cost of any joint replenishment policy T = ( T1, . . . , T n) can be written as 
+
+F (T ) = J(T ) + ∑ 
+
+> i∈[n]
+
+Ci(Ti).
+
+Incorporating resource constraints. A common thread passing through the preceding dis-cussion is that different commodities are interacting “only” via their common ordering density. The resource-constrained joint replenishment problem introduces a further layer of complex-ity, where the underlying commodities are interrelated through resource consumption bounds. While serving a wide range of practical purposes, it is instructive to take a production-oriented view on this family of constraints, where assembling each commodity i requires D limited re-sources. Assuming each order of commodity i requires αid ≥ 0 units of resource d ∈ [D], a time interval of Ti induces a long-run average consumption rate of αid  
+
+> Ti
+
+for this resource. In turn, our system is constrained by ensuring the aggregate rate across all commodities does not exceed the total resource capacity, βd. By normalizing the latter constant, such constraints can be compactly specified by asking the time intervals T1, . . . , T n to satisfy ∑  
+
+> i∈[n]αid
+> Ti
+
+≤ 1 for every 
+
+d ∈ [D]. In summary, our objective is to identify a resource-feasible joint replenishment policy 
+
+T = ( T1, . . . , T n) whose long-run average operational cost F (T ) is minimized. 
+
+1.2 Known approximability results The classics: Power-of-2 policies. By investigating natural convex relaxations, on which Section 2.1 sheds further light, the seminal work of Roundy (1989) established that their optimal solutions can be rounded to resource-feasible power-of-2 policies with bounded loss in optimality. Similar to unconstrained settings, this approach operates by expressing each time interval as a 
+
+[1 , 2) -valued base coefficient, multiplied by a power-of-2 component. By carefully shifting these base coefficients, Roundy generated polynomially many candidate policies, each coupled with “ideal” base coefficients alongside an ordering-frequency lower bound, dictated by our resource restrictions. Subsequently, to correct potential constraint violations, feasibility is restored by scaling these ideal coefficients up to their corresponding lower bound. In the presence of an arbitrary number of resources, this rounding framework guarantees a long-run average cost within factor 1ln 2 ≈ 1.4427 of the convex relaxation optimum. Furthermore, when dealing with 4a single resource, Roundy (1989) proved that this bound improves to √9/8 ≈ 1.0606 . Building upon these foundational results, Teo and Bertsimas (2001) introduced an alternative algorith-mic framework utilizing randomized rounding. Their approach recovers the above-mentioned performance guarantees by mapping convex relaxation solutions to probability distributions over power-of-2 policies. This randomized mechanism considerably simplified the derivation of classical findings and facilitated extensions to lot-sizing models exhibiting submodular joint ordering costs. 
+
+Recent progress. Our recent work (Segev, 2025b) further examined the approximability of resource-constrained joint replenishment by revisiting its convex relaxation, focusing on whether  
+
+> 1ln 2
+
+is a true barrier in this domain or an intrinsic feature of existing methods. To devise a proof-of-concept improvement, we introduced a dual-policy rounding framework, which classifies commodities as being “small” and “large”, depending on the magnitude of their relaxed time intervals. By developing two juxtaposed policies, via a deterministic right-shift procedure that slightly saves on the cost inflation of small commodities, and a randomized-shift procedure that leads to analogous savings for large commodities, we established an approximation factor of 
+
+1.417 < 1ln 2 .Additionally, we investigated the computational status of resource-constrained joint replen-ishment instances whose number of resource constraints, D, is relatively small. In this setting, we proposed a discretization method that considers only O( 1 
+
+> ϵ
+
+log nϵ ) candidate time intervals for each commodity. Then, to overcome the unbounded integrality gaps inherent to standard LP-relaxations, we considered an assignment-based formulation, augmented by exhaustively guessing and fixing assignment variables for “heavy” resource-consuming pairs and “expensive” cost-incurring pairs. This mechanism allows for near-lossless randomized rounding, through which we construct a (1 + ϵ)-approximate policy in O(n ˜O(D3/ϵ 4)) time, implying in particular that for a constant number of resources (i.e., D = O(1) ), our framework provides a polynomial-time approximation scheme. Notably, for the single-resource case, this outcome improves upon the classical √9/8-approximation developed by Roundy (1989) and Teo and Bertsimas (2001). 
+
+Hardness results. While our work is algorithmically driven, it is instructive to briefly high-light known complexity results, to better understand the theoretical landscape of resource-constrained joint replenishment. As explained as part of our concluding remarks, we still do not know whether the incorporation of such constraints makes the joint replenishment problem provably harder to approximate in comparison to its unconstrained setting. In the latter con-text, Schulz and Telha (2011) were the first to rigorously examine the computational feasibility of obtaining optimal periodic policies in continuous time. Specifically, they established that in the fixed-base setting, an exact polynomial-time algorithm for the joint replenishment problem would imply a similar outcome for integer factorization, thereby establishing novel connections to core challenges in number theory. Subsequently, Cohen-Hillel and Yedidsion (2018) proved that the fixed-base setting is strongly NP-hard. This result was strengthened by Schulz and Telha (2024), who demonstrated that NP-hardness persists even for two-commodity instances. Extending their analysis to the variable-base setting, they demonstrated its polynomial-time 5reducibility to integer factorization. This reduction was subsequently lifted to a strong NP-hardness proof by Tuisov and Yedidsion (2020). 
+
+1.3 Main contributions 
+
+The primary contribution of this paper resides in devising a systematic rounding framework that significantly surpasses the best-known approximation guarantees for resource-constrained joint replenishment. While previous approaches solely relied on bounding the cost inflation inherent to power-of-2 policies, the present work examines a much broader class of replenishment policies. In particular, the technical domains we study and their analysis enhance traditional ideas by encompassing fractional expansion factors, randomized shifting, and staggered interleaved grids. As outlined below, these developments culminate in the following performance guarantee for general problem instances, with an arbitrary number of capacity constraints. 
+
+Theorem 1.1 . The resource-constrained joint replenishment problem can be approximated in polynomial time within factor 56 ln 2 < 1.2023 of optimal. 
+
+Static power-of-m1/k policies. In Section 2, we initiate our algorithmic progression by rounding optimal solutions of a well-known convex relaxation via a static geometric grid, defined by a possibly fractional expansion factor of m1/k . By identifying the optimal grid parameters (m = 2 , k = 2 ), we establish a baseline approximation guarantee of √2 < 1.4143 for the resulting policy, T 2,2. To push beyond this limit, we exploit a structural asymmetry within the rounding operator in play, as its respective multipliers governing joint ordering density and inventory holding costs are unbalanced. Specifically, our optimal single-shot policy T 2,2 incurs a highly efficient density multiplier alongside a heavy holding cost multiplier, whereas the alternative configuration T 2,3 exhibits the inverse cost structure. By carefully pairing these policies and selecting the cheaper of two static configurations, we obtain an improved approximation ratio of 1.3776 .
+
+Randomized shifting. In Section 3, to further mitigate the rounding errors incurred by static grids, we inject a uniformly distributed shift Θ ∼ U [0 , 1] into the logarithmic domain of the expansion factor. In essence, scaling grid elements by mΘ/k smooths the expected individ-ual ordering and holding cost multipliers across the continuum of Θ values. We show that an optimal single-shot randomized policy, T 3,2,Θ, leverages such smoothing to attain an expected approximation guarantee of 2( √3−1) ln 3 < 1.3327 . Moreover, exploiting the asymmetry between two randomized policies ( T 2,1,Θ and T 2,2,Θ) further drops the expected bound to 1.2585 . Fi-nally, moving beyond oblivious randomization, we transition to a proactive instance-dependent selection of Θ. By discretizing our shift parameter and formulating a factor-revealing linear program to evaluate worst-case adversarial cost distributions, we arrive at a strictly better 
+
+1.2512 -approximation. 
+
+Interleaved policies. In Section 4, we tackle the expected holding cost inflation inherent to any single geometric grid. For this purpose, we introduce a secondary grid, scaled by a fractional offset of α, which is superimposed onto the primary grid to form a denser interleaved structure. 6This approach subdivides the primary grid’s rounding intervals, restricting the maximum pos-sible rounding error for any given commodity. While utilizing a secondary grid inflates joint ordering costs, optimizing the offset α to stagger ordering points ensures that integer multiples of these two grids frequently synchronize. Instantiating this interleaved framework with m = 2 ,
+
+k = 1 , and α = 3 /2 strikes an effective balance between bounding holding costs and suppressing ordering density blowup. This configuration establishes our ultimate expected approximation ratio of 56 ln 2 < 1.2023 , which is proven to be best-possible for the entire class of interleaved power-of-m1/k policies. 
+
+2 Static Power-of-m1/k Policies 
+
+In this section, we introduce and study the class of static power-of-m1/k policies. This concept is based on deterministically rounding optimal solutions to a well-known convex relaxation of the resource-constrained joint replenishment problem, utilizing a geometric grid with an expansion factor of m1/k . Our first finding along these lines shows that by optimally tuning grid parameters, a single-shot power-of-m1/k policy suffices to achieve a worst-case performance guarantee of √2 < 1.4143 . Second, we exploit the structural asymmetry between the ordering density and holding cost multipliers of our rounding procedure: By selecting the cheaper of two carefully matched policies, we obtain an improved approximation ratio of 1.3776 .
+
+2.1 The convex relaxation 
+
+Our mechanism for lower-bounding optimal long-run average operational costs is similar to that of Roundy (1989) and Teo and Bertsimas (2001), who considered the following convex relaxation: min K0
+
+Tmin 
+
++ ∑ 
+
+> i∈[n]
+> (
+
+Ki
+
+Ti
+
++ HiTi
+
+> )
+
+(P) s.t. Ti ≥ Tmin ≥ 0 ∀ i ∈ [n] (1) 
+
+> ∑
+> i∈[n]
+
+αid 
+
+Ti
+
+≤ 1 ∀ d ∈ [D] (2) Reading in reverse order, constraint (2) ensures that the time intervals T1, . . . , T n are resource-feasible. Constraint (1) involves the auxiliary decision variable Tmin , which represents min i∈[n] Ti
+
+in an optimal solution, since the objective function of (P) is strictly decreasing in Tmin . Finally, to derive a closed-form bound on the operational cost F (T ) = J(T ) + ∑ 
+
+> i∈[n]
+
+Ci(Ti) of any replenishment policy, this formulation replaces the asymptotic ordering density J(T ) with K0 
+
+> Tmin
+
+.This term coincides with the individual density of the most frequently ordered commodity, which provides a straightforward lower bound on J(T ).Summarizing common knowledge, we point out that formulation (P) is a convex program that can be solved to optimality in polynomial time via interior-point methods. Specifically, by transforming our decision variables into frequency-based ones, where fi = 1 
+
+> Ti
+
+, this problem can be cast as a second-order cone program or as a convex geometric program. For a comprehensive overview of such problems and their algorithmic foundations, we refer the reader to Nesterov 7and Nemirovskii (1994, Chap. 4) for interior-point theory and to Boyd and Vandenberghe (2004, Sec. 4.4–4.6) for geometric and cone programming. Moving forward, T ∗ = ( T ∗
+
+> min
+
+, T ∗ 
+
+> 1
+
+, . . . , T ∗ 
+
+> n
+
+)
+
+will designate an optimal solution to (P). 
+
+2.2 Power-of-m1/k policies: Preliminaries 
+
+To describe the mechanics of power-of-m1/k policies, we begin by creating a deterministic ge-ometric grid and elaborating on its induced rounding operator and density coefficient. For a gradual exposition of these concepts, the objects we will be interacting with are formally defined as follows. 
+
+The geometric grid. For a pair of integers m ≥ 2 and k ≥ 1 whose values will be optimized later on, let m1/k be the expansion factor of our grid. We restrict our attention to this discrete parametrization, noting that the set {m1/k : m ∈ Z≥2, k ∈ Z≥1} is dense in the interval (1 , ∞),thereby covering arbitrarily valued expansion factors via potentially irrational terms. Given m,
+
+k, and T ∗
+
+> min
+
+, we consider the geometric grid Gm,k , where T ∗ 
+
+> min
+
+is multiplied by all integer powers of the expansion factor m1/k , namely, Gm,k = {mp/k · T ∗ 
+
+> min
+
+: p ∈ Z}.
+
+The operator Rm,k . With respect to this grid, the operator Rm,k : R++ → R rounds its ar-gument up to the nearest strictly greater point in Gm,k , meaning that Rm,k (t) = min {g ∈ G m,k :
+
+g > t }. We emphasize that this operator is purposely defined with a strict inequality, implying in particular that grid points are not rounded to themselves but rather to their successors. As explained in the sequel, the latter property is an important design feature for our current class of policies. 
+
+The density coefficient Dm,k . To introduce our next component, which serves an analytical role in bounding joint ordering costs, for any element g ∈ G m,k and ∆ ≥ 0, let Mg, ∆ =
+
+{0, g, 2g, . . . , ⌊ ∆ 
+
+> g
+
+⌋ · g} be the collection of integer multiples of g within the interval [0 , ∆] . Then, the density coefficient Dm,k of Gm,k is defined as the asymptotic density of the union of these integer multiples, over elements of value at least Rm,k (T ∗
+
+> min
+
+), i.e., 
+
+Dm,k = lim 
+
+> ∆→∞
+
+| ⋃    
+
+> g∈G m,k ∩[Rm,k (T∗
+> min ),∞)
+
+Mg, ∆|
+
+∆ . (3) Even though this union is taken over infinitely many sets, it is identical to the finite union of its first k sets, MRm,k (T ∗
+
+> min ),∆
+
+, Mm1/k ·R m,k (T ∗
+
+> min ),∆
+
+, . . . , Mm(k−1) /k ·R m,k (T ∗
+
+> min ),∆
+
+. Indeed, since m
+
+is an integer, Mmg, ∆ ⊆ M g, ∆ for every g ∈ G m,k , effectively making all sets beyond the first k
+
+redundant. 
+
+2.3 Rounding procedure Creating T m,k . Given an optimal solution T ∗ = ( T ∗
+
+> min
+
+, T ∗ 
+
+> 1
+
+, . . . , T ∗ 
+
+> n
+
+) to the convex relax-ation (P), we round this vector via the Rm,k -operator into a power-of-m1/k policy, T m,k , set-ting T m,k i = Rm,k (T ∗ 
+
+> i
+
+) for every commodity i ∈ [n]. As such, since our resource constraints 8{∑  
+
+> i∈[n]αid
+> Ti
+
+≤ 1}d∈[D] are upward-closed, and since Rm,k inflates its argument (i.e., Rm,k (t) > t ), the replenishment policy T m,k is clearly resource-feasible. 
+
+Parametric performance guarantee. For the purpose of evaluating the operational cost 
+
+F (T m,k ) of this policy, we observe that the time interval T m,k i of every commodity must be a grid point in Gm,k ∩ [Rm,k (T ∗
+
+> min
+
+), ∞). Therefore, T m,k places joint orders only at integer multiples of these points, precisely corresponding to the union in definition (3) of the density coefficient 
+
+Dm,k , implying that J(T m,k ) ≤ K0 · D m,k . To resolve overlapping integer multiples of relevant grid elements, we derive an inclusion-exclusion-type expression for this coefficient in Claim 2.1, whose proof is presented in Section 2.5. Here, for any finite set N ⊆ R++ , the smallest positive value that is an integer multiple of every element in N will be denoted by LCM( N ); when these elements are incommensurable, we set LCM( N ) = ∞.
+
+Claim 2.1 . Dm,k = 1   
+
+> Rm,k (T∗
+> min )
+
+· ∑  
+
+> ∅̸ =N ⊆S m,k
+> (−1) |N | +1
+> LCM( N)
+
+, where Sm,k = {m(κ−1) /k }κ∈[k].
+
+This observation allows us to relate the operational cost of T m,k to the convex relaxation optimum in terms of the grid parameters m and k, by noting that 
+
+F (T m,k ) ≤ K0 · D m,k + ∑
+
+> i∈[n]
+
+( Ki
+
+T m,k i
+
++ HiT m,k i
+
+)
+
+≤
+
+ ∑
+
+> ∅̸ =N ⊆S m,k
+
+(−1) |N | +1 
+
+LCM( N )
+
+ · K0
+
+Rm,k (T ∗
+
+> min
+
+) + ∑
+
+> i∈[n]
+
+( Ki
+
+Rm,k (T ∗ 
+
+> i
+
+) + HiRm,k (T ∗ 
+
+> i
+
+)
+
+)
+
+≤ 1
+
+m1/k ·
+
+ ∑
+
+> ∅̸ =N ⊆S m,k
+
+(−1) |N | +1 
+
+LCM( N )
+
+ · K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ m1/k · ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+. (4) The last inequality holds since T ∗ 
+
+> i
+
+< Rm,k (T ∗ 
+
+> i
+
+) ≤ m1/k · T ∗ 
+
+> i
+
+for every commodity i ∈ [n]. In addition, Rm,k (T ∗
+
+> min
+
+) = m1/k · T ∗
+
+> min
+
+, which would not have been the case had Rm,k been defined with a weak inequality. 
+
+2.4 Policy instantiation Optimal single-shot policy. To extract the best-possible approximation guarantee out of this mechanism, we proceed by optimizing the grid parameters m and k, depending on whether 
+
+m1/k is rational or not. First, by standard divisibility arguments, m1/k is rational if and only if 
+
+m is a perfect k-th power of an integer. In this case, the expansion factor m1/k is integer-valued, and we may therefore assume k = 1 without loss of generality. In turn, letting T m, 1 stand for the resulting policy, our upper bound (4) specializes to 
+
+F (T m, 1) ≤ 1
+
+m · K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ m · ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+,
+
+implying that such a policy does not improve on the trivial 2-approximation, since m ≥ 2.Now, when m1/k is irrational, we observe that the inclusion-exclusion term in (4) collapses to the union bound, as Sm,k = {m(κ−1) /k }κ∈[k] consists of incommensurable elements. Conse-quently, ∑  
+
+> ∅̸ =N ⊆S m,k
+> (−1) |N | +1
+> LCM( N)
+
+= ∑  
+
+> κ∈[k]1
+> m(κ−1) /k
+
+= 1−1/m  
+
+> 1−m−1/k
+
+, leading to a simplified upper bound 9of 
+
+F (T m,k ) ≤
+
+(
+
+1 − 1
+
+m
+
+)
+
+· 1
+
+m1/k − 1
+
+︸ ︷︷ ︸ 
+
+> VJ(m,k )
+
+· K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ m1/k 
+
+︸ ︷︷ ︸  
+
+> VH(m,k )
+
+· ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+. (5) To derive the best approximation of this form, we wish to determine m ∈ Z≥2 and k ∈ Z≥1 that minimize the larger coefficient out of VJ (m, k ) and VH (m, k ). The next claim, whose proof is provided in Appendix A.1, shows that the optimal choice is m∗ = k∗ = 2 .
+
+Claim 2.2 . The integers m ∈ Z≥2 and k ∈ Z≥1 that minimize max {VJ (m, k ), V H (m, k )} are 
+
+m∗ = 2 and k∗ = 2 , yielding an optimum value of √2.
+
+We have just shown that the policy obtained, T 2,2, is associated with a long-run average operational cost within factor √2 < 1.4143 of optimal. This result by itself is already an improvement over the 1.417 -approximation attained by our previous work in this context (Segev, 2025b). 
+
+Lemma 2.3 . F (T 2,2) ≤ √2 · OPT (P) .
+
+Best-of-both-worlds policy. Our next enhancement is derived by noting that, while m∗ =
+
+k∗ = 2 is an optimal choice in the sense of minimizing max {VJ (m, k ), V H (m, k )}, these two terms are not perfectly balanced, due to the integrality restriction on m and k. Specifically, in light of the irrational-case bound (5), 
+
+F (T 2,2) ≤√2 + 1 2 · K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ √2 · ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+, (6) where the ordering density component has a multiplier of  
+
+> √2+1 2
+
+≈ 1.2071 , much better than the 
+
+√2-multiplier of the holding cost component. To exploit this structure, we consider the policy 
+
+T 2,3, which exhibits the inverse asymmetry. Here, 
+
+F (T 2,3) ≤ 12(2 1/3 − 1) · K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ 2 1/3 · ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+, (7) meaning that we incur an ordering density multiplier of 12(2 1/3−1) ≈ 1.9236 , in contrast to a holding cost multiplier of only 21/3, which is strictly better than √2. Consequently, by picking the cheaper of these two policies, we improve on the worst-case performance guarantee of T 2,2
+
+by itself, as shown below. 
+
+Lemma 2.4 . min {F (T 2,2), F (T 2,3)} ≤ 1.3776 · OPT (P) .
+
+Proof. By synthesizing the upper bounds (6) and (7) on the operational costs of T 2,2 and 
+
+T 2,3, respectively, we conclude that 
+
+min {F (T 2,2), F (T 2,3)}≤ min 
+
+> λ∈[0 ,1]
+
+λ ·
+
+
+
+√2 + 1 2 · K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ √2 · ∑
+
+> i∈[n]
+
+HiT ∗
+
+> i
+
+
+
+10 + (1 − λ) ·
+
+ 12(2 1/3 − 1) · K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ 2 1/3 · ∑
+
+> i∈[n]
+
+HiT ∗
+
+> i
+
+
+
+≤ 0.76218 ·
+
+
+
+√2 + 1 2 · K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ √2 · ∑
+
+> i∈[n]
+
+HiT ∗
+
+> i
+
+
+
++ (1 − 0.76218) ·
+
+ 12(2 1/3 − 1) · K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ 2 1/3 · ∑
+
+> i∈[n]
+
+HiT ∗
+
+> i
+
+ (8) 
+
+≤ 1.3776 ·
+
+ K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+( Ki
+
+T ∗
+
+> i
+
++ HiT ∗
+
+> i
+
+)
+
+= 1.3776 · OPT (P) .
+
+We remark that the constant 0.76218 appearing in inequality (8) is a truncation of the one that balances between the density and holding multipliers, i.e.,  
+
+> √2+1 2
+
+· λ + 12(2 1/3−1) · (1 − λ) = 
+
+√2 · λ + 2 1/3 · (1 − λ). ■
+
+2.5 Proof of Claim 2.1 
+
+In order to compute Dm,k , according to definition (3), we have 
+
+Dm,k = lim 
+
+> ∆→∞
+
+| ⋃    
+
+> g∈G m,k ∩[Rm,k (T∗
+> min ),∞)
+
+Mg, ∆|
+
+∆= lim 
+
+> ∆→∞
+
+| ⋃ 
+
+> κ∈[k]
+
+Mm(κ−1) /k ·R m,k (T ∗
+
+> min ),∆
+
+|
+
+∆ (9) 
+
+= ∑
+
+> ∅̸ =N ⊆ [k]
+
+(−1) |N | +1 · lim 
+
+> ∆→∞
+
+| ⋂ 
+
+> κ∈N
+
+Mm(κ−1) /k ·R m,k (T ∗
+
+> min ),∆
+
+|
+
+∆ (10) 
+
+= 1
+
+Rm,k (T ∗
+
+> min
+
+) · ∑
+
+> ∅̸ =N ⊆S m,k
+
+(−1) |N | +1 
+
+LCM( N ) . (11) Here, equality (9) holds since the union ⋃    
+
+> g∈G m,k ∩[Rm,k (T∗
+> min ),∞)
+
+Mg, ∆ is identical to the finite union of its first k sets, {M m(κ−1) /k ·R m,k (T ∗
+
+> min ),∆
+
+}κ∈[k], as explained in Section 2.2. Equality (10) follows from the inclusion-exclusion principle. Finally, recalling that Sm,k = {m(κ−1) /k }κ∈[k],equality (11) is obtained by observing that 
+
+∣∣∣∣∣⋂
+
+> κ∈N
+
+Mm(κ−1) /k ·R m,k (T ∗
+
+> min ),∆
+
+∣∣∣∣∣ =
+
+⌊ ∆
+
+Rm,k (T ∗
+
+> min
+
+) · LCM( {m(κ−1) /k }κ∈N )
+
+⌋
+
++ 1 .
+
+3 Shifted Power-of-m1/k Policies 
+
+In what follows, we expand our algorithmic framework by introducing the class of shifted power-of-m1/k policies. Building upon the geometric rounding approach of Section 2, this concept injects a randomized shift into the logarithmic grid domain to smooth out rounding errors. Our first finding demonstrates that, by optimally tuning grid parameters, a single-shot policy is capable of attaining an expected performance guarantee of 2( √3−1) ln 3 < 1.3327 . Second, we 11 once again exploit the structural asymmetry between the ordering density and holding cost multipliers of our rounding procedure. By picking the cheaper of two carefully constructed randomized policies, we obtain an improved expected approximation ratio of 1.2585 . Finally, we move beyond oblivious randomization to a proactive instance-dependent shift selection. Utilizing a factor-revealing linear program, we prove that by choosing an optimal shift for each specific instance, a tighter approximation guarantee of 1.2512 can be established. 
+
+3.1 Introducing randomization 
+
+To take the performance guarantees of Section 2 one step further, we augment power-of-m1/k 
+
+policies with randomized shifting. Specifically, by revisiting earlier definitions and notation, our geometric grid, rounding operator, and density coefficient will incorporate randomization as follows. 
+
+The geometric grid. We remind the reader that given m ∈ Z≥2, k ∈ Z≥1, and T ∗
+
+> min
+
+, the static geometric grid Gm,k = {mp/k · T ∗ 
+
+> min
+
+: p ∈ Z} was defined through multiplying T ∗ 
+
+> min
+
+by all integer powers of the expansion factor m1/k . Moving forward, rather than considering Gm,k , we scale its elements by a factor of mΘ/k , where Θ ∼ U [0 , 1] represents a uniformly distributed shift in the logarithmic domain, thereby creating the random grid Gm,k, Θ = {m(p+Θ) /k · T ∗ 
+
+> min
+
+: p ∈ Z}.
+
+The operator Rm,k, Θ and density coefficient Dm,k, Θ. The first consequence of this extension is that, when any t > 0 is rounded up to the strictly greater nearest point in Gm,k, Θ,the latter point is clearly random. As such, our rounding operator becomes the random function 
+
+Rm,k, Θ(t) = min {g ∈ G m,k, Θ : g > t }. Similarly, once we take all integer multiples of grid elements valued at least Rm,k, Θ(T ∗
+
+> min
+
+), their asymptotic density is random as well, with the density coefficient of Gm,k, Θ prescribed by 
+
+Dm,k, Θ = lim 
+
+> ∆→∞
+
+| ⋃  
+
+> g∈G m,k, Θ∩[Rm,k, Θ(T∗
+> min ),∞)
+
+Mg, ∆|
+
+∆ . (12) 
+
+Creating T m,k, Θ. Given an optimal solution T ∗ = ( T ∗
+
+> min
+
+, T ∗ 
+
+> 1
+
+, . . . , T ∗ 
+
+> n
+
+) to the convex relax-ation (P), we define the randomized replenishment policy T m,k, Θ via the Rm,k, Θ-operator, specifically meaning that T m,k, Θ 
+
+> i
+
+= Rm,k, Θ(T ∗ 
+
+> i
+
+) for every commodity i ∈ [n]. As before, since 
+
+Rm,k, Θ inflates its argument, the policy T m,k, Θ is resource-feasible with probability 1.
+
+Parametric performance guarantee. In order to upper-bound the expected operational cost of this policy, we observe that T m,k, Θ may place joint orders only at integer multiples of the points in Gm,k, Θ ∩ [Rm,k, Θ(T ∗
+
+> min
+
+), ∞). This set is clearly contained within the union appearing in definition (12), implying that J(T m,k, Θ) ≤ K0 · D m,k, Θ almost surely. As stated in Claim 3.1, we show that the expected density coefficient EΘ[Dm,k, Θ] admits a closed-form expression, and so do EΘ[Rm,k, Θ(t)] and EΘ[ 1 
+
+> Rm,k, Θ(t)
+
+], for any t > 0. The derivation of these expressions is presented in Section 3.4. 
+
+Claim 3.1 . 1. EΘ[Rm,k, Θ(t)] = k(m1/k −1) ln m · t, for every t > 0.
+
+12 2. EΘ[ 1 
+
+> Rm,k, Θ(t)
+
+] = k(m1/k −1)    
+
+> m1/k ln m
+
+· 1 
+
+> t
+
+, for every t > 0.3. EΘ[Dm,k, Θ] = k(m1/k −1)    
+
+> m1/k ln m
+
+· (∑  
+
+> ∅̸ =N ⊆S m,k
+> (−1) |N | +1
+> LCM( N)
+
+) · 1 
+
+> T∗
+> min
+
+.
+
+As an immediate byproduct, the expected operational cost of T m,k, Θ can be related to the convex relaxation optimum in terms of the grid parameters m and k, by noting that 
+
+EΘ
+
+[
+
+F (T m,k, Θ)
+
+]
+
+≤ K0 · EΘ [Dm,k, Θ] + ∑
+
+> i∈[n]
+
+(
+
+Ki · EΘ
+
+[ 1
+
+T m,k, Θ
+
+> i
+
+]
+
++ Hi · EΘ
+
+[
+
+T m,k, Θ
+
+> i
+
+])
+
+= K0 · EΘ [Dm,k, Θ] + ∑
+
+> i∈[n]
+
+(
+
+Ki · EΘ
+
+[ 1
+
+Rm,k, Θ(T ∗ 
+
+> i
+
+)
+
+]
+
++ Hi · EΘ [Rm,k, Θ(T ∗ 
+
+> i
+
+)] 
+
+)
+
+≤ k(m1/k − 1) 
+
+m1/k ln m ·
+
+ ∑
+
+> ∅̸ =N ⊆S m,k
+
+(−1) |N | +1 
+
+LCM( N )
+
+ · K0
+
+T ∗
+
+> min
+
++ k(m1/k − 1) 
+
+m1/k ln m · ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ k(m1/k − 1) ln m · ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+. (13) 
+
+3.2 Policy instantiation Optimal single-shot policy. Building on this bound, we observe that with respect to the ordering cost multiplier, k(m1/k −1)    
+
+> m1/k ln m
+
+< 1 for any m ≥ 2 and k ≥ 1. Therefore, we focus on identifying the grid parameters m ∈ Z≥2 and k ∈ Z≥1 that minimize the larger of the density multiplier k(m1/k −1)    
+
+> m1/k ln m
+
+· (∑  
+
+> ∅̸ =N ⊆S m,k
+> (−1) |N | +1
+> LCM( N)
+
+) and the holding cost multiplier k(m1/k −1) ln m . Similarly to the case analysis in Section 2.4, when m1/k is rational, we may assume without loss of generality that k = 1 . As such, ∑  
+
+> ∅̸ =N ⊆S m, 1
+> (−1) |N | +1
+> LCM( N)
+
+= 1 , and in relation to our resulting policy 
+
+T m, 1,Θ, the upper bound (13) becomes 
+
+EΘ
+
+[
+
+F (T m, 1,Θ)
+
+]
+
+≤ m − 1
+
+m ln m · K0
+
+T ∗
+
+> min
+
++ m − 1
+
+m ln m · ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ m − 1ln m · ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+. (14) An optimal policy of this form picks m = 2 , for which EΘ[F (T 2,1,Θ)] ≤ 1ln 2 · OPT (P). On the other hand, when m1/k is irrational, we know that ∑  
+
+> ∅̸ =N ⊆S m,k
+> (−1) |N | +1
+> LCM( N)
+
+= 1−1/m  
+
+> 1−m−1/k
+
+,leading to a simplified upper bound of 
+
+EΘ
+
+[
+
+F (T m,k, Θ)
+
+]
+
+≤
+
+(
+
+1 − 1
+
+m
+
+)
+
+· k
+
+ln m
+
+︸ ︷︷ ︸ 
+
+> VJ(m,k )
+
+· K0
+
+T ∗
+
+> min
+
++ k(m1/k − 1) 
+
+m1/k ln m
+
+︸ ︷︷ ︸
+
+> ≤1
+
+· ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ k(m1/k − 1) ln m
+
+︸ ︷︷ ︸ 
+
+> VH(m,k )
+
+· ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+.
+
+As stated in Claim 3.2, whose complete derivation is deferred to Appendix A.2, the optimal choice here is m∗ = 3 and k∗ = 2 , attaining an expected operational cost within factor 2( √3−1) ln 3 <
+
+1.3327 of optimal. This result represents a substantial improvement over the deterministic 
+
+1.3776 -approximation ratio of Section 2. 
+
+Claim 3.2 . The integers m ∈ Z≥2 and k ∈ Z≥1 that minimize max {VJ (m, k ), V H (m, k )} are 
+
+m∗ = 3 and k∗ = 2 , yielding an optimum value of 2( √3−1) ln 3 .
+
+Lemma 3.3 . EΘ[F (T 3,2,Θ)] ≤ 2( √3−1) ln 3 · OPT (P) .
+
+13 Best-of-both-worlds policy. Our primary improvement along these lines is attained by exploiting a structural asymmetry in the randomized policy T 2,1,Θ. As previously mentioned, by instantiating the rational-case bound (14) on the expected operational cost of T 2,1,Θ, we have 
+
+EΘ
+
+[
+
+F (T 2,1,Θ)
+
+]
+
+≤ 12 ln 2 · K0
+
+T ∗
+
+> min
+
++ 12 ln 2 · ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ 1ln 2 · ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+. (15) Interestingly, this policy’s ordering density multiplier is only 12 ln 2 ≈ 0.7213 , even though it incurs heavy holding costs, with a multiplier of 1ln 2 ≈ 1.4426 . To counterbalance this trend, we evaluate T 2,2,Θ, which exhibits the opposite asymmetry. Indeed, 
+
+EΘ
+
+[
+
+F (T 2,2,Θ)
+
+]
+
+≤ 1ln 2 · K0
+
+T ∗
+
+> min
+
++ 2 − √2ln 2 · ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ 2( √2 − 1) ln 2 · ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+, (16) which is associated with a high ordering density multiplier of 1ln 2 ≈ 1.4426 , but with a highly efficient holding cost multiplier, 2( √2−1) ln 2 ≈ 1.1951 . By picking the cheaper of these two random-ized policies, we push our expected performance guarantee down to 1.2585 .
+
+Lemma 3.4 . EΘ[min {F (T 2,1,Θ), F (T 2,2,Θ)}] ≤ 1.2585 · OPT (P) .
+
+Proof. By upper-bounding the expected operational costs of T 2,1,Θ and T 2,2,Θ via inequali-ties (15) and (16), we conclude that 
+
+EΘ
+
+[
+
+min {F (T 2,1,Θ), F (T 2,2,Θ)}
+
+]
+
+≤ min 
+
+> λ∈[0 ,1]
+
+{
+
+λ · EΘ
+
+[
+
+F (T 2,1,Θ)
+
+]
+
++ (1 − λ) · EΘ
+
+[
+
+F (T 2,2,Θ)
+
+]} 
+
+≤ min 
+
+> λ∈[0 ,1]
+
+λ ·
+
+ 12 ln 2 · K0
+
+T ∗
+
+> min
+
++ 12 ln 2 · ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ 1ln 2 · ∑
+
+> i∈[n]
+
+HiT ∗
+
+> i
+
+
+
++ (1 − λ) ·
+
+ 1ln 2 · K0
+
+T ∗
+
+> min
+
++ 2 − √2ln 2 · ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ 2( √2 − 1) ln 2 · ∑
+
+> i∈[n]
+
+HiT ∗
+
+> i
+
+
+
+≤ 0.25548 ·
+
+ 12 ln 2 · K0
+
+T ∗
+
+> min
+
++ 12 ln 2 · ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ 1ln 2 · ∑
+
+> i∈[n]
+
+HiT ∗
+
+> i
+
+
+
++ (1 − 0.25548) ·
+
+ 1ln 2 · K0
+
+T ∗
+
+> min
+
++ 2 − √2ln 2 · ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ 2( √2 − 1) ln 2 · ∑
+
+> i∈[n]
+
+HiT ∗
+
+> i
+
+
+
+≤ 1.2585 ·
+
+ K0
+
+T ∗
+
+> min
+
++ ∑
+
+> i∈[n]
+
+( Ki
+
+T ∗
+
+> i
+
++ HiT ∗
+
+> i
+
+)
+
+= 1.2585 · OPT (P) .
+
+■
+
+3.3 Best-of-two policy via factor-revealing LP 
+
+Despite extensive numerical search, we still do not know whether the best-of-several-worlds approach can improve upon T 2,1,Θ and T 2,2,Θ, in the sense of achieving better expected cost 14 coefficients via two or more randomized policies. In contrast, our current approach treats the shift Θ as an intentionally selected design parameter. This idea motivates us to exploit ˜T 2,1,Θ
+
+and ˜T 2,2,Θ, along with an instance-dependent choice of Θ. Here, the ˜T -notation indicates that we will not be directly rounding the optimal convex relaxation solution T ∗, but rather a carefully modified vector. As stated below, this proactive choice allows us to surpass the approximation guarantee stated in Lemma 3.4, which evaluates to at least 1.2584 .
+
+Lemma 3.5 . min Θ∈[0 ,1] {F ( ˜T 2,1,Θ), F ( ˜T 2,2,Θ)} ≤ 1.2512 · OPT (P) .
+
+Policy description. Rather than working with an optimal solution T ∗ to the convex relax-ation (P), our policies will be defined in terms of its ˜T -counterpart. Given an integer-valued discretization parameter N ≥ 1, to be specified later on, for every commodity i ∈ [n], we fix ˜Ti
+
+by rounding T ∗ 
+
+> i
+
+up to the nearest integer power of 21/N ; similarly, T ∗ 
+
+> min
+
+is transformed to ˜Tmin .As such, ˜T is a feasible solution to (P), with an objective value of at most 21/N · OPT (P). With this modified vector, the policies ˜T 2,1,Θ and ˜T 2,2,Θ are defined in relation to ˜T , meaning that 
+
+˜T m,k, Θ 
+
+> i
+
+= Rm,k, Θ( ˜Ti) for every commodity i ∈ [n]. Subsequently, we pick the shift Θ ∈ [0 , 1] 
+
+for which min {F ( ˜T 2,1,Θ), F ( ˜T 2,2,Θ)} is minimized. As explained in Section 5 when discussing derandomization, one can indeed determine an optimal choice of Θ for all policies considered in this paper. 
+
+Bounding F ( ˜ T 2,k, Θ) for adversarial instances. Let us recall that the objective value of 
+
+˜T with respect to formulation (P) can be written as Ψ( ˜T ) = K0
+
+> ˜Tmin
+
++ ∑ 
+
+> i∈[n]Ki
+> ˜Ti
+
++ ∑ 
+
+> i∈[n]
+
+Hi ˜Ti.For the purpose of decomposing this expression, note that the restriction of each time interval 
+
+˜Ti to integer powers of 21/N induces a natural partition of the underlying commodities into 
+
+N disjoint sets. Specifically, for each residue class ν ∈ [N ], we define Aν as the subset of commodities i ∈ [n] whose modified time interval take the form ˜Ti = 2 ri+ν/N for some integer 
+
+ri. Consequently, 
+
+Ψ( ˜T ) = K0
+
+˜Tmin 
+
+︸ ︷︷ ︸ 
+
+> z
+
++ ∑ 
+
+> ν∈[N]
+
+∑
+
+> i∈Aν
+
+Ki
+
+˜Ti
+
+︸ ︷︷ ︸
+
+> xν
+
++ ∑ 
+
+> ν∈[N]
+
+∑
+
+> i∈Aν
+
+Hi ˜Ti
+
+︸ ︷︷ ︸
+
+> yν
+
+.
+
+The crucial observation is that, with this shorthand notation, for any choice of Θ, the operational cost of ˜T 2,k, Θ can be bounded in terms of z, {xν }ν∈[N ], and {yν }ν∈[N ]. Indeed, we know that this policy incurs a joint ordering cost of J( ˜T 2,k, Θ) ≤ K0 · ˜D2,k, Θ, where the latter coefficient is given by 
+
+D2,k, Θ = 1
+
+R2,k, Θ( ˜Tmin ) · ∑
+
+> ∅̸ =N ⊆S 2,k
+
+(−1) |N | +1 
+
+LCM( N ) = 1˜Tmin · 2Θ/k · ∑
+
+> ∅̸ =N ⊆S 2,k
+
+(−1) |N | +1 
+
+LCM( N ) ,
+
+as explained within the proof of Claim 3.1. In addition, for every class ν ∈ [N ] and commodity 
+
+i ∈ Aν , its time interval ˜Ti = 2 ri+ν/N has a rounding error of 
+
+˜T 2,k, Θ
+
+> i
+
+˜Ti
+
+= R2,k, Θ( ˜Ti)˜Ti
+
+= R2,k, Θ(2 ri+ν/N )2ri+ν/N = R2,k, Θ(2 ν/N )2ν/N .
+
+In other words, we incur precisely the same error for all commodities in Aν , noting that 15 R2,k, Θ(2 ν/N ) can easily be computed; see equation (17) in Section 3.4. By aggregating these observations, we have 
+
+F ( ˜T 2,k, Θ) ≤ 2−Θ/k ·
+
+ ∑
+
+> ∅̸ =N ⊆S 2,k
+
+(−1) |N | +1 
+
+LCM( N )
+
+·z+ ∑ 
+
+> ν∈[N]
+
+2ν/N 
+
+R2,k, Θ(2 ν/N ) ·xν + ∑ 
+
+> ν∈[N]
+
+R2,k, Θ(2 ν/N )2ν/N ·yν .
+
+The factor-revealing LP. To evaluate the best-performing policy out of ˜T 2,1,Θ and ˜T 2,2,Θ
+
+across all continuous choices of Θ ∈ [0 , 1] , we transition to a tractable framework by discretizing this interval, restricting our attention to the set Θdisc = { ℓL : 0 ≤ ℓ ≤ L}. Clearly, for any integer-valued L ≥ 1, the resulting approximation guarantee will form an upper bound on the one attained by optimizing over all Θ ∈ [0 , 1] . The main advantage of considering finitely many 
+
+Θ values is that such discretization allows us to rigorously derive an upper bound via a factor-revealing LP. The goal of this mechanism is to show that, regardless of how our adversary sets up z, {xν }ν∈[N ], and {yν }ν∈[N ], there is always a choice of Θ ∈ Θdisc ensuring an approximation ratio of ρ, which is what we wish to optimize. For this purpose, when these adversarial terms are normalized by the objective value Ψ( ˜T ), we obtain the following linear program: max ρ (LP N,L )s.t. ρ ≤ 2−Θ ·
+
+ ∑
+
+> ∅̸ =N ⊆S 2,1
+
+(−1) |N | +1 
+
+LCM( N )
+
+ · z
+
++ ∑ 
+
+> ν∈[N]
+
+2ν/N 
+
+R2,1,Θ(2 ν/N ) · xν + ∑ 
+
+> ν∈[N]
+
+R2,1,Θ(2 ν/N )2ν/N · yν ∀ Θ ∈ Θdisc 
+
+ρ ≤ 2−Θ/2 ·
+
+ ∑
+
+> ∅̸ =N ⊆S 2,2
+
+(−1) |N | +1 
+
+LCM( N )
+
+ · z
+
++ ∑ 
+
+> ν∈[N]
+
+2ν/N 
+
+R2,2,Θ(2 ν/N ) · xν + ∑ 
+
+> ν∈[N]
+
+R2,2,Θ(2 ν/N )2ν/N · yν ∀ Θ ∈ Θdisc 
+
+z + ∑ 
+
+> ν∈[N]
+
+xν + ∑ 
+
+> ν∈[N]
+
+yν = 1 
+
+z, x ν , y ν ≥ 0 ∀ ν ∈ [N ]
+
+By numerically solving this program, instantiated with N = 2000 and L = 2000 , we find that OPT(LP 2000 ,2000 ) = 1 .250677 . That said, one should still take into account that, due to normalizing by Ψ( ˜T ), this worst-case ratio is determined with respect to the modified solution 
+
+˜T . As previously mentioned, the ratio between Ψ( ˜T ) and Ψ( T ∗) is bounded by 21/N , implying that our final approximation guarantee is at most 1.250677 · 21/2000 < 1.2512 .
+
+3.4 Proof of Claim 3.1 Proof of items 1 and 2. To evaluate the expected values of Rm,k, Θ(t) and its reciprocal, we define their relationship to t as a function of the random shift Θ. For this purpose, let B = m1/k 
+
+be the base expansion factor and let Lt = log B ( tT ∗
+
+> min
+
+) be a mapping of t > 0 to the logarithmic scale, normalized by T ∗
+
+> min
+
+. Then, in terms of Θ, the rounded value of t is given by the relative 16 position of Lt within a unit cycle, along the following case disjunction: 
+
+Rm,k, Θ(t) =
+
+
+
+t · B⌊Lt⌋− Lt+1+Θ , when Θ ∈ [0 , L t − ⌊ Lt⌋]
+
+t · B⌊Lt⌋− Lt+Θ , when Θ ∈ (Lt − ⌊ Lt⌋, 1] 
+
+(17) To compute EΘ[Rm,k, Θ(t)] , we integrate this functional dependency over Θ ∈ [0 , 1] , where for simplicity of notation, ϕ = Lt − ⌊ Lt⌋, leading to 
+
+EΘ [Rm,k, Θ(t)] = t ·
+
+(∫ ϕ
+
+> 0
+
+B1−ϕ+θdθ +
+
+∫ 1
+
+> ϕ
+
+Bθ−ϕdθ
+
+)
+
+= t ·
+
+B1−ϕ · Bθ
+
+ln B
+
+]ϕ
+
+> 0
+
++ B−ϕ · Bθ
+
+ln B
+
+]1
+
+> ϕ
+
+
+
+= t
+
+ln B ·
+
+(
+
+B1−ϕ · (Bϕ − 1) + B−ϕ · (B − Bϕ)
+
+)
+
+= B − 1ln B · t . 
+
+Substituting back B = m1/k , we obtain EΘ[Rm,k, Θ(t)] = k(m1/k −1) ln m · t, completing the proof of item 1. For the reciprocal, a similar integration yields 
+
+EΘ
+
+[ 1
+
+Rm,k, Θ(t)
+
+]
+
+= 1
+
+t ·
+
+(∫ ϕ
+
+> 0
+
+dθB1−ϕ+θ +
+
+∫ 1
+
+> ϕ
+
+dθBθ−ϕ
+
+)
+
+= 1
+
+t ·
+
+ −Bϕ−1−θ
+
+ln B
+
+]ϕ
+
+> 0
+
++ −Bϕ−θ
+
+ln B
+
+]1
+
+> ϕ
+
+
+
+= 1
+
+t ln B ·
+
+(
+
+(Bϕ−1 − B−1) + (1 − Bϕ−1)
+
+)
+
+= B − 1
+
+B ln B · 1
+
+t .
+
+Again, substituting B = m1/k results in EΘ[ 1 
+
+> Rm,k, Θ(t)
+
+] = k(m1/k −1)    
+
+> m1/k ln m
+
+· 1 
+
+> t
+
+, which concludes the proof of item 2. 
+
+Proof of item 3. By replicating the analysis leading to Claim 2.1 in the deterministic setting, it follows that Dm,k, Θ = 1  
+
+> Rm,k, Θ(T∗
+> min )
+
+· ∑  
+
+> ∅̸ =N ⊆S m,k
+> (−1) |N | +1
+> LCM( N)
+
+. Therefore, 
+
+EΘ [Dm,k, Θ] = EΘ
+
+[ 1
+
+Rm,k, Θ(T ∗
+
+> min
+
+)
+
+]
+
+· ∑
+
+> ∅̸ =N ⊆S m,k
+
+(−1) |N | +1 
+
+LCM( N )= k(m1/k − 1) 
+
+m1/k ln m ·
+
+ ∑
+
+> ∅̸ =N ⊆S m,k
+
+(−1) |N | +1 
+
+LCM( N )
+
+ · 1
+
+T ∗
+
+> min
+
+,
+
+where the second equality follows from the expression in item 2 for the expected value of  
+
+> 1
+> Rm,k, Θ(t)
+
+.17 4 Shifted Interleaved Power-of-m1/k Policies 
+
+In this section, we finalize our algorithmic machinery by introducing the class of shifted in-terleaved power-of-m1/k policies. This approach utilizes a secondary offset grid to subdivide the rounding gaps of a primary geometric grid, thereby mitigating its expected holding cost inflation. By optimizing this offset, we demonstrate that a single-shot interleaved policy strikes an effective balance between joint ordering and holding cost inflations. These ideas allow us to establish our main result, showing that the resource-constrained joint replenishment problem can be efficiently approximated within factor 56 ln 2 < 1.2023 of optimal. Moreover, we prove that our choice of parameters perfectly balances between various cost components, arguing that this configuration is optimal for the entire class of interleaved policies. 
+
+4.1 Introducing shifted interleaved policies 
+
+The core logic behind shifted interleaved policies focuses on mitigating the expected rounding errors inherent to a single geometric grid. Specifically, with an expansion factor of m1/k , any given time interval T ∗ 
+
+> i
+
+might be inflated by nearly m1/k when rounded up. Through inter-leaving a secondary geometric grid, offset by a carefully chosen factor α, we divide each grid interval into two smaller sub-intervals. This idea reduces the maximum rounding error of any point, tightening the expected individual ordering and holding cost multipliers. Even though an additional grid comes at the expense of a denser set of joint ordering points, we will prove that specific choices for the offset α strike an effective balance between these competing costs. Toward this objective, our interleaved geometric grid, rounding operator, and density coefficient are formally defined as follows. 
+
+The interleaved grid. Let m ≥ 2 and k ≥ 1 be a pair of integers whose values will be optimized later on, dictating our base expansion factor, m1/k . We begin by considering the geometric grid Gm,k = {mp/k · T ∗ 
+
+> min
+
+: p ∈ Z}, where T ∗ 
+
+> min
+
+is multiplied by all integer powers of m1/k . Additionally, for a constant parameter α ∈ (1 , m 1/k ) whose value will be optimized as well, we define the α-scaled secondary grid Gαm,k = {αm p/k · T ∗ 
+
+> min
+
+: p ∈ Z}. The union of these two grids forms the interleaved grid Hαm,k = Gm,k ∪ G αm,k . Moving forward, rather than directly utilizing Hαm,k , we scale its elements by a multiplicative factor of mΘ/k , where 
+
+Θ ∼ U [0 , 1] represents a uniformly distributed shift, thereby creating the randomized interleaved grid Hαm,k, Θ = {mΘ/k · g : g ∈ H αm,k }.
+
+The operator Rαm,k, Θ and density coefficient Dαm,k, Θ. The first implication of these definitions is that, when any t > 0 is rounded up to the strictly greater nearest point in Hαm,k, Θ,the resulting point is random. As such, our rounding operator Rαm,k, Θ(t) = min {g ∈ H αm,k, Θ :
+
+g > t } is actually a random function. Similarly, the asymptotic density of the relevant grid multiples is random as well, with the density coefficient of Hαm,k, Θ specified by 
+
+Dαm,k, Θ = lim 
+
+> ∆→∞
+
+| ⋃  
+
+> g∈H αm,k, Θ∩[Rαm,k, Θ(T∗
+> min ),∞)
+
+Mg, ∆|
+
+∆ .
+
+18 Creating T m,k,α, Θ. Given an optimal convex relaxation solution T ∗ = ( T ∗
+
+> min
+
+, T ∗ 
+
+> 1
+
+, . . . , T ∗ 
+
+> n
+
+), the randomized interleaved policy T m,k,α, Θ is defined via our new rounding operator. Namely, we set T m,k,α, Θ 
+
+> i
+
+= Rαm,k, Θ(T ∗ 
+
+> i
+
+) for every commodity i ∈ [n]. As before, since this operator strictly increases its argument, the resulting policy remains resource-feasible with probability 1.
+
+Parametric performance guarantee. Next, we explain how to determine the expected val-ues of the rounding operator Rαm,k, Θ and its reciprocal, which govern the individual ordering and holding costs of each commodity. As stated below, these values admit closed-form expres-sions, including dependencies on how the offset α splits the logarithmic interval of the base grid. Furthermore, we derive an analogous expression with respect to the expected density coefficient Dαm,k, Θ. In this context, by extending the notation of Section 2.3, we make use of 
+
+Sα, prim  
+
+> m,k
+
+= {m(κ−1) /k }κ∈[k] ∪ { αm (κ−1) /k }κ∈[k] to designate the primary base multipliers of the interleaved grid. Similarly, Sα, sec  
+
+> m,k
+
+= {m(κ−1) /k }κ∈[k] ∪ { 1 
+
+> α
+
+mκ/k }κ∈[k] will denote its secondary base multipliers. For convenience, their corresponding inclusion-exclusion summations will be denoted by Σα, prim  
+
+> m,k
+
+= ∑  
+
+> ∅̸ =N ⊆S α, prim
+> m,k
+> (−1) |N | +1
+> LCM( N)
+
+and Σα, sec  
+
+> m,k
+
+= ∑  
+
+> ∅̸ =N ⊆S α, sec
+> m,k
+> (−1) |N | +1
+> LCM( N)
+
+. The proof of this result is presented in Section 4.4; as a sanity check, one can verify that Claim 3.1 is recovered by setting α = 1 .
+
+Claim 4.1 . 1. EΘ[Rαm,k, Θ(t)] = k  
+
+> ln m
+
+· (α + m1/k  
+
+> α
+
+− 2) · t, for every t > 0.2. EΘ[ 1 
+
+> Rαm,k, Θ(t)
+
+] = k  
+
+> ln m
+
+· (2 − 1 
+
+> α
+
+− αm1/k ) · 1 
+
+> t
+
+, for every t > 0.3. EΘ[Dαm,k, Θ] = k  
+
+> ln m
+
+· ((1 − αm1/k ) · Σα, prim  
+
+> m,k
+
++ (1 − 1 
+
+> α
+
+) · Σα, sec  
+
+> m,k
+
+) · 1 
+
+> T∗
+> min
+
+.
+
+Given these findings, the expected operational cost of T m,k,α, Θ can be related to the convex relaxation optimum in terms of the grid parameters m, k, and α, by noting that 
+
+EΘ
+
+[
+
+F (T m,k,α, Θ)
+
+]
+
+≤ K0 · EΘ
+
+[
+
+Dαm,k, Θ
+
+]
+
++ ∑
+
+> i∈[n]
+
+(
+
+Ki · EΘ
+
+[ 1
+
+T m,k,α, Θ
+
+> i
+
+]
+
++ Hi · EΘ
+
+[
+
+T m,k,α, Θ
+
+> i
+
+])
+
+= K0 · EΘ
+
+[
+
+Dαm,k, Θ
+
+]
+
++ ∑
+
+> i∈[n]
+
+(
+
+Ki · EΘ
+
+[ 1
+
+Rαm,k, Θ(T ∗ 
+
+> i
+
+)
+
+]
+
++ Hi · EΘ
+
+[
+
+Rαm,k, Θ(T ∗ 
+
+> i
+
+)
+
+])
+
+≤ k
+
+ln m ·
+
+(( 
+
+1 − αm1/k 
+
+)
+
+· Σα, prim  
+
+> m,k
+
++
+
+(
+
+1 − 1
+
+α
+
+)
+
+· Σα, sec 
+
+> m,k
+
+)︸ ︷︷ ︸ 
+
+> VJ(m,k,α )
+
+· K0
+
+T ∗
+
+> min
+
++ k
+
+ln m ·
+
+(
+
+2 − 1
+
+α − αm1/k 
+
+)︸ ︷︷ ︸
+
+> ≤1
+
+· ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ k
+
+ln m ·
+
+(
+
+α + m1/k 
+
+α − 2
+
+)︸ ︷︷ ︸ 
+
+> VH(m,k,α )
+
+· ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+. (18) 
+
+4.2 Policy instantiation Choice of parameters. From this point on, we will investigate the specific configuration where m = 2 and k = 1 , along with an offset of α = 32 . In other words, our randomized policy will be T 2,1,3/2,Θ, with the convention that T 2,1,3/2,Θ 
+
+> i
+
+= R3/22,1,Θ(T ∗ 
+
+> i
+
+) for every commodity i ∈ [n].Intuitively, the latter offset is small enough to significantly subdivide the primary grid, thereby reducing holding cost inflation. Furthermore, by choosing α = 32 , we ensure that the secondary 19 grid points are well-staggered relative to the primary ones, leading to useful synchronization. Specifically, since the current expansion factor and offset are both simple rationals, integer multiples of these grids frequently overlap, preventing the joint ordering density from increasing as sharply as the sum of its parts. Notably, in Section 4.3, we show that the choice of m = 2 ,
+
+k = 1 , and α = 32 is best possible for the class of interleaved power-of-m1/k policies. 
+
+Performance guarantee. To quantify the expected operational cost of T 2,1,3/2,Θ, let us consider the three coefficients appearing in our upper bound (18). Beyond directly plugging in 
+
+m = 2 , k = 1 , and α = 32 , it remains to evaluate the inclusion-exclusion summation over the primary base multipliers S3/2,prim 2,1 = {1, 32 }, which amounts to Σ3/2,prim 2,1 = 1+ 23 − 1LCM(1 ,3/2) = 43 .Similarly, in regard to the secondary base multipliers S3/2,sec 2,1 = {1, 43 }, we have Σ3/2,sec 2,1 =1 + 34 − 1LCM(1 ,4/3) = 32 . Consequently, we arrive at an upper bound of 
+
+EΘ
+
+[
+
+F (T 2,1,3/2,Θ)
+
+]
+
+≤ 56 ln 2 · K0
+
+T ∗
+
+> min
+
++ 712 ln 2 · ∑
+
+> i∈[n]
+
+Ki
+
+T ∗
+
+> i
+
++ 56 ln 2 · ∑
+
+> i∈[n]
+
+HiT ∗ 
+
+> i
+
+(19) on the expected operational cost of T 2,1,3/2,Θ, which is within factor 56 ln 2 < 1.2023 of the convex relaxation optimum. This result constitutes a significant improvement over the best-of-two randomized policies of Section 3.3, which provided an approximation ratio of 1.2512 .
+
+Lemma 4.2 . EΘ[F (T 2,1,3/2,Θ)] ≤ 56 ln 2 · OPT (P) .
+
+4.3 Optimality of single-shot configuration 
+
+In what follows, we prove that the configuration considered in Section 4.2 is optimal, in the sense of minimizing the largest coefficient we are seeing in our general-purpose bound (18). Interestingly, additional optimal configurations exist; for instance, the upcoming analysis will demonstrate that m = 2 , k = 1 , and α = 43 is best possible as well. 
+
+Lemma 4.3 . A configuration of integers m ∈ Z≥2 and k ∈ Z≥1, along with an offset α ∈
+
+(1 , m 1/k ), that minimizes max {VJ (m, k, α ), V H (m, k, α )} is given by m∗ = 2 , k∗ = 1 , and 
+
+α∗ = 32 .
+
+As previously explained, by plugging the above-mentioned configuration into our density and holding cost coefficients, one can ascertain that VJ (2 , 1, 32 ) = VH (2 , 1, 32 ) = 56 ln 2 . Moving forward, we show that in any other case, max {VJ (m, k, α ), V H (m, k, α )} ≥ 56 ln 2 .
+
+Holding coefficient constraints. To this end, letting B = m1/k be our base expansion factor, we observe that the holding cost coefficient VH (B, α ) = 1ln B ·(α+ Bα −2) is strictly convex in α, and attains its global minimum over (0 , ∞) at α = √B. Therefore, for any configuration, 
+
+VH (B, α ) ≥ 2( √B−1) ln B . Noting that the function B 7 → 2( √B−1) ln B is strictly increasing over (1 , ∞), it follows that VH (B, α ) ≥ 2( √41 /20 −1) ln(41 /20) > 56 ln 2 for every B ≥ 41 20 . As such, optimal configurations must pick B < 41 20 . In turn, we observe that such configurations cannot select an offset of the form α = Bq , for any integer q ≥ 1. Indeed, since α ∈ (1 , B ) and B < 41 20 , both q = 1 and 20 q ≥ 3 are infeasible choices. The remaining case of q ≥ 2 cannot be optimal, as our holding cost coefficient would become 
+
+VH
+
+(
+
+B, B
+
+2
+
+)
+
+= B
+
+2 ln B ≥ min 
+
+> B∈(1 ,∞)
+
+{ B
+
+2 ln B
+
+}
+
+= e
+
+2 > 56 ln 2 .
+
+We proceed by considering two cases, depending on whether B is rational or not. 
+
+Case 1: B is irrational. The next auxiliary claim, whose proof is provided in Appendix A.3, establishes a lower bound on the density coefficient VJ (B, α ) in the scenario of an irrational expansion factor. 
+
+Claim 4.4 . VJ (B, α ) ≥ 3(1 −1/m )2 ln B , when B < 41 20 is irrational and α / ∈ { Bq : q ∈ N}.
+
+We observe that this claim suffices to establish VJ (B, α ) > 56 ln 2 . Indeed, when m ≥ 3, by recalling that B < 41 20 , we have VJ (B, α ) > 1ln B > 1ln(41 /20) > 56 ln 2 . When m = 2 , since B = 2 1/k 
+
+is irrational by our case hypothesis, k takes a value of at least 2. As such, B ≤ √2 and therefore 
+
+VJ (B, α ) > 34 ln B ≥ 34 ln √2 > 56 ln 2 .
+
+Case 2: B is rational. As previously noted, when B = m1/k > 1 is rational, it must be an integer of value at least 2. In parallel, we know that B < 41 20 , meaning that the only permissible expansion factor is B = 2 and that m = 2 k for some integer k ≥ 1. To simplify the upcoming discussion, we observe that any such configuration generates the exact same interleaved grid for any given α, since its primary grid is G2k ,k = {(2 k)p/k · T ∗ 
+
+> min
+
+: p ∈ Z} = {2p · T ∗ 
+
+> min
+
+: p ∈ Z}, which is invariant to k. Consequently, we assume without loss of generality that m = 2 and k = 1 ; for this setting, it remains to identify an optimal offset α ∈ (1 , 2) .To ensure the holding cost coefficient VH (2 , 1, α ) does not exceed our target threshold, we must have 1ln 2 · (α + 2 
+
+> α
+
+− 2) ≤ 56 ln 2 , which is equivalent to α ∈ [ 43 , 32 ]. The next claim, whose proof appears in Appendix A.4, shows that the density coefficient VJ (2 , 1, α ) is lower-bounded by 56 ln 2 , for any α in this interval. 
+
+Claim 4.5 . VJ (2 , 1, α ) ≥ 56 ln 2 , for every α ∈ [ 43 , 32 ].
+
+4.4 Proof of Claim 4.1 Proof of items 1 and 2. Following the logic behind the proof of Claim 3.1, we compute the expected values of the rounding operator Rαm,k, Θ(t) and its reciprocal by identifying their relationship to t as a function of the random shift Θ. By recycling our previous notation, let 
+
+B = m1/k be the base expansion factor and let β = log B (α) ∈ [0 , 1) be the logarithmic offset. Moreover, let Lt = log B ( tT ∗
+
+> min
+
+) be a mapping of t > 0 to the logarithmic scale. Once again, the rounded value Rαm,k, Θ(t) is given by the relative position of Lt within a unit cycle, including an additional dependency on β, according to the next two cases: 21 (A) When Lt ≤ ⌊ Lt⌋ + β: Here, we have 
+
+Rαm,k, Θ(t) =
+
+
+
+t · B⌊Lt⌋− Lt+β+Θ , when Θ ∈ [0 , L t − ⌊ Lt⌋]
+
+t · B⌊Lt⌋− Lt+Θ , when Θ ∈ (Lt − ⌊ Lt⌋, L t − ⌊ Lt⌋ + 1 − β]
+
+t · B⌊Lt⌋− Lt−1+ β+Θ , when Θ ∈ (Lt − ⌊ Lt⌋ + 1 − β, 1] 
+
+(B) When Lt > ⌊Lt⌋ + β: In this case, 
+
+Rαm,k, Θ(t) =
+
+
+
+t · B⌊Lt⌋− Lt+1+Θ , when Θ ∈ [0 , L t − ⌊ Lt⌋ − β]
+
+t · B⌊Lt⌋− Lt+β+Θ , when Θ ∈ (Lt − ⌊ Lt⌋ − β, L t − ⌊ Lt⌋]
+
+t · B⌊Lt⌋− Lt+Θ , when Θ ∈ (Lt − ⌊ Lt⌋, 1] 
+
+To determine the expected value of Rαm,k, Θ(t), we integrate these piecewise functions over 
+
+Θ ∈ [0 , 1] . Regardless of whether Lt falls into case (A) or (B), the resulting expression will be identical. We proceed by elaborating on case (A), where 
+
+EΘ
+
+[
+
+Rαm,k, Θ(t)
+
+]
+
+=
+
+(∫ Lt−⌊ Lt⌋
+
+> 0
+
+B⌊Lt⌋− Lt+β+θdθ +
+
+∫ Lt−⌊ Lt⌋+1 −βLt−⌊ Lt⌋
+
+B⌊Lt⌋− Lt+θdθ
+
++
+
+∫ 1
+
+> Lt−⌊ Lt⌋+1 −β
+
+B⌊Lt⌋− Lt−1+ β+θdθ
+
+)
+
+· t
+
+= 1ln B ·
+
+(
+
+B⌊Lt⌋− Lt+β+θ]Lt−⌊ Lt⌋ 
+
+> 0
+
++ B⌊Lt⌋− Lt+θ]Lt−⌊ Lt⌋+1 −βLt−⌊ Lt⌋
+
++ B⌊Lt⌋− Lt−1+ β+θ]1
+
+> Lt−⌊ Lt⌋+1 −β
+
+)
+
+· t
+
+= Bβ + B1−β − 2ln B · t . 
+
+Substituting B = m1/k and Bβ = α yields EΘ[Rαm,k, Θ(t)] = k  
+
+> ln m
+
+· (α + m1/k  
+
+> α
+
+− 2) · t. Via an analogous calculation for case (B), we arrive at the same result, concluding item 1. For the reciprocal, by considering case (A), it follows that 
+
+EΘ
+
+[ 1
+
+Rαm,k, Θ(t)
+
+]
+
+=
+
+(∫ Lt−⌊ Lt⌋
+
+> 0
+
+dθB⌊Lt⌋− Lt+β+θ +
+
+∫ Lt−⌊ Lt⌋+1 −βLt−⌊ Lt⌋
+
+dθB⌊Lt⌋− Lt+θ
+
++
+
+∫ 1
+
+> Lt−⌊ Lt⌋+1 −β
+
+dθB⌊Lt⌋− Lt−1+ β+θ
+
+)
+
+· 1
+
+t
+
+= − 1ln B ·
+
+(
+
+B−(⌊Lt⌋− Lt+β+θ)]Lt−⌊ Lt⌋ 
+
+> 0
+
++ B−(⌊Lt⌋− Lt+θ)]Lt−⌊ Lt⌋+1 −βLt−⌊ Lt⌋
+
++ B−(⌊Lt⌋− Lt−1+ β+θ)]1
+
+> Lt−⌊ Lt⌋+1 −β
+
+)
+
+· 1
+
+t
+
+= 2 − B−β − Bβ−1
+
+ln B · 1
+
+t .
+
+By plugging in B = m1/k and Bβ = α, we have EΘ[ 1 
+
+> Rαm,k, Θ(t)
+
+] = k  
+
+> ln m
+
+· (2 − 1 
+
+> α
+
+− αm1/k ) · 1 
+
+> t
+
+. An identical result is obtained for case (B), thereby completing the proof of item 2. 22 Proof of item 3. By specializing the notation of items 1 and 2 to t = T ∗
+
+> min
+
+, we observe that the anchor point T ∗ 
+
+> min
+
+of our yet-unshifted grid Hαm,k corresponds to a very specific setting, where LT ∗ 
+
+> min
+
+= 0 . Consequently, the density coefficient Dαm,k, Θ can be expressed as a function of Θ, depending on the shifted grid point to which T ∗ 
+
+> min
+
+is Rαm,k, Θ-rounded. The latter can be determined via the relation between Θ and the logarithmic offset β = log B (α) according to the following case disjunction: 
+
+Dαm,k, Θ =
+
+  
+
+> 1
+> T∗
+> min ·BΘ
+
+· Σα, prim  
+
+> m,k
+
+, when Θ ∈ [0 , 1 − β]  
+
+> 1
+> T∗
+> min ·Bβ−1+Θ
+
+· Σα, sec  
+
+> m,k
+
+, when Θ ∈ (1 − β, 1] 
+
+By integrating this functional dependency over Θ ∈ [0 , 1] ,
+
+EΘ
+
+[
+
+Dαm,k, Θ
+
+]
+
+=
+
+(
+
+Σα, prim  
+
+> m,k
+
+·
+
+∫ 1−β
+
+> 0
+
+dθBθ + Σ α, sec  
+
+> m,k
+
+·
+
+∫ 11−β
+
+dθBβ−1+ θ
+
+)
+
+· 1
+
+T ∗
+
+> min
+
+= 1ln B ·
+
+(
+
+Σα, prim  
+
+> m,k
+
+·
+
+(
+
+1 − B−(1 −β))
+
++ Σ α, sec  
+
+> m,k
+
+·
+
+(
+
+1 − B−β )) 
+
+· 1
+
+T ∗
+
+> min
+
+.
+
+As before, substituting B = m1/k and β = log B (α) leads to the expression in item 3. 
+
+5 Concluding Remarks 
+
+To conclude, we provide a broader perspective on our main findings and discuss promising av-enues for future research. Specifically, we explore the extensibility of our algorithmic framework to upward-closed constraint structures, outline how shifted power-of-m1/k policies can be ef-ficiently derandomized, and highlight fundamental questions regarding the approximability of resource-constrained joint replenishment. 
+
+Upward-closed constraints. A key feature of the rounding methodology presented in Sec-tions 2–4 is that its performance guarantees are not strictly tied to the linear-in-reciprocal structure of resource consumption. Our feasibility argument relies on making use of expansive rounding operators, which ensure that any upward-closed constraint remains satisfied, allowing extensions to variants of the resource-constrained joint replenishment problem whose feasible region of time intervals is upward-closed. The primary requirement for this extension is the ability to solve the convex relaxation (P) to optimality in polynomial time. As long as the fam-ily of constraints in question allows for efficient optimization, capturing practical operational realities such as minimum order quantities or nested storage limitations via second-order cones or other well-behaved convex sets, all established approximation ratios remain valid. This de-gree of flexibility indicates that power-of-m1/k policies can be applied in a much wider array of production and distribution settings than initially described. 
+
+Derandomization. Even though most of our results are derived through randomized shift-ing, these policies can be efficiently derandomized to produce deterministic counterparts with identical performance guarantees. Indeed, since the rounded time interval of each commodity is proportional to mΘ/k , within any interval of Θ where the resulting grid points are fixed, the 23 terms we utilize to upper-bound operational cost functions such as F (T m,k,α, Θ) are proportional to m−Θ/k and mΘ/k , representing ordering and holding costs, respectively. This structure im-plies that our bounds are piecewise-convex with a polynomial number of critical breakpoints where the rounding operator R transitions to the next grid point. By identifying these O(nk )
+
+values and computing the local minimum within each convex piece via standard calculus argu-ments, the best-possible shift can be determined in polynomial time. This approach ensures that the 56 ln 2 -approximation stated in Theorem 1.1 is achievable without any reliance on stochastic-ity. Consequently, our approach maintains its practical utility for real-world inventory systems that require predictable ordering schedules. 
+
+APX-hardness. While our work represents a substantial improvement on the classical ap-proximation guarantee of 1ln 2 ≈ 1.4427 , a captivating research direction would investigate whether resource-constrained joint replenishment is APX-hard or not. Namely, is there an absolute constant δ > 0 for which it is NP-hard to approximate this problem within factor 
+
+1 + δ? In contrast to the simpler case of D = O(1) resources, recently proven to admit an 
+
+O(n ˜O(D3/ϵ 4))-time approximation scheme (Segev, 2025b), the computational status of arbitrarily many resources is still unresolved. Establishing either APX-hardness results or approximation schemes in this context would answer a long-standing open question in the field of lot-sizing and inventory coordination. 
+
+References 
+
+Yasemin Aksoy and S. Selcuk Erenguc. Multi-item inventory models with co-ordinated replen-ishments: A survey. International Journal of Operations & Production Management , 8(1): 63–73, 1988. 1 Shoshana Anily. Multi-item replenishment and storage problem (MIRSP): Heuristics and bounds. Operations Research , 39(2):233–243, 1991. 2 and 3 Leonardo dos Santos Lourenço Bastos, Matheus Lopes Mendes, Denilson Ricardo de Lucena Nunes, André Cristiano Silva Melo, and Mariana Pereira Carneiro. A systematic literature review on the joint replenishment problem solutions: 2006-2015. Production , 27:e20162229, 2017. 1 Gabriel R. Bitran and Horacio H. Yanasse. Computational complexity of the capacitated lot size problem. Management Science , 28(10):1174–1186, 1982. 2 Stephen Boyd and Lieven Vandenberghe. Convex Optimization . Cambridge University Press, Cambridge, UK, 2004. 8 Tamar Cohen-Hillel and Liron Yedidsion. The periodic joint replenishment problem is strongly NP-hard. Mathematics of Operations Research , 43(4):1269–1289, 2018. 2 and 5 Gregory Dobson. The economic lot-scheduling problem: Achieving feasibility using time-varying lot sizes. Operations Research , 35(5):764–771, 1987. 2 24 Awi Federgruen, Maurice Queyranne, and Yu-Sheng Zheng. Simple power-of-two policies are close to optimal in a general class of production/distribution networks with general joint setup costs. Mathematics of Operations Research , 17(4):951–963, 1992. 1 Guillermo Gallego, Maurice Queyranne, and David Simchi-Levi. Single resource multi-item inventory systems. Operations Research , 44(4):580–595, 1996. 2 and 3 Jean-Philippe Gayon, Guillaume Massonnet, Christophe Rapine, and Gautier Stauffer. Fast approximation algorithms for the one-warehouse multi-retailer problem under general cost structures and capacity constraints. Mathematics of Operations Research , 42(3):854–875, 2017. 2 Suresh K. Goyal and Ahmet T. Satir. Joint replenishment inventory control: Deterministic and stochastic models. European Journal of Operational Research , 38(1):2–13, 1989. 1 Mohammad Abdul Hoque. An optimal solution technique for the joint replenishment problem with storage and transport capacities and budget constraints. European Journal of Opera-tional Research , 175(2):1033–1042, 2006. 2 Peter Jackson, William Maxwell, and John Muckstadt. The joint replenishment problem with a powers-of-two restriction. IIE Transactions , 17(1):25–32, 1985. 1 Peter Jackson, William Maxwell, and John Muckstadt. Determining optimal reorder intervals in capacitated production-distribution systems. Management Science , 34(8):938–958, 1988. 2Moutaz Khouja and Suresh Goyal. A review of the joint replenishment problem literature: 1989–2005. European Journal of Operational Research , 186(1):1–16, 2008. 1 William L. Maxwell and John A. Muckstadt. Establishing consistent and realistic reorder intervals in production-distribution systems. Operations Research , 33(6):1316–1341, 1985. 1 Ilkyeong Moon and Byung-Cheol Cha. The joint replenishment problem with resource restric-tion. European Journal of Operational Research , 173(1):190–198, 2006. 2 John A. Muckstadt and Robin O. Roundy. Multi-item, one-warehouse, multi-retailer distribu-tion systems. Management Science , 33(12):1613–1621, 1987. 1 John A. Muckstadt and Robin O. Roundy. Analysis of multistage production systems. In Stephen C. Graves, Alexander H. G. Rinnooy Kan, and Paul H. Zipkin, editors, Handbooks in Operations Research and Management Science , volume 4, chapter 2, pages 59–131. Elsevier, 1993. 1 John A. Muckstadt and Amar Sapra. Principles of Inventory Management: When You Are Down to Four, Order More . Springer Science & Business Media, New York, NY, 2010. 1and 3 25 Yurii Nesterov and Arkadii Nemirovskii. Interior-Point Polynomial Algorithms in Convex Pro-gramming , volume 13 of SIAM Studies in Applied Mathematics . Society for Industrial and Applied Mathematics, Philadelphia, PA, 1994. 7 Eric Porras and Rommert Dekker. A solution method for the joint replenishment problem with multiple restricted resources. International Journal of Production Economics , 113(1): 211–225, 2008. 2 Robin Roundy. 98%-effective integer-ratio lot-sizing for one-warehouse multi-retailer systems. 
+
+Management Science , 31(11):1416–1430, 1985. 1 Robin Roundy. A 98%-effective lot-sizing rule for a multi-product, multi-stage produc-tion/inventory system. Mathematics of Operations Research , 11(4):699–727, 1986. 1 Robin Roundy. Rounding off to powers of two in continuous relaxations of capacitated lot sizing problems. Management Science , 35(12):1433–1442, 1989. 2, 4, 5, and 7 Andreas S. Schulz and Claudio Telha. Approximation algorithms and hardness results for the joint replenishment problem with constant demands. In Proceedings of the 19th Annual European Symposium on Algorithms , pages 628–639, 2011. 5 Andreas S. Schulz and Claudio Telha. Integer factorization: Why two-item joint replenishment is hard. Operations Research , 72(3):1192–1202, 2024. 2 and 5 Danny Segev. The continuous-time joint replenishment problem: ϵ-optimal policies via pairwise alignment. Management Science , 71(5):4183–4197, 2025a. 2 Danny Segev. Improved approximation guarantees for joint replenishment in continuous time. 
+
+Mathematics of Operations Research (forthcoming) , 2025b. 2, 5, 10, and 24 Edward A. Silver and Rein Peterson. Decision Systems for Inventory Management and Pro-duction Planning . Wiley, New York, NY, 1985. 1 David Simchi-Levi, Xin Chen, and Julien Bramel. The Logic of Logistics: Theory, Algorithms, and Applications for Logistics Management . Springer Science & Business Media, New York, NY, third edition, 2014. 1 and 3 Chung-Piaw Teo and Dimitris Bertsimas. Multistage lot sizing problems via randomized round-ing. Operations Research , 49(4):599–608, 2001. 1, 5, and 7 Alexander Tuisov and Liron Yedidsion. The continuous joint replenishment problem is strongly NP-hard. Technical report. Available online at https: // arxiv. org/ abs/ 2006. 05310 ,2020. 6 Paul Herbert Zipkin. Foundations of Inventory Management . McGraw-Hill, Boston, MA, 2000. 1 and 3 26 A Additional Proofs 
+
+A.1 Proof of Claim 2.2 
+
+Let V (m, k ) = max {VJ (m, k ), V H (m, k )} be the objective function we wish to minimize, subject to m ∈ Z≥2 and k ∈ Z≥1, where VJ (m, k ) = (1 − 1 
+
+> m
+
+) · 1  
+
+> m1/k −1
+
+and VH (m, k ) = m1/k . To this end, standard calculus arguments show that min x∈R++ V (m, x ) = 12 (1 + 
+
+√
+
+5 − 4 
+
+> m
+
+) for every 
+
+m ≥ 1, which is an increasing function of m. Moreover, V (m, x ) is decreasing in x over the interval (0 , x ∗
+
+> m
+
+] and increasing over [x∗
+
+> m
+
+, ∞), where x∗ 
+
+> m
+
+= log 1+ √5−4/m 
+
+> 2
+
+(m) is the minimizer of this function. We proceed by considering two cases: 
+
+• When m = 2 : Here, x∗ 
+
+> 2
+
+≈ 2.2223 , meaning that the candidate integer values for minimizing 
+
+V (2 , k ) are k = 2 and k = 3 . Since V (2 , 2) < V (2 , 3) , the optimal choice for m = 2 is 
+
+k = 2 .
+
+• When m ≥ 3: In this case, for every k ∈ Z≥1,
+
+V (m, k ) ≥ min 
+
+> x∈R++
+
+V (3 , x ) = 12
+
+(
+
+1 + 
+
+√
+
+5 − 43
+
+)
+
+> √2 = V (2 , 2) .
+
+Therefore, there is no choice of k outperforming the (2 , 2) combination of the previous item. 
+
+A.2 Proof of Claim 3.2 
+
+Let V (m, k ) = max {VJ (m, k ), V H (m, k )} be the objective function we wish to minimize, subject to m ∈ Z≥2 and k ∈ Z≥1, where VJ (m, k ) = (1 − 1 
+
+> m
+
+) · k  
+
+> ln m
+
+and VH (m, k ) = k(m1/k −1) ln m . One can verify that V (3 , 2) = 2( √3−1) ln 3 < 1.3327 , and to prove that this value is the global minimum, we show that V (m, k ) ≥ V (3 , 2) for any feasible integer pair. To this end, letting x = ln mk > 0, we can rewrite our holding cost multiplier as 
+
+VH (m, k ) = k(m1/k − 1) ln m = k(e ln mk − 1) ln m = ex − 1
+
+x .
+
+The function ψ(x) = ex−1 
+
+> x
+
+is strictly increasing over (0 , ∞), with ψ( ln 3 2 ) = V (3 , 2) . As such, for a pair of integers m ∈ Z≥2 and k ∈ Z≥1 to satisfy V (m, k ) < V (3 , 2) , we must have   
+
+> ln mk
+
+< ln 3 2 . By applying this necessary condition to our joint ordering function, it follows that 
+
+VJ (m, k ) = (1 − 1 
+
+> m
+
+) · k  
+
+> ln m
+
+> (1 − 1 
+
+> m
+
+) · 2ln 3 . Given these observations, we proceed by considering three cases, depending on the value of m:
+
+• When m ≥ 4: In this case, VJ (m, k ) > (1 − 14 ) · 2ln 3 > 1.36 > V (3 , 2) .
+
+• When m = 3 : Excluding the configuration (3 , 2) , for the boundary case of k = 1 , we have 
+
+VH (3 , 1) = 2ln 3 > 1.82 > V (3 , 2) . Then, pairs of the form (3 , k ) with k ≥ 3 do not improve the objective value either, since VJ (3 , k ) = 2k 
+
+> 3 ln 3
+
+≥ 2ln 3 > 1.82 > V (3 , 2) .
+
+• When m = 2 : Here, for k = 1 , we get VH (2 , 1) = 1ln 2 > 1.44 > V (3 , 2) . Similarly, for 
+
+k ≥ 2, our joint ordering multiplier becomes VJ (2 , k ) = k 
+
+> 2 ln 2
+
+≥ 1ln 2 > 1.44 > V (3 , 2) .27 A.3 Proof of Claim 4.4 
+
+Let us observe that, in terms of B, the expected density coefficient can be written as 
+
+VJ (B, α ) = 1ln B ·
+
+(( 
+
+1 − αB
+
+)
+
+· Σα, prim  
+
+> B
+
++
+
+(
+
+1 − 1
+
+α
+
+)
+
+· Σα, sec 
+
+> B
+
+)
+
+, (20) where Σα, prim  
+
+> B
+
+= ∑  
+
+> ∅̸ =N ⊆S α, prim
+> B
+> (−1) |N | +1
+> LCM( N)
+
+and Σα, sec  
+
+> B
+
+= ∑  
+
+> ∅̸ =N ⊆S α, sec
+> B
+> (−1) |N | +1
+> LCM( N)
+
+. To evaluate these inclusion-exclusion summations, we partition the domain of α ∈ (1 , B ) into three cases, based on its commensurability with integer powers of B.
+
+Case 1: α is rational. Let us write α = pq as a rational fraction in lowest terms, with 
+
+p > q ≥ 1. In regard to Σα, prim  
+
+> B
+
+, by recalling that Sα, prim  
+
+> B
+
+= {Bκ−1}κ∈[k] ∪{ αB κ−1}κ∈[k] and that 
+
+B is irrational, for every subset ∅̸ = N ⊆ S α, prim  
+
+> B
+
+we have LCM( N ) < ∞ only when N is either a singleton or a cross-grid pair of the form N = {Bκ−1, αB κ−1}, for some κ ∈ [k]. Therefore, letting Σk = ∑  
+
+> κ∈[k]1
+> m(κ−1) /k
+
+= 1−1/m  
+
+> 1−1/B
+
+, it follows that Σα, prim  
+
+> B
+
+= (1 + 1 
+
+> α
+
+− 1LCM(1 ,α ) ) · Σk = (1 + qp − 
+
+> 1
+> p
+
+) · Σk. By contrast, in relation to Σα, sec  
+
+> B
+
+, one has Sα, sec  
+
+> B
+
+= {Bκ−1}κ∈[k] ∪ { 1 
+
+> α
+
+Bκ}κ∈[k]. Crucially, since B is irrational, for every subset ∅̸ = N ⊆ S α, sec  
+
+> B
+
+, we have LCM( N ) < ∞ only when N is a singleton. Indeed, since { 1 
+
+> α
+
+Bκ}κ∈[k] is a Bα -scaling of {Bκ−1}κ∈[k], with Bα being irrational, all cross-grid subsets N have LCM( N ) = ∞. As a result, Σα, sec  
+
+> B
+
+= (1 + αB ) · Σk = (1 + pqB ) · Σk. By substituting these terms into (20), 
+
+VJ (B, α ) = 1ln B ·
+
+(( 
+
+1 − αB
+
+)
+
+·
+
+(
+
+1 + qp − 1
+
+p
+
+)
+
++
+
+(
+
+1 − 1
+
+α
+
+)
+
+·
+
+(
+
+1 + pqB 
+
+)) 
+
+· Σk
+
+= 1ln B ·
+
+(
+
+2 ·
+
+(
+
+1 − 1
+
+B
+
+)
+
+− qB − ppqB 
+
+)
+
+· Σk
+
+= 1 − 1/m 
+
+ln B ·
+
+(
+
+2 − B − p/q p(B − 1) 
+
+)
+
+≥ 3(1 − 1/m )2 ln B ,
+
+where the last inequality holds since α = pq ∈ (1 , B ), implying that pq > 1 and p ≥ 2.
+
+Case 2: α is irrational, and LCM( α, B κ) = ∞ for every κ ∈ Z. In this case, the ratio of any element in the secondary grid GαB to any element in the primary grid GB is irrational, implying that the cross-grid LCM intersections vanish in both Σα, prim  
+
+> B
+
+and Σα, sec  
+
+> B
+
+. As such, 
+
+Σα, prim  
+
+> B
+
+= (1 + 1 
+
+> α
+
+) · Σk and Σα, sec  
+
+> B
+
+= (1 + αB ) · Σk. By substituting these terms into (20), 
+
+VJ (B, α ) = 1ln B ·
+
+(( 
+
+1 − αB
+
+)
+
+·
+
+(
+
+1 + 1
+
+α
+
+)
+
++
+
+(
+
+1 − 1
+
+α
+
+)
+
+·
+
+(
+
+1 + αB
+
+)) 
+
+· Σk
+
+= 2ln B ·
+
+(
+
+1 − 1
+
+B
+
+)
+
+· Σk
+
+= 2(1 − 1/m )ln B .
+
+Case 3: α is irrational, and LCM( α, B κ) < ∞ for some κ ∈ Z. Here, since Bk = m
+
+is an integer, there exist integers p, q, and 1 ≤ κ ≤ k − 1 for which α = pq · Bκ. Without loss of generality, we assume that p and q are coprime. Additionally, the maximal overlap between the 28 primary and secondary grids occurs when κ = 1 , and we therefore lower-bound the worst-case scenario, where α = pq · B. Specifically, by employing the second-order Bonferroni inequality, 
+
+Σα, prim  
+
+> B
+
+≥ (1 + 1 
+
+> α
+
+− 1LCM(1 ,α/B ) ) · Σk = (1 + qpB − 1 
+
+> p
+
+) · Σk, and similarly, Σα, sec  
+
+> B
+
+≥ (1 + pq − 1 
+
+> q
+
+) · Σk.By substituting these terms into (20), 
+
+VJ (B, α ) ≥ 1ln B ·
+
+(( 
+
+1 − pq
+
+)
+
+·
+
+(
+
+1 + qpB − 1
+
+p
+
+)
+
++
+
+(
+
+1 − qpB 
+
+)
+
+·
+
+(
+
+1 + pq − 1
+
+q
+
+)) 
+
+· Σk
+
+= 1ln B ·
+
+(
+
+1 − 1
+
+B
+
+)
+
+·
+
+(
+
+2 − 1
+
+p
+
+)
+
+· Σk
+
+= 1 − 1/m 
+
+ln B ·
+
+(
+
+2 − 1
+
+p
+
+)
+
+≥ 3(1 − 1/m )2 ln B ,
+
+where the last inequality holds since p ≥ 2. Otherwise, p = 1 , meaning that α = Bq for some integer q, which contradicts the hypothesis of Claim 4.4, stating that α / ∈ { Bq : q ∈ N}.
+
+A.4 Proof of Claim 4.5 
+
+Within the interval [ 43 , 32 ], the right endpoint α = 32 takes us back to our original configuration, for which we already know that VJ (2 , 1, 32 ) = 56 ln 2 . Additionally, the left endpoint α = 43
+
+produces an identical objective value, since VJ (2 , 1, 43 ) = VH (2 , 1, 43 ) = 56 ln 2 . In what follows, we show that all interior points α ∈ ( 43 , 32 ) do not improve on 56 ln 2 . To this end, by exploiting the notation introduced in Appendix A.3, our analysis will evaluate the inclusion-exclusion summations Σα, prim 2 = ∑  
+
+> ∅̸ =N ⊆S α, prim 2
+> (−1) |N | +1
+> LCM( N)
+
+and Σα, sec 2 = ∑  
+
+> ∅̸ =N ⊆S α, sec 2
+> (−1) |N | +1
+> LCM( N)
+
+in two distinct cases, depending on whether α is rational or not. 
+
+Case 1: α is irrational. In this case, the ratio of any element in the secondary grid Gα 
+
+> 2
+
+=
+
+{α2p · T ∗ 
+
+> min
+
+: p ∈ Z} to any element in the primary grid G2 = {2p · T ∗ 
+
+> min
+
+: p ∈ Z} is irrational, implying that the cross-grid LCM intersections vanish in both Σα, prim 2 and Σα, sec 2 . As such, 
+
+Σα, prim 2 = 1 + 1 
+
+> α
+
+and Σα, sec 2 = 1 + α 
+
+> 2
+
+. By substituting these terms into (20), 
+
+VJ (2 , 1, α ) = 1ln 2 ·
+
+(( 
+
+1 − α
+
+2
+
+)
+
+·
+
+(
+
+1 + 1
+
+α
+
+)
+
++
+
+(
+
+1 − 1
+
+α
+
+)
+
+·
+
+(
+
+1 + α
+
+2
+
+)) 
+
+= 1ln 2 ≥ 56 ln 2 .
+
+Case 2: α is rational. Let us write this offset as a reduced fraction α = pq , where p and q
+
+are coprime integers. As such, the primary and secondary base multipliers for the interleaved grid can be expressed as Sα, prim 2 = {1, pq } and Sα, sec 2 = {1, 2qp }, implying that Σα, prim 2 = 1 + qp − 
+
+> 1LCM(1 ,p/q )
+
+= 1 + qp − 1 
+
+> p
+
+and Σα, sec 2 = 1 + p 
+
+> 2q
+
+− 1LCM(1 ,2q/p ) . Since the latter LCM-term depends on the parity of p, we proceed by examining two subcases. 
+
+Subcase 2A: p is odd. In this case, LCM(1 , 2q/p ) = 2 q, and by substituting Σα, prim 2 and 
+
+Σα, sec 2 into (20), 
+
+VJ
+
+(
+
+2, 1, pq
+
+)
+
+= 1ln 2 ·
+
+(( 
+
+1 − p
+
+2q
+
+)
+
+·
+
+(
+
+1 + qp − 1
+
+p
+
+)
+
++
+
+(
+
+1 − qp
+
+)
+
+·
+
+(
+
+1 + p
+
+2q − 12q
+
+)) 
+
+29 = 1ln 2 ·
+
+> (
+
+1 − 12p
+
+> )
+
+≥ 56 ln 2 .
+
+Here, the last inequality follows by observing that p ≥ 3. Indeed, this parameter is odd, and we cannot have p = 1 or otherwise α = 1 
+
+> q
+
+/∈ ( 43 , 32 ).
+
+Subcase 2B: p is even. Suppose that p = 2 r. Then, since p and q are coprime, r and q must be coprime as well, meaning that LCM(1 , 2q/p ) = LCM(1 , q/r ) = q. By substituting Σα, prim 2
+
+and Σα, sec 2 into (20), 
+
+VJ
+
+> (
+
+2, 1, pq
+
+> )
+
+= 1ln 2 ·
+
+> ((
+
+1 − p
+
+2q
+
+> )
+
+·
+
+> (
+
+1 + qp − 1
+
+p
+
+> )
+
++
+
+> (
+
+1 − qp
+
+> )
+
+·
+
+> (
+
+1 + p
+
+2q − 1
+
+q
+
+> ))
+
+= 1ln 2 ·
+
+> (
+
+1 − 12q
+
+> )
+
+≥ 56 ln 2 ,
+
+where the last inequality holds since q ≥ 3. To verify this claim, note that since p and q are coprime, and since p is even by the subcase hypothesis, q must be odd. In addition, we cannot have q = 1 or otherwise α = p / ∈ ( 43 , 32 ).30

@@ -1,0 +1,211 @@
+Title: CoViLLM: An Adaptive Human-Robot Collaborative Assembly Framework Using Large Language Models for Manufacturing
+
+URL Source: https://arxiv.org/pdf/2603.11461v1
+
+Published Time: Fri, 13 Mar 2026 00:28:23 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+> Proceedings of the ASME 2026 21st International Manufacturing Science and Engineering Conference MSEC2026 June 14–June 18, 2026, State College, Pennsylvania
+
+# MSEC2026-182945 
+
+COVILLM: AN ADAPTIVE HUMAN-ROBOT COLLABORATIVE ASSEMBLY FRAMEWORK USING LARGE LANGUAGE MODELS FOR MANUFACTURING 
+
+> Jiabao Zhao 1, ∗, Jonghan Lim 1, Hongliang Li 1, Ilya Kovalenko 1
+> 1The Pennsylvania State University, University Park, PA
+> ABSTRACT
+
+With increasing demand for mass customization, traditional manufacturing robots that rely on rule-based operations lack the flexibility to accommodate customized or new product variants. Human-Robot Collaboration (HRC) has demonstrated potential to improve system adaptability by leveraging human versatility and decision-making capabilities. However, existing HRC frame-works typically depend on predefined perception-manipulation pipelines, limiting their ability to autonomously generate task plans for new product assembly. In this work, we propose CoV-iLLM, an adaptive human-robot collaborative assembly frame-work that supports the assembly of customized and previously unseen products. CoViLLM combines depth-camera-based lo-calization for object position estimation, human operator classi-fication for identifying new components, and an Large Language Model (LLM) for assembly task planning based on natural lan-guage instructions. The framework is validated on the NIST Assembly Task Board for known, customized, and new product cases. Experimental results show that the proposed framework enables flexible collaborative assembly by extending HRC beyond predefined product and task settings. 
+
+> Keywords: Manufacturing Systems, Human-Robot Collabo-ration, Large-language models 1. INTRODUCTION
+
+The rapid development of robotic technologies has signifi-cantly improved manufacturing efficiency and productivity. With the increasing demand for personalized products, traditional man-ufacturing robots that are hard-coded are limited in their adapt-ability to address mass customization [1]. They often require human operators to manually update and adapt the fundamental functionality for specific customized or new products, thus reduc-ing manufacturing efficiency. HRC has the potential to address this challenge by integrating manufacturing robots with the ver-satility of human operators. The concept of HRC refers to the  
+
+> ∗Corresponding author
+> FIGURE 1: Overview of the CoViLLM-enabled collaborative assembly system, in which a depth camera localizes workspace objects and the human operator provides runtime feedback to identify previously unseen components.
+
+interaction and cooperation between humans and robots within a shared workspace. Previous work has focused on developing HRC frameworks to improve productivity and efficiency while ensuring human-robot interaction safety in manufacturing assembly [2, 3]. In addition, recent studies have explored various HRC approaches, including gesture-based robot instruction frameworks for collabo-rative assembly [4], worker-aware mixed-reality systems for man-1 Copyright © 2026 by ASME ufacturing information recommendation [5], and scene-centric mixed-reality robot programming methods that improve segmen-tation in cluttered environments [6]. However, existing HRC systems are complex and difficult to facilitate a user-friendly interaction, often demanding extensive specialized training in coding and robot operation [7]. Moreover, the natural language barrier when interacting with robots causes psychological stress and tension for the human operator [8]. Therefore, it is essential to develop a convenient human-robot communication system to facilitate a user-friendly experience and collaboration. Recent advances in LLMs have sparked growing interest in their integration into HRC. LLM refers to a comprehensive system that could handle complex language tasks with reasoning, includ-ing translation, summarization, and conversational interactions [9]. LLM serves as an intermediary layer or “translator” between human operators and robots, enabling collaboration through natu-ral language communication. Previous studies have demonstrated the potential of LLMs by enabling robots to understand, process information, and make decisions based on human operator in-structions [10–12]. Although artificial intelligence technology like vision-language models provides open-vocabulary recogni-tion for new products, they remain constrained by reliability, high computational costs, and latency [13]. Therefore, there is a pressing need for a comprehensive HRC framework capable of detecting customized and new products at runtime to improve efficiency and adaptability of HRC in manufacturing. To address these limitations, we present Collaborative Vi-sion and Large Language Model for Human-Robot Assembly (CoViLLM) , as illustrated in Figure 1. The proposed frame-work integrates depth-based localization, human operator instruc-tion, and LLM-based reasoning to support runtime identification of previously unseen manufacturing components. In addition, CoViLLM enables dynamic assembly sequencing from natural-language operator instructions, allowing the system to support both customized products and products containing new compo-nents. Compared with conventional HRC systems, the proposed framework provides a more flexible and human-centered collab-orative assembly process by combining runtime perception and language-driven task planning. The main contributions of this work are summarized as follows: (1) An LLM-enabled HRC framework that dynamically generates assembly sequences for customized and new products from natural-language operator instructions. (2) A runtime human-in-the-loop collaborative per-ception scheme that combines depth-based localization, operator feedback, and LLM reasoning to identify previously unseen man-ufacturing components. The remainder of this manuscript is organized as follows. Section 2 formulates the manufacturing assembly problem ad-dressed in this work. Section 3 presents the proposed CoViLLM framework and its methodology. Section 4 validates the frame-work through experimental case studies using a standardized as-sembly task board. Finally, Section 5 concludes the paper and discusses future research directions. 
+
+> 2. PROBLEM FORMULATION
+
+A manufacturing product can be represented as an ordered sequence of component-level assembly subtasks, as illustrated in  
+
+> FIGURE 2: Manufacturing Collaborative Assembly Example. (Note: il lustration is for conceptual purposes only and does not reflect actual mechanical scale)
+
+Figure 2. For example, the assembly sequence of a spur-gear product may follow as gear A → gear B → gear C. Therefore, we can define a product as 𝑃 = {𝑝 1, 𝑝 2, 𝑝 3, . . . , 𝑝 𝑛 }, where 𝑝 𝑖 
+
+denotes the assembly subtask associated with the 𝑖 -th component and 𝑛 is the total number of subtasks required to complete the product. However, before assembling each subtask, the robotic vision system must provide two essential outputs: 
+
+Localization: the spatial coordinates of the target component with respect to the robot base frame (𝑥, 𝑦, 𝑧 );
+
+Classification: the component category associated with that lo-cation. Accordingly, each subtask can be written as 𝑝 𝑖 (L, C), where 
+
+L specifies where the robot should act and C specifies how the component should be handled and where it belongs in the assembly sequence. Together, these outputs allow the system to identify the correct object, perform the pick operation, and place the component at the appropriate assembly location. Based on the availability of component knowledge and assembly order, this work considers three manufacturing settings: 
+
+• Known products: all components are known to the manu-facturing system and the assembly sequence is predefined. 
+
+• Customized products: all components are known to the system, but the required assembly sequence is specified at runtime and differs from the predefined sequence. 
+
+• New products: the assembly contains at least one previ-ously unseen component, while the required assembly op-erations remain achievable using the existing manipulation capabilities of the robotic system. In conventional HRC settings, the essential perception out-puts, L and C, are typically obtained using pretrained computer vision models such as YOLO. For known products, both percep-tion and execution can be supported using predefined component knowledge and a fixed assembly sequence. For customized prod-ucts, the perception requirement remains unchanged because all components are already known, but the system must determine 2 Copyright © 2026 by ASME FIGURE 3: Architecture of LLM-enabled human-robot collaborative assembly framework. 
+
+the assembly order dynamically at runtime. For example, a cus-tomized product may be represented as 𝑃 = {𝑝 1, 𝑝 3, 𝑝 2 } instead of a predefined sequence such as 𝑃 = {𝑝 1, 𝑝 2, 𝑝 3 }. In contrast, new products involve not only assembly sequence change but also previously unseen components. This setting introduces an additional perception challenge, since conventional vision sys-tems can only localize and classify components that were in the training set. As a result, pre-programmed HRC frameworks face a fundamental limitation when handling new products, as they cannot reliably identify unseen components during execution. Consequently, traditional HRC frameworks are generally well suited for known products, but remain limited in their ability to handle customized and new products in dynamic manufactur-ing settings. To address this limitation, we develop CoViLLM, a collaborative assembly framework that integrates vision-based localization, human operator classification, and LLM-based rea-soning to enable runtime perception of new components and assembly sequence planning. 
+
+> 3. COVILLM
+
+To support adaptive robotic assembly with previously un-seen products, we propose CoViLLM , as shown in Figure 3. The voice-control module provides a natural-language interface between the human operator and the robotic system through an audio-input unit, an audio-output unit, and a speech-text con-versation system. Using this interface, the human operator ini-tializes the system by providing an initial prompt that specifies the desired assembly sequence and relevant feedback about new products. Based on this input, the LLM module performs high-level reasoning and dynamic task planning by interpreting the operator instruction together with localization and classification information from the tool layer. In particular, the depth cam-era supports unseen object localization in the workspace, while the robot arm executes the generated assembly subtasks. The following sections describe the depth-camera-based localization and human-assisted classification process, and the LLM-based reasoning and task-planning module in detail to output structured subtask 𝑝 𝑖 (L, C). 
+
+> FIGURE 4: Object Localization through Algorithm 1
+> 3.1 Localization
+
+Unseen component localization is achieved using the depth-camera tool. As shown in Algorithm 1, the depth camera provides a set of functions to extract all objects located on the workspace surface. The proposed algorithm leverages depth discontinuities to segment and localize physical objects based solely on their geometric features, without relying on surface texture or class labels. First, the depth camera captures a raw depth map 𝑫 𝑟 . A sequence of depth-processing operations is then applied to reduce noise and mitigate signal dropouts, as described in the GetDepth 
+
+function. Next, a binary mask is generated by applying a region of interest to separate the objects from the surrounding environ-ment. A histogram-based method is then used to estimate the background surface depth, allowing the foreground objects to be isolated from the workspace plane. In the final stage, object cen-troids are extracted from the binary mask. To improve robustness against sensor noise, morphological opening and closing opera-tions are applied prior to centroid extraction. An example of the proposed localization algorithm is shown in Figure 4. The output of the algorithm is the spatial coordinate set of all detected com-ponents in the workspace, which is 𝑃 (L). However, localization alone is insufficient for robotic assembly, since the robot must also determine the type of each component. Therefore, each lo-calized component must additionally be assigned a classification label, denoted by C.3 Copyright © 2026 by ASME Algorithm 1 Localization Method  
+
+> Require:
+
+pyrealsense2 library aliased as rs                                                                                                                                                                             
+
+> 1: function GetDepth
+> 2: 𝐷 𝑟 ←RawDepth ()
+> 3: 𝐹 𝑑 2𝑧 ←DisparityTransform (𝑇 )
+> 4: 𝐹 𝑧 2𝑑 ←DisparityTransform (𝐹 )
+> 5: 𝐹 𝑠 𝑝𝑎𝑡𝑖𝑎𝑙 ←SpatialFilter (𝛼, 𝛿, 𝑚 )
+> 6: 𝐹 𝑡𝑒𝑚 𝑝 ←TemporalFilter ()
+> 7: 𝐹 ℎ𝑜𝑙𝑒 ←HoleFillingFilter (0)
+> 8: 𝐷 𝑓 ←𝐹 𝑧 2𝑑 (𝐹 ℎ𝑜𝑙𝑒 (𝐹 𝑡𝑒𝑚 𝑝 (𝐹 𝑠 𝑝𝑎𝑡𝑖𝑎𝑙 (𝐹 𝑑 2𝑧 (𝐷 𝑟 ) ) ) ) )
+> 9: return 𝐷 𝑓
+> 10: function CreateBinaryMask (𝐷 𝑓 )11: 𝑀 ←ROI (𝐷 𝑓 )⊲Region of Interest 12: 𝑀 𝑣𝑎𝑙𝑖𝑑 ← { 𝑑 ∈𝐷 𝑓 [𝑀 ] | 𝑑 𝑚𝑖𝑛 < 𝑑 < 𝑑 𝑚𝑎𝑥 }⊲Valid depths 13: 𝑑 𝑠 ←HistogramMode (𝑀 𝑣𝑎𝑙𝑖𝑑 )⊲Surface depth 14: 𝜏 𝑜𝑏 𝑗 ←𝑑 𝑠 −ℎ𝑚 ⊲Depth threshold 15: 𝑀 𝑏 ← ( 𝐷 𝑓 < 𝜏 𝑜𝑏 𝑗 ) ∧ ( 𝑑 𝑚𝑖𝑛 < 𝐷 𝑓 < 𝑑 𝑚𝑎𝑥 )⊲Segment objects 16: 𝑀 𝑏 ←MorphOperator (𝑴 𝑏 )⊲Clean noise 17: return 𝑀 𝑏 , 𝑑 𝑠𝑢𝑟 𝑓
+> 18: function FindObjectsFromMask (𝑀 𝑏 , 𝐷 𝑓 , 𝑑 𝑠 )19: 𝐶 ←FindContours (𝑀 𝑏 )⊲Extract contours 20: for all 𝑐 ∈𝐶 do
+> 21: 𝐴 ←Area (𝑐 ),𝑤, ℎ ←BoundingRect (𝑐 )
+> 22: 𝛼 ←max (𝑤, ℎ )/( min (𝑤, ℎ ) + 𝜖 )⊲Aspect Ratio 23: if (𝐴 𝑚𝑖𝑛 ≤𝐴 ≤𝐴 𝑚𝑎𝑥 ) ∧ ( 𝛼 ≤𝛼 𝑚𝑎𝑥 )then
+> 24: (𝑐 𝑥 , 𝑐 𝑦 ) ← Moments (𝑐 )⊲Centroid 25: 𝑀 𝑜𝑏 𝑗 ←DrawContour (𝑐 )
+> 26: 𝑑 𝑜𝑏 𝑗 ←Median (𝐷 𝑓 [𝑀 𝑜𝑏 𝑗 ] ) ⊲Object Depth 27: ℎ𝑜𝑏 𝑗 ←𝑑 𝑠 −𝑑 𝑜𝑏 𝑗 ⊲Object Height 28: 𝑧 𝑔𝑟 𝑎𝑠 𝑝 ←ℎ𝑜𝑏 𝑗 /2+𝑑 𝑜𝑏 𝑗 +𝛿 𝑐𝑎𝑚 −𝛿 𝑔𝑟𝑖 𝑝 ⊲Robot Z-coord 29: 𝑝. append ( { 𝑐 𝑥 , 𝑐 𝑦 , 𝑧 } )
+> 30: return 𝑃
+
+3.2 Human Operator Classification 
+
+Component classification is performed through a human-in-the-loop reasoning process that complements the geometric localization results. Once the depth-camera tool extracts the cen-ter of each object in the workspace, the human operator provides natural-language feedback describing the relative position of pre-viously unseen components with respect to other objects. For instance, the operator may indicate that an unseen component is the object to the right of a reference object or between two known locations. The LLM reasons over these spatial relation-ships together with the localization set L to assign the appro-priate semantic label to the corresponding object center, thereby producing the classification set C. The resulting classification information is then used for subsequent task planning and robot execution. 
+
+3.3 LLM Module 
+
+Given the human operator’s prompt together with the local-ization and classification results, the LLM performs sequential reasoning to generate a structured assembly plan. For each com-ponent in the target product sequence, the LLM identifies the intended part label, matches it to the corresponding localized object, and determines its role in the assembly order. The out-put is represented in a structured format for each component as 
+
+𝑝 𝑖 (L, C). Collectively, these structured component-level out-puts form a complete task plan that can be interpreted by the robot-execution module for assembly. For example, the struc-tured output for each component may include the target label, the corresponding object center, and its position in the assembly sequence. Since this task requires contextual understanding, spatial rea-soning, and consistent decision-making, the LLM must be con-figured to operate reliably within a manufacturing setting. How-ever, LLMs that are trained on general domain data, may produce hallucinated or inconsistent outputs when applied directly to spe-cialized manufacturing tasks. Therefore, additional measures are required to improve output accuracy and reduce hallucination. To prevent hallucination and ensure the output accuracy, we employ a prompt-engineering and evaluation process. First, a system prompt is designed to define the role, objective, callable tools, and operating rules of the LLM. This prompt provides the con-textual constraints needed for manufacturing-task interpretation and structured decision-making. Next, a dedicated evaluation dataset is constructed to assess the quality of the LLM outputs under the given prompt. A grading module is then used to mea-sure whether the generated outputs are correct, consistent, and aligned with the required task format. Based on these evaluation results, the human operator iteratively refines the system prompt to improve the LLM’s contextual understanding and reasoning performance. This process is repeated until the evaluation score satisfies the deployment requirement for the target manufacturing application. 
+
+3.4 Pixel to Robot Coordinate Conversion 
+
+Before the structured subtasks 𝑝 𝑖 (L, C) are sent to the robot arm for execution, the localized component coordinates must be converted from the image plane to the robot base frame. The de-tected object centers are first obtained as pixel coordinates (𝑥, 𝑦 )
+
+in the camera frame, which are not directly suitable for robotic manipulation. Therefore, this section describes how these pixel-space coordinates are transformed into 3D positions in the robot base frame. To convert a detected pixel (𝑥, 𝑦 ) with depth 𝑧 into a 3D point expressed in the robot base frame {𝐵 }, we combine the pinhole camera projection model with rigid-body transfor-mations between the camera frame {𝐶 }, end-effector frame {𝐸 },and robot base frame {𝐵 }. The overall mapping can be written compactly as: 
+
+˜p𝐵 = 𝐵 T𝐸 𝐸 T𝐶 
+
+⎡⎢⎢⎢⎢⎢⎢⎢⎢⎣   
+
+> (𝑥 −𝑐 𝑥 )
+> 𝑓 𝑥
+
+𝑧    
+
+> (𝑦 −𝑐 𝑦 )
+> 𝑓 𝑦
+
+𝑧 𝑧 
+
+1
+
+⎤⎥⎥⎥⎥⎥⎥⎥⎥⎦
+
+, (1) where ˜p𝐵 = [𝑥 𝐵 , 𝑦 𝐵 , 𝑧 𝐵 , 1]⊤ is the homogeneous coordinate of the target point in the robot base frame. The intrinsic parame-ters ( 𝑓 𝑥 , 𝑓 𝑦 ) are the focal lengths in pixel units and (𝑐 𝑥 , 𝑐 𝑦 ) is the principal point. The term 𝐸 T𝐶 denotes the fixed extrinsic transformation from the camera frame to the end-effector frame, and 𝐵 T𝐸 is the time-varying end-effector pose in the robot base frame obtained from robot forward kinematics. Specifically, let  
+
+> 𝐸
+
+T𝐶 denote the rigid transformation from the camera frame {𝐶 }
+
+to the end-effector frame {𝐸 }: 
+
+> 𝐸
+
+T𝐶 =[︃ 𝐸 R𝐶 𝐸 t𝐶 
+
+0⊤ 1]︃ , (2) 4 Copyright © 2026 by ASME FIGURE 5: Overview of the experimental manufacturing setup: (a) Top-down view of the physical workspace, showing the arrangement of robot and the assembly board. (b) Detailed view of the assembly board com-ponents: gears (red arrows), circular pins (green arrows), and rectangu-lar pins (blue arrows). 
+
+where 𝐸 R𝐶 ∈ 𝑆𝑂 (3) and 𝐸 t𝐶 ∈ R3 are the rotation matrix and translation vector, respectively. Similarly, 𝐵 T𝐸 denotes the rigid transformation from the end-effector frame {𝐸 } to the robot base frame {𝐵 }:
+
+> 𝐵
+
+T𝐸 =[︃ 𝐵 R𝐸 𝐵 t𝐸 
+
+0⊤ 1]︃ , (3) where 𝐵 R𝐸 ∈ 𝑆𝑂 (3) and 𝐵 t𝐸 ∈ R3 are provided by the robot controller at runtime through forward kinematics. 
+
+> 3.5 Robot Arm
+
+This tool equips the robotic system with callable manipu-lation functions for performing assembly tasks within the man-ufacturing workspace. Given a subtask and its corresponding component coordinates from the sensing module, the LLM for-mulates a sequence of robot manipulation primitives that satisfies the required assembly procedure. These primitives are organized into a collision-free and efficient motion plan consisting of sev-eral key waypoints: a pick pose aligned with the target component centroid, one or more intermediate poses for safe navigation, and a final place pose for accurate assembly or placement. The tool is further defined by a set of operational constraints and capa-bilities, including velocity limits, acceleration limits, and safety parameters. By incorporating this configuration, the LLM gener-ates motion plans that remain kinematically feasible and suitable for the robot’s dynamic limits. During task execution, the system monitors assembly progress and updates the motion plan when necessary to accommodate changes in the environment or the geometry of new products. As a result, the framework supports robust and flexible assembly by translating natural-language in-structions into executable robot actions through coordinated per-ception, reasoning, and manipulation. 
+
+> 4. CASE STUDIES
+
+This section details the experimental validation of the pro-posed framework. We first describe the hardware testbed and the assembly task, then define the three case studies designed to evaluate the system’s adaptability for different manufacturing assembly task. 
+
+> 4.1 Experimental Setup
+
+The manufacturing testbed, shown in Figure 5 (a), consists of a 6-Degree-of-Freedom (6DOF) UFactory xArm robot equipped with a UFactory xArm Gripper G2. An Intel RealSense Depth Camera D435 provides component localization via the proposed vision tool. Human-robot interaction, including operator prompts and classification feedback, is managed by the voice-control mod-ule described in Section 3, which is implemented using Eleven-Labs’ speech-to-text and text-to-speech models. The case studies are based on the NIST Assembly Task Board 1 (NATB1) [14], a standard benchmark for robotic manipulation and assembly, as shown in Figure 5 (b). The NATB1 includes various components such as circular pins, rectangular pins, and gears of different sizes. To evaluate the framework’s performance against increasing levels of novelty, we designed three distinct cases (Table 1): 
+
+• Case 1: Known Product (Baseline). This case represents traditional manufacturing, where the product and its assem-bly sequence are already in the system’s knowledge base. The robot executes the predefined plan without human as-sistance. This case validates the system’s baseline execution capability. 
+
+• Case 2: Customized Product. This case features a product using known components (e.g., pins, gears) but in a new assembly order that is not in the knowledge base. The system must use the human operator’s initial prompt to dynamically plan a new, valid assembly sequence. This case tests the framework dynamic planning capabilities. 
+
+• Case 3: New Product. This case introduces a product that includes a new component, previously unknown to the sys-tem. The system must first recognize the component as novel, then trigger the human-in-the-loop classification feed-back. Following classification, the system must plan a full assembly sequence for this new product. This case tests the framework’s complete adaptive pipeline, from new product identification to planning. 
+
+> 4.2 Case Study Results
+
+This subsection presents the evaluation of the proposed framework, CoViLLM, across the designed case studies. First, we assess the performance of the localization method in estimat-ing component spatial coordinates within the workspace. Next, we evaluate whether the accuracy of the LLM output for reliable deployment in task planning and format consistent. Finally, we analyze the dynamic interaction between the human operator and the robotic system across different assembly cases. Localization is one of the most critical components of the proposed framework, since it is responsible for extracting the spatial coordinates of objects in the workspace. As the first stage of the pipeline, its reliability and accuracy strongly affect the overall performance of the framework. Our results show that, as long as a high-quality filtered depth map D𝑓 can be constructed, the proposed localization method can effectively estimate the coordinates of detected objects. However, if the GetDepth func-tion fails to generate a reliable depth map, the localization stage becomes unreliable and may cause the framework to fail. For ex-ample, when the camera is positioned too far from the workspace 5 Copyright © 2026 by ASME TABLE 1: Three case levels and example products (each product lists a 3–4 step assembly sequence, red indicates new assembly component). 
+
+Case (Level) Product 1 Product 2 Product 3 Case 1 
+
+Known small gear → small rectangular pin 
+
+→ small circular pin small gear → medium rectangular pin → medium circular pin medium gear → small rectangular pin → small gear 
+
+Case 2 
+
+Customized small gear → medium rectangular pin → medium circular pin medium gear → small rectangular pin → medium circular pin medium gear → medium circular pin 
+
+→ small gear 
+
+Case 3 
+
+New big gear → small gear → small rect-angular pin → small circular pin big circular pin → small gear →
+
+medium rectangular pin → medium circular pin big rectangular pin → medium gear 
+
+→ small rectangular pin → small gear big gear → big circular pin → small rectangular pin → small circular pin big circular pin → big rectangular pin → medium rectangular pin →
+
+medium circular pin big rectangular pin → big gear →
+
+small rectangular pin → small gear  
+
+> FIGURE 6: Valid camera height for effective object localization
+
+surface, the captured raw depth frame may not represent gear components accurately because their height is relatively small and may be interpreted as part of the background surface. In addition, small circular and rectangular pins, which have limited surface area, are more likely to be treated as noise by the pro-posed method. Conversely, when the camera is placed too close to the workspace, the invalid region in the depth map increases, the effective field of view is reduced, and the measured depth values become less reliable. Therefore, selecting an appropriate camera height is essential for achieving robust localization and improving the success rate of the overall framework. Based on our experiments, the effective camera-height range is shown in Figure 6. In this paper, we set the camera height to 400 mm above the background surface across the case studies. As shown in Figure 7, the robotic system successfully col-laborates with the human operator in different ways across all product levels. For both case 1 (known product) and case 2 (cus-tomized product), all assembly components are already included in the robot’s knowledge base. Therefore, the robotic system is able to interpret the prompt and complete the product assembly without using a human operator’s classification in real-time. Case 3 introduces products containing previously unseen components. When encountering a new component, the robot collaborates with the human operator for product identification, where the hu-man operator provides the classification of the product and the robot dynamically integrates this classification information with localization through the proposed vision system. The robotic sys-tem demonstrates adaptive communication strategies depending on task complexity. For example, if only one new component appears in the assembly sequence, the robot confirms with the human operator if the localized object matches the new compo-nent in the initial prompt. When multiple new components are introduced, the robot asks for clarification to correctly associate each component with its corresponding instruction. These behav-iors demonstrate that the proposed framework can dynamically collaborate with a human operator to identify new products in the workspace at runtime. We further evaluated the framework’s task-planning accuracy based on prompts issued by the human operator. Each product level was tested in ten iterations, and the framework achieved 100% accuracy across all case studies. This strong performance is attributed to the prompt-engineering pro-cess described in Section 3, which improved the reliability and consistency of the LLM outputs. 
+
+> 5. CONCLUSION
+
+The increasing demand for mass customization presents a significant challenge for existing manufacturing systems, where pre-programmed robots struggle with the high-mix, low-volume requirements of personalized products. In this work, we proposed an adaptive HRC assembly framework to address this gap, lever-aging an LLM to enhance flexibility. The proposed framework employs an LLM-enabled agent for dynamic sequence and sub-task planning, eliminating the reliance on predefined assembly instructions. In addition, we develop a collaborative identifica-tion system, which couples the robot’s vision tools with human operator assistance at runtime. This integration enhances the flex-ibility and adaptability of traditional HRC. Our system success-fully assembles new products with components and sequences not contained in its original knowledge base. Future work will focus on deploying the proposed framework in real-world manu-facturing settings. This will involve evaluating its scalability and robustness against more complex product structures and longer, more intricate assembly sequences. 6 Copyright © 2026 by ASME FIGURE 7: Human-Robot Collaborative assembly for different levels of products. 
+
+> ACKNOWLEDGMENTS
+
+This research was supported by the Manufacturing PA Inno-vation Program. The authors would also like to thank Dana Smith and Brent Albert (DMI Companies, Inc.) for valuable feedback regarding the proposed framework and case study. 
+
+> REFERENCES
+
+[1] Dhanda, Mandeep, Rogers, Benedict Alexander, Hall, Stephanie, Dekoninck, Elies and Dhokia, Vimal. “Re-viewing human-robot collaboration in manufacturing: Op-portunities and challenges in the context of industry 5.0.” 
+
+Robotics and Computer-Integrated Manufacturing Vol. 93 (2025): p. 102937. [2] Unhelkar, Vaibhav V, Lasota, Przemyslaw A, Tyroller, Quirin, Buhai, Rares-Darius, Marceau, Laurie, Deml, Bar-bara and Shah, Julie A. “Human-aware robotic assistant for collaborative assembly: Integrating human motion predic-tion with planning in time.” IEEE Robotics and Automation Letters Vol. 3 No. 3 (2018): pp. 2394–2401. [3] Guo, Daqiang. “Fast scheduling of human-robot teams col-laboration on synchronised production-logistics tasks in air-craft assembly.” Robotics and Computer-Integrated Manu-facturing Vol. 85 (2024): p. 102620. [4] Wang, Zipeng, Yan, Jihong, Yan, Guanzhong and Yu, Boshuai. “Multi-scale control and action recognition based human-robot collaboration framework facing new genera-tion intelligent manufacturing.” Robotics and Computer-Integrated Manufacturing Vol. 91 (2025): p. 102847. [5] Choi, Sung Ho, Kim, Minseok and Lee, Jae Yeol. “Smart and user-centric manufacturing information recommenda-tion using multimodal learning to support human-robot col-laboration in mixed reality environments.” Robotics and Computer-Integrated Manufacturing Vol. 91 (2025): p. 102836. [6] Yin, Yue, Fan, Junming, Liu, Ang and Zheng, Pai. “A mixed reality-assisted scene-centric robot programming approach for human–robot collaborative manufacturing.” Robotics and Computer-Integrated Manufacturing Vol. 98 (2026): p. 103146. [7] Gkournelos, Christos, Konstantinou, Christos and Makris, Sotiris. “An LLM-based approach for enabling seamless Human-Robot collaboration in assembly.” CIRP Annals 
+
+Vol. 73 No. 1 (2024): pp. 9–12. [8] Körner, Ulrike, Müller-Thur, Kathrin, Lunau, Thorsten, Dragano, Nico, Angerer, Peter and Buchner, Axel. “Per-ceived stress in human–machine interaction in modern man-ufacturing environments—Results of a qualitative interview study.” Stress and Health Vol. 35 No. 2 (2019): pp. 187– 199. [9] Naveed, Humza, Khan, Asad Ullah, Qiu, Shi, Saqib, Muhammad, Anwar, Saeed, Usman, Muhammad, Akhtar, Naveed, Barnes, Nick and Mian, Ajmal. “A comprehensive overview of large language models.” ACM Transactions on Intelligent Systems and Technology Vol. 16 No. 5 (2025): pp. 1–72. [10] Mon-Williams, Ruaridh, Li, Gen, Long, Ran, Du, Wenqian and Lucas, Christopher G. “Embodied large language mod-els enable robots to complete complex tasks in unpredictable environments.” Nature Machine Intelligence (2025): pp. 1– 10. [11] Singh, Ishika, Blukis, Valts, Mousavian, Arsalan, Goyal, Ankit, Xu, Danfei, Tremblay, Jonathan, Fox, Dieter, Thoma-son, Jesse and Garg, Animesh. “Progprompt: Generat-ing situated robot task plans using large language models.” 
+
+arXiv preprint arXiv:2209.11302 (2022). [12] Lim, Jonghan, Vogel-Heuser, Birgit and Kovalenko, Ilya. “Large language model-enabled multi-agent manufacturing systems.” 2024 IEEE 20th International Conference on Automation Science and Engineering (CASE) : pp. 3940– 3946. 2024. IEEE. [13] Zhang, Jingyi, Huang, Jiaxing, Jin, Sheng and Lu, Shijian. “Vision-language models for vision tasks: A survey.” IEEE transactions on pattern analysis and machine intelligence 
+
+Vol. 46 No. 8 (2024): pp. 5625–5644. [14] National Institute of Standards and Technology. “NIST Assembly Task Board 1 (NATB1).” https: //www.nist.gov/el/intelligent-systems-division-73500/ robotic-grasping-and-manipulation-assembly/assembly. Accessed: 2025-07-26. 7 Copyright © 2026 by ASME ,
