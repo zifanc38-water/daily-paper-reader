@@ -25,3 +25,48 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
+  intent_profiles:
+    - tag: ATO
+      description: 帮我搜索 assemble to order 相关的论文
+      enabled: true
+      keywords:
+        - keyword: markov decision process
+          keyword_cn: ''
+          query: m
+        - keyword: primal-dual
+          keyword_cn: ''
+          query: p
+        - keyword: assemble to order
+          keyword_cn: 按订单组装
+          query: assemble to order production strategy
+        - keyword: ATO system
+          keyword_cn: ATO系统
+          query: assemble-to-order manufacturing systems
+        - keyword: inventory management
+          keyword_cn: 库存管理
+          query: inventory control in assemble to order systems
+        - keyword: demand uncertainty
+          keyword_cn: 需求不确定性
+          query: managing demand uncertainty in ATO systems
+      intent_queries:
+        - query: recent research papers on assemble to order systems
+          query_cn: 关于按订单组装系统的最新研究论文
+          enabled: true
+          source: manual
+          note: ''
+        - query: optimization models for assemble to order production
+          query_cn: 按订单组装生产的优化模型
+          enabled: true
+          source: manual
+          note: ''
+        - query: literature review of assemble to order supply chains
+          query_cn: 按订单组装供应链的文献综述
+          enabled: true
+          source: manual
+          note: ''
+        - query: inventory policies for assemble to order manufacturing
+          query_cn: 按订单组装制造的库存策略
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-03-24T01:36:24.292Z'
